@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Import routers
+from app.routers import recipe
+
 # Create FastAPI app instance
 app = FastAPI(
     title="Recipe Auto-Creation Service",
@@ -37,9 +40,8 @@ async def root():
         "version": app.version,
     }
 
-# Import and include routers here later
-# from app.routers import recipe
-# app.include_router(recipe.router)
+# Include routers
+app.include_router(recipe.router)
 
 if __name__ == "__main__":
     import uvicorn
