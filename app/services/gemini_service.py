@@ -280,56 +280,78 @@ class GeminiService:
     
     def _convert_to_recipe_model(self, data: Dict[str, Any]) -> Recipe:
         """Convert the extracted data to a Recipe model."""
-        # Process ingredients
-        ingredients = []
-        for ing_data in data.get("ingredients", []):
-            ingredients.append(Ingredient(
-                item=ing_data.get("item", ""),
-                amount=str(ing_data.get("amount", "")),
-                unit=ing_data.get("unit", "")
-            ))
-        
-        # Generate a unique ID for the recipe
-        import uuid
-        recipe_id = str(uuid.uuid4())
-        
-        # Get current datetime
-        from datetime import datetime
-        current_time = datetime.now()
-        
-        # Create recipe base fields
-        recipe_data = {
-            "id": recipe_id,
-            "name": data.get("name", "Untitled Recipe"),
-            "description": data.get("description", ""),
-            "prepTime": data.get("prepTime"),
-            "cookTime": data.get("cookTime"),
-            "totalTime": data.get("totalTime"),
-            "servings": data.get("servings"),
-            "ingredients": ingredients,
-            "mainIngredient": data.get("mainIngredient"),
-            "tags": data.get("tags", []),
-            "creationTime": current_time,
-            "approved": False,
-            "allowImageSuggestions": True
-        }
-        
-        # Set either instructions or stages
-        if data.get("stages"):
-            stages = []
-            for stage_data in data["stages"]:
-                stages.append(Stage(
-                    title=stage_data.get("title", ""),
-                    instructions=stage_data.get("instructions", [])
+        try:
+            # Process ingredients
+            ingredients = []
+            for ing_data in data.get("ingredients", []):
+                ingredients.append(Ingredient(
+                    item=ing_data.get("item", ""),
+                    amount=str(ing_data.get("amount", "")),
+                    unit=ing_data.get("unit", "")
                 ))
-            recipe_data["stages"] = stages
-            recipe_data["instructions"] = None
-        else:
-            recipe_data["instructions"] = data.get("instructions", [])
-            recipe_data["stages"] = None
+            
+            # Generate a unique ID for the recipe
+            import uuid
+            recipe_id = str(uuid.uuid4())
+            
+            # Get current datetime
+            from datetime import datetime
+            current_time = datetime.now()
+            
+            # Create recipe base fields
+            recipe_data = {
+                "id": recipe_id,
+                "name": data.get("name", "Untitled Recipe"),
+                "description": data.get("description", ""),
+                "prepTime": data.get("prepTime"),
+                "cookTime": data.get("cookTime"),
+                "totalTime": data.get("totalTime"),
+                "servings": data.get("servings"),
+                "ingredients": ingredients,
+                "mainIngredient": data.get("mainIngredient"),
+                "tags": data.get("tags", []),
+                "creationTime": current_time,
+                "approved": False,
+                "allowImageSuggestions": True
+            }
+            
+            # Set either instructions or stages
+            if data.get("stages") and isinstance(data["stages"], list) and len(data["stages"]) > 0:
+                stages = []
+                for stage_data in data["stages"]:
+                    # Validate stage data before creating Stage object
+                    if isinstance(stage_data, dict) and "title" in stage_data and stage_data["title"]:
+                        stages.append(Stage(
+                            title=stage_data.get("title", ""),
+                            instructions=stage_data.get("instructions", [])
+                        ))
+                
+                # Only set stages if we successfully created at least one valid stage
+                if stages:
+                    recipe_data["stages"] = stages
+                    recipe_data["instructions"] = None
+                else:
+                    # Fallback to instructions if stages couldn't be processed
+                    recipe_data["instructions"] = data.get("instructions") or ["No instructions available"]
+                    recipe_data["stages"] = None
+            else:
+                # Use instructions
+                recipe_data["instructions"] = data.get("instructions") or ["No instructions available"]
+                recipe_data["stages"] = None
+            
+            # Create and return Recipe object
+            return Recipe(**recipe_data)
         
-        # Create and return Recipe object
-        return Recipe(**recipe_data)
+        except Exception as e:
+            self.logger.error(f"Error converting to Recipe model: {str(e)}")
+            # Create a minimal valid recipe in case of errors
+            return Recipe(
+                id=str(uuid.uuid4()),
+                name=data.get("name", "Untitled Recipe"),
+                instructions=["Error processing recipe details"],
+                ingredients=[],
+                creationTime=datetime.now()
+            )
     
     def _preprocess_text(self, text: str) -> str:
         """Preprocess the recipe text for better AI processing."""

@@ -1,0 +1,61 @@
+{
+  "name": "Guacamole",
+  "description": "A simple and fresh guacamole recipe.",
+  "ingredients": [
+    {
+      "item": "avocados",
+      "amount": "2",
+      "unit": ""
+    },
+    {
+      "item": "lime",
+      "amount": "1",
+      "unit": ""
+    },
+    {
+      "item": "onion",
+      "amount": "1/2",
+      "unit": ""
+    },
+    {
+      "item": "garlic",
+      "amount": "1",
+      "unit": "clove"
+    },
+    {
+      "item": "tomato",
+      "amount": "1",
+      "unit": ""
+    },
+    {
+      "item": "salt",
+      "amount": "to taste",
+      "unit": ""
+    },
+    {
+      "item": "pepper",
+      "amount": "to taste",
+      "unit": ""
+    },
+    {
+      "item": "cilantro",
+      "amount": "to taste",
+      "unit": ""
+    }
+  ],
+  "instructions": [
+    "Mash avocados in a bowl.",
+    "Add lime juice, onion, garlic, and tomato.",
+    "Mix well.",
+    "Season with salt and pepper.",
+    "Add cilantro if desired.",
+    "Serve immediately."
+  ],
+  "stages": null,
+  "prepTime": 10,
+  "cookTime": 0,
+  "totalTime": 10,
+  "servings": 4,
+  "tags": ["appetizer", "dip", "mexican", "avocado"],
+  "mainIngredient": "avocados"
+}

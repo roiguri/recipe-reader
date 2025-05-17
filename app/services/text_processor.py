@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any
 from ..models.recipe import Recipe, RecipeResponse
-from .gemini_Service import GeminiService
+from .gemini_service import GeminiService
 import os
 from dotenv import load_dotenv
 
