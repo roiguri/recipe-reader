@@ -1,0 +1,96 @@
+.App {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  font-family: sans-serif;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.App h1 {
+  text-align: center;
+  color: #333;
+}
+
+.App h2 {
+  color: #555;
+  margin-top: 30px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.App > div {
+  margin-bottom: 15px;
+}
+
+.App input[type="text"],
+.App select,
+.App textarea {
+  width: calc(100% - 22px); /* Adjust width to account for padding and border */
+  padding: 10px;
+  margin-bottom: 10px; /* Add some space below each input field */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.App select {
+   width: 100%; /* Select element to take full width of its container */
+}
+
+.App textarea {
+  min-height: 100px;
+  resize: vertical; /* Allow vertical resizing */
+}
+
+.App button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.App button:hover {
+  background-color: #0056b3;
+}
+
+.App pre {
+  background-color: #f4f4f4;
+  border: 1px solid #ddd;
+  padding: 15px;
+  overflow-x: auto; /* Add horizontal scroll for long lines */
+  white-space: pre-wrap; /* Wrap text within the pre tag */
+  word-wrap: break-word; /* Break long words if necessary */
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+/* Styling for error messages within the response pre tag */
+.App pre.error {
+  color: #D8000C; /* Red text color for errors */
+  background-color: #FFD2D2; /* Light red background for errors */
+  border-color: #D8000C;
+}
+
+/* Input group styling for endpoint and method */
+.input-group {
+  display: flex;
+  gap: 10px; /* Space between input and select */
+}
+
+.input-group input[type="text"] {
+  flex-grow: 1; /* Input field takes available space */
+  margin-bottom: 0; /* Remove bottom margin as it's handled by .App > div */
+}
+
+.input-group select {
+  width: auto; /* Adjust select width to content */
+  min-width: 100px; /* Minimum width for the select dropdown */
+  margin-bottom: 0; /* Remove bottom margin */
+}
