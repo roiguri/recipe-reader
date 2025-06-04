@@ -49,6 +49,22 @@ async def test_prompt_generation():
     assert "flat 'instructions'" in prompt
 
 @pytest.mark.asyncio
+async def test_schema_creation():
+    """Test that JSON schema is created correctly."""
+    service = GeminiService(api_key="test_key")
+    
+    # Verify schema exists
+    assert hasattr(service, 'recipe_schema')
+    assert service.recipe_schema is not None
+    
+    # Verify schema structure
+    assert service.recipe_schema["type"] == "object"
+    assert "properties" in service.recipe_schema
+    assert "name" in service.recipe_schema["properties"]
+    assert "ingredients" in service.recipe_schema["properties"]
+    assert service.recipe_schema["required"] == ["name", "ingredients"]
+
+@pytest.mark.asyncio
 async def test_parse_response():
     """Test parsing of API response with different JSON formats."""
     service = GeminiService(api_key="test_key")

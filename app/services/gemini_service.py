@@ -46,8 +46,9 @@ class GeminiService:
         # Initialize cache
         self.cache = {}
         self.available = True
+        self.recipe_schema = self._create_recipe_schema()
         
-        self.logger.info("GeminiService initialized successfully")
+        self.logger.info("GeminiService initialized successfully with structured output schema")
     
     async def extract_recipe(self, text: str, options: Optional[Dict[str, Any]] = None) -> RecipeResponse:
         """
@@ -406,3 +407,98 @@ class GeminiService:
             
         # Cap at 0.95 (we're never 100% confident in AI extraction)
         return min(0.95, confidence)
+    
+    def _create_recipe_schema(self) -> Dict[str, Any]:
+        """Create JSON schema that matches our Recipe model."""
+        return {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Recipe name or title"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Brief description of the recipe"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "description": "List of ingredients with amounts",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "item": {
+                                "type": "string",
+                                "description": "Name of the ingredient"
+                            },
+                            "amount": {
+                                "type": "string",
+                                "description": "Amount/quantity as text"
+                            },
+                            "unit": {
+                                "type": "string",
+                                "description": "Unit of measurement (can be empty string)"
+                            }
+                        },
+                        "required": ["item", "amount", "unit"]
+                    },
+                    "minItems": 1
+                },
+                "instructions": {
+                    "type": ["array", "null"],
+                    "description": "Flat list of cooking instructions (use this OR stages, not both)",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "stages": {
+                    "type": ["array", "null"],
+                    "description": "Structured stages for complex recipes (use this OR instructions, not both)",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "Name of this cooking stage"
+                            },
+                            "instructions": {
+                                "type": "array",
+                                "description": "Steps for this stage",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": ["title", "instructions"]
+                    }
+                },
+                "prepTime": {
+                    "type": ["integer", "null"],
+                    "description": "Preparation time in minutes"
+                },
+                "cookTime": {
+                    "type": ["integer", "null"],
+                    "description": "Cooking time in minutes"
+                },
+                "totalTime": {
+                    "type": ["integer", "null"],
+                    "description": "Total time in minutes"
+                },
+                "servings": {
+                    "type": ["integer", "null"],
+                    "description": "Number of servings"
+                },
+                "tags": {
+                    "type": "array",
+                    "description": "Recipe tags (cuisine, dietary, etc.)",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mainIngredient": {
+                    "type": ["string", "null"],
+                    "description": "Primary or most important ingredient"
+                }
+            },
+            "required": ["name", "ingredients"]
+        }
