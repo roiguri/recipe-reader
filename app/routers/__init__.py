@@ -1,1 +1,5 @@
-# This file makes the routers directory a Python package
+"""API route handlers."""
+
+from . import recipe
+
+__all__ = ["recipe"]

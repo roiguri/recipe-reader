@@ -16,8 +16,7 @@ from google import genai
 from google.genai import types
 
 # Import our existing recipe models (no duplicates!)
-from ..models.recipe import Recipe, Ingredient, Stage, RecipeResponse, RecipeBase
-
+from app.models import Recipe, Ingredient, Stage, RecipeResponse, RecipeBase
 
 class GeminiService:
     """Service for recipe extraction using Google's new Gen AI SDK with structured output."""

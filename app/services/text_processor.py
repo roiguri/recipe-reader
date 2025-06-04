@@ -1,13 +1,9 @@
 import time
-import uuid
-from datetime import datetime
 from typing import Dict, Any
-from ..models.recipe import Recipe, RecipeResponse
+from app.models import RecipeResponse
 from .gemini_service import GeminiService
 import os
 from dotenv import load_dotenv
-
-load_dotenv()  # This will load variables from a .env file if present
 
 class TextProcessor:
     """Service for processing text into structured recipe data using Gemini API."""
@@ -28,9 +24,3 @@ class TextProcessor:
         response = await self.gemini_service.extract_recipe(text, options)
         # response is already a RecipeResponse
         return response
-    
-    async def process_text_structured(self, text: str, options: Dict[str, Any] = None) -> RecipeResponse:
-        """Process text using structured output extraction."""
-        if options is None:
-            options = {}
-        return await self.gemini_service.extract_recipe(text, options)

@@ -1,3 +1,21 @@
+# Load environment variables FIRST, before other imports
+from dotenv import load_dotenv
+import os
+import logging
+
+# Load environment variables at startup
+load_dotenv()
+
+# Set up basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Verify critical environment variables
+if not os.getenv("GOOGLE_AI_API_KEY"):
+    logger.warning("GOOGLE_AI_API_KEY not found in environment variables. Gemini service will be unavailable.")
+else:
+    logger.info("GOOGLE_AI_API_KEY found - Gemini service will be available")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
