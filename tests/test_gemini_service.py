@@ -83,6 +83,25 @@ async def test_parse_response():
     with pytest.raises(ValueError):
         service._parse_response("Not a JSON response")
 
+@pytest.mark.asyncio 
+async def test_structured_response_parser():
+    """Test the new structured response parser."""
+    service = GeminiService(api_key="test_key")
+    
+    # Test valid JSON
+    valid_json = '{"name": "Test Recipe", "ingredients": []}'
+    result = service._parse_structured_response(valid_json)
+    assert result["name"] == "Test Recipe"
+    
+    # Test with whitespace
+    json_with_spaces = '  {"name": "Test Recipe", "ingredients": []}  '
+    result = service._parse_structured_response(json_with_spaces)
+    assert result["name"] == "Test Recipe"
+    
+    # Test invalid JSON should raise exception
+    with pytest.raises(json.JSONDecodeError):
+        service._parse_structured_response("invalid json")
+
 @pytest.mark.asyncio
 async def test_hebrew_recipe_extraction(hebrew_simple_recipe_text, gemini_hebrew_simple_response):
     """Test extraction of Hebrew recipe text."""

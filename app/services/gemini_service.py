@@ -216,6 +216,19 @@ class GeminiService:
             self.logger.error(f"Failed to parse JSON response: {str(e)}")
             self.logger.debug(f"Response text: {response_text}")
             raise
+
+    def _parse_structured_response(self, response_text: str) -> Dict[str, Any]:
+        """Parse the structured JSON response (guaranteed to be valid)."""
+        try:
+            # Since we're using structured output, this should always be valid JSON
+            result = json.loads(response_text.strip())
+            self.logger.debug("Successfully parsed structured JSON response")
+            return result
+            
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Unexpected JSON decode error in structured response: {str(e)}")
+            self.logger.debug(f"Response text: {response_text}")
+            raise
     
     def _normalize_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Normalize and validate the extracted recipe data."""
