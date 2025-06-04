@@ -192,6 +192,61 @@ class GeminiService:
             template += "\nPrefer using flat 'instructions' rather than 'stages' unless the recipe has very clear distinct sections."
         
         return template.format(text=text)
+
+    def _generate_structured_prompt(self, text: str, options: Dict[str, Any]) -> str:
+        """Generate a prompt optimized for structured output extraction."""
+        
+        # Detect if text contains Hebrew
+        contains_hebrew = self._contains_hebrew(text)
+        
+        base_prompt = f"""
+    Extract complete recipe information from the following text. Focus on accuracy and completeness.
+
+    EXTRACTION GUIDELINES:
+    - Convert all time references to minutes (e.g., "1 hour" = 60, "30 seconds" = 0.5)
+    - Extract ingredients with their exact amounts and units as written
+    - Identify the primary/main ingredient (usually the protein or base)
+    - Add relevant tags for cuisine type, dietary restrictions, cooking method, etc.
+    - Use "instructions" for simple linear recipes, "stages" for complex multi-phase recipes
+
+    STRUCTURE DECISION:
+    - Use "instructions" (set "stages" to null) for straightforward recipes
+    - Use "stages" (set "instructions" to null) only if recipe has distinct preparation phases
+    - Never use both instructions and stages together
+
+    """
+
+        if contains_hebrew:
+            base_prompt += """
+    HEBREW TEXT HANDLING:
+    - Process Hebrew ingredients and instructions accurately
+    - Maintain original Hebrew names for ingredients when appropriate
+    - Convert Hebrew time expressions to minutes (דקות = minutes, שעות = hours)
+    - Preserve authentic cooking terminology
+
+    """
+
+        # Add format-specific guidance
+        format_type = options.get("format_type")
+        if format_type == "structured":
+            base_prompt += "PREFERENCE: Use 'stages' to organize instructions into logical cooking phases.\n"
+        elif format_type == "simple":
+            base_prompt += "PREFERENCE: Use flat 'instructions' array for simple step-by-step directions.\n"
+
+        base_prompt += f"""
+    RECIPE TEXT:
+    {text}
+
+    Extract the recipe information according to the required JSON structure.
+    """
+        
+        return base_prompt
+    
+    def _contains_hebrew(self, text: str) -> bool:
+        """Check if text contains Hebrew characters."""
+        import re
+        hebrew_pattern = re.compile(r'[\u0590-\u05FF]')
+        return bool(hebrew_pattern.search(text))
     
     def _parse_response(self, response_text: str) -> Dict[str, Any]:
         """Parse the AI response into structured data."""

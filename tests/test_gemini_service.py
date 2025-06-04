@@ -103,6 +103,59 @@ async def test_structured_response_parser():
         service._parse_structured_response("invalid json")
 
 @pytest.mark.asyncio
+async def test_hebrew_detection():
+    """Test Hebrew character detection."""
+    service = GeminiService(api_key="test_key")
+    
+    # Test Hebrew text
+    assert service._contains_hebrew("פרגיות אסיאתיות") is True
+    assert service._contains_hebrew("מתכון טעים") is True
+    
+    # Test English text
+    assert service._contains_hebrew("Chicken recipe") is False
+    assert service._contains_hebrew("Simple pasta") is False
+    
+    # Test mixed text
+    assert service._contains_hebrew("Recipe for פרגיות") is True
+    assert service._contains_hebrew("כוס flour") is True
+    
+    # Test empty/edge cases
+    assert service._contains_hebrew("") is False
+    assert service._contains_hebrew("123456") is False
+    assert service._contains_hebrew("!@#$%") is False
+
+@pytest.mark.asyncio
+async def test_structured_prompt_generation():
+    """Test structured prompt generation for different scenarios."""
+    service = GeminiService(api_key="test_key")
+    
+    # Test basic English recipe
+    prompt = service._generate_structured_prompt("Pasta recipe with tomatoes", {})
+    assert "Extract complete recipe information" in prompt
+    assert "EXTRACTION GUIDELINES" in prompt
+    assert "STRUCTURE DECISION" in prompt
+    assert "HEBREW TEXT HANDLING" not in prompt  # Should not appear for English
+    
+    # Test Hebrew recipe
+    prompt = service._generate_structured_prompt("פרגיות אסיאתיות טעימות", {})
+    assert "HEBREW TEXT HANDLING" in prompt
+    assert "דקות = minutes" in prompt
+    assert "שעות = hours" in prompt
+    
+    # Test structured format preference
+    prompt = service._generate_structured_prompt("Test recipe", {"format_type": "structured"})
+    assert "PREFERENCE: Use 'stages'" in prompt
+    
+    # Test simple format preference  
+    prompt = service._generate_structured_prompt("Test recipe", {"format_type": "simple"})
+    assert "PREFERENCE: Use flat 'instructions'" in prompt
+    
+    # Test that recipe text appears in prompt
+    test_text = "My special recipe with unique ingredients"
+    prompt = service._generate_structured_prompt(test_text, {})
+    assert test_text in prompt
+
+@pytest.mark.asyncio
 async def test_hebrew_recipe_extraction(hebrew_simple_recipe_text, gemini_hebrew_simple_response):
     """Test extraction of Hebrew recipe text."""
     service = GeminiService(api_key="test_key")
