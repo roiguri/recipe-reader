@@ -4,10 +4,18 @@ from datetime import datetime
 
 
 class Ingredient(BaseModel):
-    """Model for recipe ingredients."""
+    """
+    Recipe ingredient with separate amount and unit fields.
+    
+    Examples:
+    - item: "flour", amount: "2", unit: "cups"
+    - item: "קמח", amount: "2", unit: "כוסות"  
+    - item: "salt", amount: "1", unit: "tsp"
+    - item: "eggs", amount: "3", unit: "units/יחידה" (for countable items)
+    """
     item: str = Field(..., description="Name of the ingredient")
-    amount: str = Field(..., description="Amount of ingredient (as string)")
-    unit: Optional[str] = Field(None, description="Unit of measurement")
+    amount: str = Field(..., description="Quantity number only (e.g., '2', '1/2', '250')")
+    unit: str = Field(..., description="Unit of measurement (e.g., 'cups', 'grams', 'tbsp', 'קילוגרם', 'כוסות', 'גרם')")
     stage_id: Optional[int] = Field(None, description="ID of the stage this ingredient belongs to (if any)")
 
 
