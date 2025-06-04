@@ -28,3 +28,9 @@ class TextProcessor:
         response = await self.gemini_service.extract_recipe(text, options)
         # response is already a RecipeResponse
         return response
+    
+    async def process_text_structured(self, text: str, options: Dict[str, Any] = None) -> RecipeResponse:
+        """Process text using structured output extraction."""
+        if options is None:
+            options = {}
+        return await self.gemini_service.extract_recipe(text, options)
