@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import OptionCard from './OptionCard';
 
 function App() {
+  const [selectedOption, setSelectedOption] = useState(null);
+
   const handleCardClick = (cardType) => {
     console.log(`${cardType} card clicked`);
+    setSelectedOption(cardType);
+  };
+
+  const handleReset = () => {
+    console.log('Resetting selection');
+    setSelectedOption(null);
   };
 
   return (
@@ -47,6 +56,29 @@ function App() {
           <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
             <div className="flex flex-wrap justify-between gap-3 p-4">
               <p className="text-[#1b0e0e] tracking-light text-2xl md:text-[32px] font-bold leading-tight min-w-0">Add a new recipe</p>
+              <AnimatePresence>
+                {selectedOption && (
+                  <motion.button
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    onClick={handleReset}
+                    className="text-[#994d51] text-sm font-medium leading-normal bg-transparent border-none cursor-pointer hover:text-[#1b0e0e] transition-colors duration-200 flex items-center gap-2"
+                  >
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="16px" 
+                      height="16px" 
+                      fill="currentColor" 
+                      viewBox="0 0 256 256"
+                    >
+                      <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
+                    </svg>
+                    Back to options
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4">
               <OptionCard
@@ -58,6 +90,7 @@ function App() {
                 title="Fill out a form"
                 description="Add a recipe by filling out a form"
                 onClick={() => handleCardClick('form')}
+                isSelected={selectedOption === 'form'}
               />
               <OptionCard
                 icon={
@@ -68,6 +101,7 @@ function App() {
                 title="Enter text"
                 description="Add a recipe by entering text"
                 onClick={() => handleCardClick('text')}
+                isSelected={selectedOption === 'text'}
               />
               <OptionCard
                 icon={
@@ -78,6 +112,7 @@ function App() {
                 title="Provide a URL"
                 description="Add a recipe by providing a URL"
                 onClick={() => handleCardClick('url')}
+                isSelected={selectedOption === 'url'}
               />
               <OptionCard
                 icon={
@@ -88,6 +123,7 @@ function App() {
                 title="Upload an image"
                 description="Add a recipe by uploading an image"
                 onClick={() => handleCardClick('image')}
+                isSelected={selectedOption === 'image'}
               />
             </div>
           </div>
