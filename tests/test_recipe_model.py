@@ -10,10 +10,10 @@ from datetime import datetime
 def test_ingredient_model():
     """Test the Ingredient model creation and validation."""
     # Valid ingredient
-    ingredient = Ingredient(item="Salt", amount="1")
+    ingredient = Ingredient(item="Salt", amount="1", unit="tsp")
     assert ingredient.item == "Salt"
     assert ingredient.amount == "1"
-    assert ingredient.unit is None
+    assert ingredient.unit == "tsp"
     
     # Valid ingredient with all fields
     ingredient = Ingredient(

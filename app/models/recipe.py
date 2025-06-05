@@ -19,11 +19,6 @@ class Ingredient(BaseModel):
     stage_id: Optional[int] = Field(None, description="ID of the stage this ingredient belongs to (if any)")
 
 
-class Instruction(BaseModel):
-    """Model for a single instruction step."""
-    text: str = Field(..., description="Instruction text")
-
-
 class Stage(BaseModel):
     """Model for a recipe stage."""
     title: str = Field(..., description="Title of the stage")

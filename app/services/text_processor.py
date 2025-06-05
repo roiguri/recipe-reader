@@ -19,8 +19,4 @@ class TextProcessor:
         if options is None:
             options = {}
 
-        start_time = time.time()
-        # Call GeminiService to extract the recipe
-        response = await self.gemini_service.extract_recipe(text, options)
-        # response is already a RecipeResponse
-        return response
+        return await self.gemini_service.extract_recipe(text.strip(), options)
