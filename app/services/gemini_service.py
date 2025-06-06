@@ -277,9 +277,7 @@ Extract the recipe information as a valid JSON object that matches the required 
             recipe_data = data.copy()
             recipe_data.update({
                 "id": recipe_id,
-                "creationTime": current_time,
-                "approved": False,
-                "allowImageSuggestions": True
+                "creationTime": current_time
             })
             
             # Create and return Recipe object

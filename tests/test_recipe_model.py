@@ -125,7 +125,6 @@ def test_full_recipe_model():
         ],
         mainIngredient="Ingredient1",
         tags=["tag1", "tag2"],
-        image="image123.jpg",
         images=[
             ImageDetails(
                 id="img1",
@@ -137,8 +136,6 @@ def test_full_recipe_model():
                 uploadedBy="system"
             )
         ],
-        allowImageSuggestions=True,
-        approved=True,
         source_url="https://example.com/recipe",
         creationTime=now,
         updatedAt=now
@@ -153,7 +150,6 @@ def test_full_recipe_model():
     assert recipe.mainIngredient == "Ingredient1"
     assert len(recipe.tags) == 2
     assert recipe.images[0].isPrimary is True
-    assert recipe.approved is True
 
 
 def test_text_process_request():

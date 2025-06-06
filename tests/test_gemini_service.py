@@ -204,8 +204,6 @@ async def test_convert_to_recipe_model():
     assert recipe.ingredients[0].item == "flour"
     assert recipe.id is not None  # Should be generated
     assert recipe.creationTime is not None  # Should be set
-    assert recipe.approved is False
-    assert recipe.allowImageSuggestions is True
 
 @pytest.mark.asyncio
 async def test_extract_recipe_with_mock():
@@ -382,12 +380,13 @@ async def test_pydantic_integration():
 @pytest.mark.asyncio
 async def test_service_unavailable():
     """Test behavior when service is unavailable."""
-    service = GeminiService()  # No API key
-    assert service.available is False
-    
-    # Should raise ValueError when trying to extract
-    with pytest.raises(ValueError, match="GeminiService is not available"):
-        await service.extract_recipe("test recipe")
+    with patch.dict('os.environ', {}, clear=True):
+        service = GeminiService()  # No API key
+        assert service.available is False
+        
+        # Should raise ValueError when trying to extract
+        with pytest.raises(ValueError, match="GeminiService is not available"):
+            await service.extract_recipe("test recipe")
 
 # Fixtures for backward compatibility (if you have separate fixture files)
 @pytest.fixture

@@ -56,11 +56,7 @@ class RecipeBase(BaseModel):
     mainIngredient: Optional[str] = Field(None, description="Main ingredient")
     tags: List[str] = Field([], description="Recipe tags")
     
-    image: Optional[str] = Field(None, description="Primary image identifier")
     images: Optional[List[ImageDetails]] = Field(None, description="Detailed image information")
-    
-    allowImageSuggestions: bool = Field(True, description="Whether image suggestions are allowed")
-    approved: bool = Field(False, description="Whether the recipe is approved")
     
     source_url: Optional[str] = Field(None, description="Original source URL")
     
