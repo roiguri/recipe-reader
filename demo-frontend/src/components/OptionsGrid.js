@@ -36,10 +36,11 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
             {isExpanded ? (
               <motion.div
                 layoutId={item.id}
-                className="absolute inset-0 bg-[#fcf8f8] rounded-lg border border-[#e7d0d1] p-6 min-h-[300px] z-50"
+                className="absolute inset-x-0 top-0 bg-[#fcf8f8] rounded-lg border border-[#e7d0d1] p-6 min-h-[300px] z-50"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={`expanded-title-${item.id}`}
+                style={{ height: 'auto' }}
               >
                 {/* Header with blur effect */}
                 <motion.div
@@ -63,7 +64,7 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
 
                 {/* Content area with blur effect */}
                 <motion.div
-                  className="flex-1"
+                  className="w-full min-h-0"
                   animate={{
                     filter: showExpandedContent ? "blur(0px)" : "blur(4px)",
                     opacity: showExpandedContent ? 1 : 0.7

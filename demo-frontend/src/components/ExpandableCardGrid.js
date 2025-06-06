@@ -45,7 +45,7 @@ const ExpandableCardGrid = ({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ overflow: expandedCard ? 'visible' : 'hidden' }}>
       {/* Back Button */}
       {showBackButton && (
         <AnimatePresence>
@@ -80,7 +80,7 @@ const ExpandableCardGrid = ({
       )}
 
       {/* Grid Container */}
-      <div className={gridClassName}>
+      <div className={gridClassName} style={{ overflow: expandedCard ? 'visible' : 'hidden' }}>
         {items.length > 0 ? (
           <OptionsGrid
             cardItems={items}

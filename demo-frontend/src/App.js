@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpandableCardGrid from './components/ExpandableCardGrid';
 import ComingSoonContent from './components/ComingSoonContent';
+import TextProcessor from './components/TextProcessor';
 import { ANIMATION_CONFIG } from './utils/animationConfig';
 
 function App() {
@@ -73,7 +74,11 @@ function App() {
         title: config.title,
         description: config.description
       },
-      expanded: <ComingSoonContent feature={config.title.toLowerCase()} />
+      expanded: config.isComingSoon 
+        ? <ComingSoonContent feature={config.title.toLowerCase()} />
+        : id === 'text' 
+          ? <TextProcessor />
+          : <ComingSoonContent feature={config.title.toLowerCase()} />
     }));
   };
 
