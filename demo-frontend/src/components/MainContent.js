@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpandableCardGrid from './ExpandableCardGrid';
 import { ANIMATION_CONFIG } from '../utils/animationConfig';
+import Button from './ui/Button';
 
 const MainContent = ({ 
   cardItems, 
@@ -17,31 +18,37 @@ const MainContent = ({
           
           <AnimatePresence>
             {expandedCard && (
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ 
-                  duration: ANIMATION_CONFIG.CONTENT_FADE_IN / 1000, 
-                  ease: ANIMATION_CONFIG.CONTENT_EASE 
+              <Button
+                variant="ghost"
+                animated
+                animationProps={{
+                  initial: { opacity: 0, x: 20 },
+                  animate: { opacity: 1, x: 0 },
+                  exit: { opacity: 0, x: 20 },
+                  transition: { 
+                    duration: ANIMATION_CONFIG.CONTENT_FADE_IN / 1000, 
+                    ease: ANIMATION_CONFIG.CONTENT_EASE 
+                  }
                 }}
                 onClick={onBackClick}
                 aria-label="Go back to options (Press ESC)"
-                className="text-[#994d51] text-sm font-medium leading-normal bg-transparent border-none cursor-pointer hover:text-[#1b0e0e] focus:text-[#1b0e0e] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#994d51] focus-visible:ring-offset-2 transition-colors duration-200 flex items-center gap-2 px-2 py-1 rounded"
+                className="px-2 py-1"
+                leftIcon={
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16px" 
+                    height="16px" 
+                    fill="currentColor" 
+                    viewBox="0 0 256 256"
+                    aria-hidden="true"
+                  >
+                    <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
+                  </svg>
+                }
               >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="16px" 
-                  height="16px" 
-                  fill="currentColor" 
-                  viewBox="0 0 256 256"
-                  aria-hidden="true"
-                >
-                  <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
-                </svg>
                 <span className="hidden sm:inline">Back to options</span>
                 <span className="sm:hidden">Back</span>
-              </motion.button>
+              </Button>
             )}
           </AnimatePresence>
         </div>

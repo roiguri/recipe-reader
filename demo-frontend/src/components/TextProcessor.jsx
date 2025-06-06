@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { processRecipeText, createRequestController, APIError } from '../utils/api';
 import ResultDisplay from './ResultDisplay';
 import { ANIMATION_CONFIG } from '../utils/animationConfig';
+import Button from './ui/Button';
 
 const TextProcessor = () => {
   const [text, setText] = useState('');
@@ -220,13 +221,14 @@ Instructions:
           <div className="flex flex-col sm:flex-row gap-3">
             {isLoading ? (
               <div className="flex items-center gap-3">
-                <button
+                <Button
+                  variant="cancel"
                   type="button"
                   onClick={handleCancel}
-                  className="flex-1 sm:flex-none px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
+                  className="flex-1 sm:flex-none"
                 >
                   Cancel
-                </button>
+                </Button>
                 <div className="flex items-center gap-2 text-[#994d51] text-sm">
                   <div className="animate-spin w-5 h-5 border-2 border-[#994d51] border-t-transparent rounded-full"></div>
                   Processing your recipe...
@@ -234,21 +236,22 @@ Instructions:
               </div>
             ) : (
               <>
-                <button
+                <Button
+                  variant="primary"
                   type="submit"
                   disabled={!isTextValid}
-                  className="flex-1 sm:flex-none px-8 py-3 bg-[#994d51] text-white rounded-lg hover:bg-[#1b0e0e] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-bold tracking-[0.015em] focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:ring-offset-2"
+                  className="flex-1 sm:flex-none px-8"
                 >
                   Extract Recipe
-                </button>
-                {text && (
-                  <button
-                    type="button"
-                    onClick={handleClear}
-                    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
-                  >
+                </Button>
+                  {text && (
+                    <Button
+                      variant="cancel"
+                      type="button"
+                      onClick={handleClear}
+                    >
                     Clear
-                  </button>
+                  </Button>
                 )}
               </>
             )}

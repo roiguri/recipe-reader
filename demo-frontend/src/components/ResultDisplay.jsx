@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ANIMATION_CONFIG } from '../utils/animationConfig';
+import Button from './ui/Button';
 
 const ResultDisplay = ({ result, onStartOver }) => {
   const [activeTab, setActiveTab] = useState('recipe');
@@ -73,12 +74,13 @@ const ResultDisplay = ({ result, onStartOver }) => {
               <span>Processed in {processing_time.toFixed(2)}s</span>
             </div>
           </div>
-          <button
+          <Button
+            variant="secondary"
             onClick={onStartOver}
-            className="px-6 py-2 bg-[#f3e7e8] text-[#994d51] rounded-lg hover:bg-[#994d51] hover:text-white transition-colors duration-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:ring-offset-2"
+            className="px-6 py-2"
           >
             Process Another Recipe
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -89,20 +91,29 @@ const ResultDisplay = ({ result, onStartOver }) => {
             { id: 'recipe', label: 'Recipe', icon: '🍽️' },
             { id: 'raw', label: 'Raw Data', icon: '📋' },
             { id: 'export', label: 'Export', icon: '📤' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:ring-inset ${
-                activeTab === tab.id
+          ].map((tab, index, array) => {
+            const getTabVariant = () => {
+              if (array.length === 1) return 'tab'; // Single tab, use default
+              if (index === 0) return 'tab-left'; // First tab
+              if (index === array.length - 1) return 'tab-right'; // Last tab
+              return 'tab-inner'; // Middle tabs
+            };
+
+            return (
+              <Button
+                key={tab.id}
+                variant={getTabVariant()}
+                onClick={() => setActiveTab(tab.id)}
+                className={activeTab === tab.id
                   ? 'bg-[#994d51] text-white'
                   : 'text-[#994d51] hover:bg-[#f3e7e8]'
-              }`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+                }
+                leftIcon={<span>{tab.icon}</span>}
+              >
+                {tab.label}
+              </Button>
+            );
+          })}
         </div>
 
         <div className="p-6 flex-1 overflow-hidden">
@@ -158,9 +169,9 @@ const ResultDisplay = ({ result, onStartOver }) => {
                   <h3 className="text-lg font-bold text-[#1b0e0e]">
                     Ingredients ({recipe.ingredients.length})
                   </h3>
-                  <button
+                  <Button
+                    variant="icon"
                     onClick={() => copyToClipboard(formatIngredientsList(), 'ingredients')}
-                    className="text-[#994d51] hover:text-[#1b0e0e] transition-colors duration-200 focus:outline-none"
                     title="Copy ingredients list"
                   >
                     {copiedSection === 'ingredients' ? (
@@ -170,7 +181,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
                         <path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"></path>
                       </svg>
                     )}
-                  </button>
+                  </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 overflow-y-auto max-h-80">
                   {recipe.ingredients.map((ingredient, idx) => (
@@ -188,9 +199,9 @@ const ResultDisplay = ({ result, onStartOver }) => {
               <div className="bg-white border border-[#f3e7e8] rounded-lg p-4 flex flex-col">
                 <div className="flex items-center justify-between mb-4 flex-shrink-0">
                   <h3 className="text-lg font-bold text-[#1b0e0e]">Instructions</h3>
-                  <button
+                  <Button
+                    variant="icon"
                     onClick={() => copyToClipboard(formatInstructionsList(), 'instructions')}
-                    className="text-[#994d51] hover:text-[#1b0e0e] transition-colors duration-200 focus:outline-none"
                     title="Copy instructions"
                   >
                     {copiedSection === 'instructions' ? (
@@ -200,7 +211,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
                         <path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"></path>
                       </svg>
                     )}
-                  </button>
+                  </Button>
                 </div>
                 <div className="overflow-y-auto max-h-96">
                   {recipe.stages ? (
@@ -262,12 +273,13 @@ const ResultDisplay = ({ result, onStartOver }) => {
             <div className="h-full flex flex-col space-y-4">
               <div className="flex items-center justify-between flex-shrink-0">
                 <h3 className="text-lg font-bold text-[#1b0e0e]">Raw JSON Data</h3>
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => copyToClipboard(JSON.stringify(result, null, 2), 'json')}
-                  className="px-4 py-2 bg-[#994d51] text-white rounded-lg hover:bg-[#1b0e0e] transition-colors duration-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:ring-offset-2"
+                  className="px-4 py-2"
                 >
                   {copiedSection === 'json' ? '✓ Copied!' : 'Copy JSON'}
-                </button>
+                </Button>
               </div>
               <div className="flex-1 min-h-0">
                 <pre className="bg-[#fcf8f8] p-4 rounded-lg text-xs text-[#1b0e0e] border border-[#f3e7e8] h-full overflow-auto whitespace-pre-wrap break-words">
@@ -281,28 +293,28 @@ const ResultDisplay = ({ result, onStartOver }) => {
             <div className="h-full flex flex-col space-y-4">
               <h3 className="text-lg font-bold text-[#1b0e0e] flex-shrink-0">Export Options</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-                <button
+                <Button
+                  variant="export"
                   onClick={() => {
                     const recipeText = `${recipe.name}\n\n${recipe.description ? `${recipe.description}\n\n` : ''}Ingredients:\n${formatIngredientsList()}\n\nInstructions:\n${formatInstructionsList()}`;
                     copyToClipboard(recipeText, 'formatted');
                   }}
-                  className="p-6 border border-[#f3e7e8] rounded-lg hover:bg-[#fcf8f8] transition-colors duration-200 text-left focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:ring-offset-2 h-fit"
                 >
                   <div className="text-lg font-medium text-[#1b0e0e] mb-2">📝 Formatted Text</div>
                   <div className="text-sm text-[#994d51]">
                     {copiedSection === 'formatted' ? '✓ Copied to clipboard!' : 'Copy as formatted text'}
                   </div>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="export"
                   onClick={() => copyToClipboard(JSON.stringify(result, null, 2), 'json-export')}
-                  className="p-6 border border-[#f3e7e8] rounded-lg hover:bg-[#fcf8f8] transition-colors duration-200 text-left focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:ring-offset-2 h-fit"
                 >
                   <div className="text-lg font-medium text-[#1b0e0e] mb-2">🔧 JSON Data</div>
                   <div className="text-sm text-[#994d51]">
                     {copiedSection === 'json-export' ? '✓ Copied to clipboard!' : 'Copy raw JSON data'}
                   </div>
-                </button>
+                </Button>
               </div>
             </div>
           )}
