@@ -37,6 +37,9 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
               <motion.div
                 layoutId={item.id}
                 className="absolute inset-0 bg-[#fcf8f8] rounded-lg border border-[#e7d0d1] p-6 min-h-[300px] z-50"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={`expanded-title-${item.id}`}
               >
                 {/* Header with blur effect */}
                 <motion.div
@@ -47,10 +50,13 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
                   }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  <div className="text-[#1b0e0e]">
+                  <div className="text-[#1b0e0e] flex-shrink-0" aria-hidden="true">
                     {item.preview.icon}
                   </div>
-                  <h2 className="text-[#1b0e0e] text-lg font-bold">
+                  <h2 
+                    id={`expanded-title-${item.id}`}
+                    className="text-[#1b0e0e] text-lg sm:text-xl font-bold break-words"
+                  >
                     {item.preview.title}
                   </h2>
                 </motion.div>
@@ -64,7 +70,11 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
                   }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  {item.expanded}
+                  {item.expanded || (
+                    <div className="text-[#994d51] text-center py-8">
+                      No content available
+                    </div>
+                  )}
                 </motion.div>
               </motion.div>
             ) : (
