@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import OptionsGrid from './components/OptionsGrid';
-import { ANIMATION_CONFIG } from './utils/animationConfig';
+import ExpandableCardGrid from './components/ExpandableCardGrid';
 import ComingSoonContent from './components/ComingSoonContent';
 
 function App() {
@@ -118,42 +116,14 @@ function App() {
           <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
             <div className="flex flex-wrap justify-between gap-3 p-4">
               <p className="text-[#1b0e0e] tracking-light text-2xl md:text-[32px] font-bold leading-tight min-w-0">Add a new recipe</p>
-              <AnimatePresence>
-                {expandedCard && (
-                  <motion.button
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ 
-                      duration: ANIMATION_CONFIG.CONTENT_FADE_IN / 1000, 
-                      ease: ANIMATION_CONFIG.CONTENT_EASE 
-                    }}
-                    onClick={() => setExpandedCard(null)}
-                    className="text-[#994d51] text-sm font-medium leading-normal bg-transparent border-none cursor-pointer hover:text-[#1b0e0e] transition-colors duration-200 flex items-center gap-2"
-                  >
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16px" 
-                      height="16px" 
-                      fill="currentColor" 
-                      viewBox="0 0 256 256"
-                    >
-                      <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
-                    </svg>
-                    Back to options
-                  </motion.button>
-                )}
-              </AnimatePresence>
             </div>
-            <div className="relative"> {/* Add relative positioning */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4">
-                <OptionsGrid
-                  cardItems={getCardItems()}
-                  expandedCard={expandedCard}
-                  onCardClick={handleCardClick}
-                />
-              </div>
-            </div>
+            
+            <ExpandableCardGrid
+              items={getCardItems()}
+              expandedCard={expandedCard}
+              onCardClick={handleCardClick}
+              onBackClick={() => setExpandedCard(null)}
+            />
           </div>
         </div>
       </div>
