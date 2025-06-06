@@ -84,7 +84,7 @@ function App() {
 
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-[#fcf8f8]" style={{fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif'}}>
-      <div className="layout-container flex h-full grow flex-col">
+      <div className="layout-container flex min-h-screen grow flex-col">
         <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f3e7e8] px-4 md:px-10 py-3">
           <div className="flex items-center gap-4 text-[#1b0e0e]">
             <div className="size-4">

@@ -56,7 +56,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
         duration: ANIMATION_CONFIG.CONTENT_FADE_IN / 1000,
         ease: ANIMATION_CONFIG.CONTENT_EASE 
       }}
-      className="w-full max-w-6xl mx-auto p-6 min-h-screen"
+      className="w-full max-w-6xl mx-auto p-6"
     >
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm border border-[#f3e7e8] p-6 mb-6">
