@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutGroup, motion } from 'framer-motion';
-import OptionCard from './OptionCard';
+import OptionCard from './OptionCard.jsx';
 
 const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
   const [showCards, setShowCards] = useState(true);

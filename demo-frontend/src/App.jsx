@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import AppHeader from './components/AppHeader';
-import MainContent from './components/MainContent';
-import ComingSoonContent from './components/ComingSoonContent';
-import TextProcessor from './components/TextProcessor';
-import { CARD_CONFIGS } from './config/cardConfigs';
+import AppHeader from './components/AppHeader.jsx';
+import MainContent from './components/MainContent.jsx';
+import ComingSoonContent from './components/ComingSoonContent.jsx';
+import TextProcessor from './components/TextProcessor.jsx';
+import { CARD_CONFIGS } from './config/cardConfigs.jsx';
 
 function App() {
 

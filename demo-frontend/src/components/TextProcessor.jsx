@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { processRecipeText, createRequestController, APIError } from '../utils/api';
-import ResultDisplay from './ResultDisplay';
+import ResultDisplay from './ResultDisplay.jsx';
 import { ANIMATION_CONFIG } from '../utils/animationConfig';
-import Button from './ui/Button';
+import Button from './ui/Button.jsx';
 
 const TextProcessor = () => {
   const [text, setText] = useState('');

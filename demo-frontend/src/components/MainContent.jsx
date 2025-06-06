@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ExpandableCardGrid from './ExpandableCardGrid';
+import ExpandableCardGrid from './ExpandableCardGrid.jsx';
 import { ANIMATION_CONFIG } from '../utils/animationConfig';
-import Button from './ui/Button';
+import Button from './ui/Button.jsx';
 
 const MainContent = ({ 
   cardItems, 

@@ -1,8 +1,8 @@
 import React, { useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ANIMATION_CONFIG } from '../utils/animationConfig';
-import OptionsGrid from './OptionsGrid';
-import Button from './ui/Button';
+import OptionsGrid from './OptionsGrid.jsx';
+import Button from './ui/Button.jsx';
 
 const ExpandableCardGrid = ({ 
   items = [],

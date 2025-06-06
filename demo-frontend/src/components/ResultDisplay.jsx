@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ANIMATION_CONFIG } from '../utils/animationConfig';
-import Button from './ui/Button';
+import Button from './ui/Button.jsx';
 
 const ResultDisplay = ({ result, onStartOver }) => {
   const [activeTab, setActiveTab] = useState('recipe');
