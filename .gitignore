@@ -175,3 +175,6 @@ cython_debug/
 
 # Ignore cursor rules
 .cursor
+
+# Claude Code documentation
+CLAUDE.md
