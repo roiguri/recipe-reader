@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import AppHeader from './components/AppHeader.jsx';
 import MainContent from './components/MainContent.jsx';
 import ComingSoonContent from './components/ComingSoonContent.jsx';
-import TextProcessor from './components/TextProcessor.jsx';
+import TextProcessor from './components/TextProcessor/index';
 import { CARD_CONFIGS } from './config/cardConfigs.jsx';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
 
@@ -24,7 +25,7 @@ function App() {
       expanded: config.isComingSoon 
         ? <ComingSoonContent feature={config.title.toLowerCase()} />
         : id === 'text' 
-          ? <TextProcessor />
+          ? <ErrorBoundary><TextProcessor /></ErrorBoundary>
           : <ComingSoonContent feature={config.title.toLowerCase()} />
     }));
   };
@@ -32,13 +33,15 @@ function App() {
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-[#fcf8f8]" style={{fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif'}}>
       <div className="layout-container flex min-h-screen grow flex-col">
-        <AppHeader />
-        <MainContent 
-          cardItems={getCardItems()}
-          expandedCard={expandedCard}
-          onCardClick={handleCardClick}
-          onBackClick={() => setExpandedCard(null)}
-        />
+        <ErrorBoundary>
+          <AppHeader />
+          <MainContent 
+            cardItems={getCardItems()}
+            expandedCard={expandedCard}
+            onCardClick={handleCardClick}
+            onBackClick={() => setExpandedCard(null)}
+          />
+        </ErrorBoundary>
       </div>
     </div>
   );
