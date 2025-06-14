@@ -4,7 +4,7 @@
  * @returns {string} - Formatted time string
  */
 export const formatTime = (minutes) => {
-  if (!minutes) return 'Not specified';
+  if (minutes == null) return 'Not specified';
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
@@ -60,8 +60,9 @@ export const isHebrew = (text) => {
  * @returns {Object} - Validation result object
  */
 export const validateText = (text, minChars, maxChars) => {
-  const trimmedLength = text.trim().length;
-  const textLength = text.length;
+  const safeText = text || '';
+  const trimmedLength = safeText.trim().length;
+  const textLength = safeText.length;
   
   if (!trimmedLength) {
     return { 

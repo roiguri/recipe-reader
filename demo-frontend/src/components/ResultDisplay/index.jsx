@@ -27,7 +27,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
     { id: 'export', label: 'Export', icon: '📤' }
   ];
 
-  // Handle export button clicks
+  // TODO: Implement export functionality
   const handleExport = (type, recipeData) => {
     alert(`Export as ${type} functionality would be implemented here`);
   };

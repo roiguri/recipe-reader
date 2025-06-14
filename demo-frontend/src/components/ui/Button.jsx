@@ -126,13 +126,13 @@ const Button = forwardRef(({
     if (variant === 'tab' || variant === 'tab-left' || variant === 'tab-right' || variant === 'tab-inner') return sizeClasses.tab;
     if (variant === 'icon') return sizeClasses.icon;
     if (variant === 'export') return sizeClasses.export;
-    return sizeClasses[size];
+    return sizeClasses[size] || sizeClasses.md;
   };
 
   const combinedClasses = [
     getBaseClasses(),
-    variantClasses[variant],
-    getSize(),
+    variantClasses[variant] ?? variantClasses.primary,
+    getSize() ?? sizeClasses.md,
     className
   ].filter(Boolean).join(' ');
 

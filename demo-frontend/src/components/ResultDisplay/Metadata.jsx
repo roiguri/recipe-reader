@@ -22,38 +22,52 @@ const Metadata = ({ recipe }) => {
     return null;
   }
   
+  // Count metadata items to determine grid layout
+  const metadataItems = [servings, prepTime, cookTime, totalTime].filter(Boolean);
+  const getGridCols = () => {
+    const count = metadataItems.length;
+    if (count === 1) return 'grid-cols-1';
+    if (count === 2) return 'grid-cols-1 md:grid-cols-2';
+    if (count === 3) return 'grid-cols-1 md:grid-cols-3';
+    return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4';
+  };
+
   return (
-    <Card variant="highlight" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <Card variant="highlight" className="space-y-4">
       {description && (
-        <div className="lg:col-span-2 text-center">
-          <div className="text-sm font-medium text-[#994d51] mb-1">Description</div>
+        <div className="text-center">
           <div className="text-sm text-[#1b0e0e]" style={{ direction: isHebrew(description) ? 'rtl' : 'ltr' }}>
             {description}
           </div>
         </div>
       )}
-      {servings && (
-        <div className="text-center">
-          <div className="text-sm font-medium text-[#994d51] mb-1">Servings</div>
-          <div className="text-sm text-[#1b0e0e]">{servings}</div>
-        </div>
-      )}
-      {prepTime && (
-        <div className="text-center">
-          <div className="text-sm font-medium text-[#994d51] mb-1">Prep Time</div>
-          <div className="text-sm text-[#1b0e0e]">{formatTime(prepTime)}</div>
-        </div>
-      )}
-      {cookTime && (
-        <div className="text-center">
-          <div className="text-sm font-medium text-[#994d51] mb-1">Cook Time</div>
-          <div className="text-sm text-[#1b0e0e]">{formatTime(cookTime)}</div>
-        </div>
-      )}
-      {totalTime && (
-        <div className="text-center">
-          <div className="text-sm font-medium text-[#994d51] mb-1">Total Time</div>
-          <div className="text-sm text-[#1b0e0e]">{formatTime(totalTime)}</div>
+      
+      {(servings || prepTime || cookTime || totalTime) && (
+        <div className={`grid ${getGridCols()} gap-4`}>
+          {servings && (
+            <div className="text-center">
+              <div className="text-sm font-medium text-[#994d51] mb-1">Servings</div>
+              <div className="text-sm text-[#1b0e0e]">{servings}</div>
+            </div>
+          )}
+          {prepTime && (
+            <div className="text-center">
+              <div className="text-sm font-medium text-[#994d51] mb-1">Prep Time</div>
+              <div className="text-sm text-[#1b0e0e]">{formatTime(prepTime)}</div>
+            </div>
+          )}
+          {cookTime && (
+            <div className="text-center">
+              <div className="text-sm font-medium text-[#994d51] mb-1">Cook Time</div>
+              <div className="text-sm text-[#1b0e0e]">{formatTime(cookTime)}</div>
+            </div>
+          )}
+          {totalTime && (
+            <div className="text-center">
+              <div className="text-sm font-medium text-[#994d51] mb-1">Total Time</div>
+              <div className="text-sm text-[#1b0e0e]">{formatTime(totalTime)}</div>
+            </div>
+          )}
         </div>
       )}
     </Card>

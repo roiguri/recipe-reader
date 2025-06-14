@@ -10,7 +10,7 @@ import Button from '../ui/Button';
  */
 const TabNavigation = ({ activeTab, setActiveTab, tabs }) => {
   return (
-    <div className="flex border-b border-[#f3e7e8] flex-shrink-0">
+    <div className="flex border-b border-[#f3e7e8] flex-shrink-0" role="tablist">
       {tabs.map((tab, index, array) => {
         const getTabVariant = () => {
           if (array.length === 1) return 'tab'; // Single tab, use default
@@ -29,6 +29,8 @@ const TabNavigation = ({ activeTab, setActiveTab, tabs }) => {
               : 'text-[#994d51] hover:bg-[#f3e7e8]'
             }
             leftIcon={<span>{tab.icon}</span>}
+            role="tab"
+            aria-selected={activeTab === tab.id}
           >
             {tab.label}
           </Button>

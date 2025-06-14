@@ -17,6 +17,7 @@ const Card = ({
   noPadding = false,
   variant = 'default',
   onClick,
+  ...props
 }) => {
   const baseStyles = "bg-white rounded-lg border border-[#f3e7e8]";
   const shadowStyles = noShadow ? '' : 'shadow-sm';
@@ -28,9 +29,10 @@ const Card = ({
 
   return (
     <div 
-      className={`${baseStyles} ${shadowStyles} ${paddingStyles} ${variantStyles[variant]} ${className}`}
+      className={`${baseStyles} ${shadowStyles} ${paddingStyles} ${variantStyles[variant] || variantStyles.default} ${className}`}
       onClick={onClick}
       style={{ cursor: onClick ? 'pointer' : 'default' }}
+      {...props}
     >
       {children}
     </div>

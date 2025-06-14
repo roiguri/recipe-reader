@@ -33,9 +33,9 @@ const InstructionsSection = ({ instructions, stages, onCopyToClipboard, copiedSe
                   {stage.title}
                 </h4>
                 <ol className="space-y-2">
-                  {stage.instructions.map((instruction, instIdx) => (
+                  {(stage.instructions || []).map((instruction, instIdx) => (
                     <li key={instIdx} className="flex items-start">
-                      <span className="flex-shrink-0 w-6 h-6 bg-[#994d51] text-white rounded-full text-xs flex items-center justify-center mr-3 mt-0.5">
+                      <span className="flex-shrink-0 w-6 h-6 bg-[#994d51] text-white rounded-full text-xs flex items-center justify-center mr-3 mt-0.5" aria-hidden="true">
                         {instIdx + 1}
                       </span>
                       <span className="text-sm text-[#1b0e0e] flex-1" style={{ direction: isHebrew(instruction) ? 'rtl' : 'ltr' }}>

@@ -16,7 +16,7 @@ const RecipeInfoCard = ({
   onStartOver 
 }) => {
   const isHebrew = text => /[\u0590-\u05FF]/.test(text);
-  const hasHebrewContent = isHebrew(recipe.name) || recipe.ingredients.some(ing => isHebrew(ing.item));
+  const hasHebrewContent = isHebrew(recipe.name) || (Array.isArray(recipe.ingredients) && recipe.ingredients.some(ing => isHebrew(ing.item)));
   
   return (
     <Card className="mb-6">

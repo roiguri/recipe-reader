@@ -13,16 +13,15 @@ const useFormValidation = (text, minChars = 50, maxChars = 10000) => {
   const [isTextValid, setIsTextValid] = useState(false);
   const [showCharWarning, setShowCharWarning] = useState(false);
   
-  // Update character count
-  useEffect(() => {
-    setCharCount(text.length);
-  }, [text]);
-  
-  // Validate text and update state
+  // Validate text and update all related state
   useEffect(() => {
     const textLength = text.length;
     const trimmedLength = text.trim().length;
     
+    // Update character count
+    setCharCount(textLength);
+    
+    // Update validation state
     setIsTextValid(trimmedLength >= minChars && textLength <= maxChars);
     setShowCharWarning(textLength > 0 && (textLength < minChars || textLength > maxChars));
     
@@ -32,12 +31,14 @@ const useFormValidation = (text, minChars = 50, maxChars = 10000) => {
   
   // Function to validate before submission
   const validateForSubmission = () => {
-    if (!text.trim()) {
+    const trimmedText = text.trim();
+    
+    if (!trimmedText) {
       setError('Please enter some recipe text');
       return false;
     }
     
-    if (text.length < minChars) {
+    if (trimmedText.length < minChars) {
       setError(`Please enter at least ${minChars} characters for better results`);
       return false;
     }

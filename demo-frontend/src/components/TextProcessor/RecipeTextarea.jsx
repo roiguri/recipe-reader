@@ -8,21 +8,19 @@ import CharacterCounter from './CharacterCounter';
  * @param {Function} props.onChange - Function to handle text changes
  * @param {boolean} props.disabled - Disable textarea if true
  * @param {number} props.maxChars - Maximum character limit
- * @param {React.RefObject} props.textareaRef - Ref for the textarea element
  */
-const RecipeTextarea = ({ 
+const RecipeTextarea = React.forwardRef(({ 
   value, 
   onChange, 
   disabled = false, 
-  maxChars = 10000,
-  textareaRef
-}) => {
+  maxChars = 10000
+}, ref) => {
   const isHebrew = text => /[\u0590-\u05FF]/.test(text);
   
   return (
     <div className="relative">
       <textarea
-        ref={textareaRef}
+        ref={ref}
         value={value}
         onChange={onChange}
         placeholder="Paste your recipe text here...
@@ -53,9 +51,9 @@ Instructions:
         disabled={disabled}
       />
       
-      <CharacterCounter charCount={value.length} maxChars={maxChars} />
+      <CharacterCounter charCount={(value || '').length} maxChars={maxChars} />
     </div>
   );
-};
+});
 
 export default RecipeTextarea; 

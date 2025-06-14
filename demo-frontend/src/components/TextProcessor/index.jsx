@@ -82,6 +82,7 @@ const TextProcessor = () => {
   const handleCancel = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      setIsLoading(false);
     }
   };
 
@@ -136,7 +137,7 @@ const TextProcessor = () => {
             onChange={handleTextChange}
             disabled={isLoading}
             maxChars={MAX_CHARS}
-            textareaRef={textareaRef}
+            ref={textareaRef}
           />
 
           {/* Input guidelines */}

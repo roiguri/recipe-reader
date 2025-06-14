@@ -27,12 +27,12 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
   }, [expandedCard]);
 
   return (
-    <>
+    <LayoutGroup>
       {cardItems.map((item) => {
         const isExpanded = expandedCard === item.id;
         
         return (
-          <LayoutGroup key={item.id}>
+          <React.Fragment key={item.id}>
             {isExpanded ? (
               <motion.div
                 layoutId={item.id}
@@ -97,10 +97,10 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
                 />
               </motion.div>
             )}
-          </LayoutGroup>
+          </React.Fragment>
         );
       })}
-    </>
+    </LayoutGroup>
   );
 };
 

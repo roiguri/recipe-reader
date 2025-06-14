@@ -23,12 +23,23 @@ const ExportOptions = ({ recipe, onExport }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {exportFormats.map((format) => (
-          <Card 
-            key={format.id}
-            className="p-6 hover:shadow-lg transition-shadow"
-            onClick={() => onExport(format.id, recipe)}
-          >
+        {exportFormats.map((format) => {
+          const handleKeyDown = (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              onExport(format.id, recipe);
+            }
+          };
+
+          return (
+            <Card 
+              key={format.id}
+              className="p-6 hover:shadow-lg transition-shadow"
+              onClick={() => onExport(format.id, recipe)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+            >
             <div className="flex items-center space-x-4">
               <div className="text-3xl">{format.icon}</div>
               <div>
@@ -37,7 +48,8 @@ const ExportOptions = ({ recipe, onExport }) => {
               </div>
             </div>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
