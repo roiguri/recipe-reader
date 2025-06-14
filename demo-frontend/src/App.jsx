@@ -4,6 +4,7 @@ import MainContent from './components/MainContent.jsx';
 import ComingSoonContent from './components/ComingSoonContent.jsx';
 import TextProcessor from './components/TextProcessor/index';
 import UrlProcessor from './components/UrlProcessor/index';
+import ImageProcessor from './components/ImageProcessor/index';
 import { CARD_CONFIGS } from './config/cardConfigs.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -29,7 +30,9 @@ function App() {
           ? <ErrorBoundary><TextProcessor /></ErrorBoundary>
           : id === 'url'
             ? <ErrorBoundary><UrlProcessor /></ErrorBoundary>
-            : <ComingSoonContent feature={config.title.toLowerCase()} />
+            : id === 'image'
+              ? <ErrorBoundary><ImageProcessor /></ErrorBoundary>
+              : <ComingSoonContent feature={config.title.toLowerCase()} />
     }));
   };
 
