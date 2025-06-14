@@ -166,7 +166,7 @@ class UrlProcessor:
         # Strategy 1: Try JSON-LD structured data
         json_ld_content = self._extract_json_ld(soup)
         if json_ld_content:
-            self.logger.info("Successfully extracted content from JSON-LD")
+            self.logger.info(f"Successfully extracted content from JSON-LD for {source_url}")
             return {
                 'content': json_ld_content,
                 'extraction_method': 'json-ld',
@@ -176,7 +176,7 @@ class UrlProcessor:
         # Strategy 2: Try microdata
         microdata_content = self._extract_microdata(soup)
         if microdata_content:
-            self.logger.info("Successfully extracted content from microdata")
+            self.logger.info(f"Successfully extracted content from microdata for {source_url}")
             return {
                 'content': microdata_content,
                 'extraction_method': 'microdata',
@@ -186,7 +186,7 @@ class UrlProcessor:
         # Strategy 3: Try common recipe selectors
         selector_content = self._extract_by_selectors(soup)
         if selector_content:
-            self.logger.info("Successfully extracted content using CSS selectors")
+            self.logger.info(f"Successfully extracted content using CSS selectors for {source_url}")
             return {
                 'content': selector_content,
                 'extraction_method': 'css-selectors',
@@ -194,7 +194,7 @@ class UrlProcessor:
             }
         
         # Strategy 4: Fallback to full text extraction
-        self.logger.info("Using fallback text extraction")
+        self.logger.info(f"Using fallback text extraction for {source_url}")
         text_content = self._extract_full_text(soup)
         return {
             'content': text_content,
