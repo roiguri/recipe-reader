@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
-from ..models.recipe import TextProcessRequest, UrlProcessRequest, RecipeResponse
+from ..models.recipe import TextProcessRequest, UrlProcessRequest, ImageProcessRequest, RecipeResponse
 from ..services.text_processor import TextProcessor
 from ..services.url_processor import UrlProcessor
+from ..services.image_processing_service import ImageProcessingService
 from ..config.confidence import URL_EXTRACTION_CONFIDENCE_WEIGHT, AI_PROCESSING_CONFIDENCE_WEIGHT
 
 router = APIRouter(
@@ -36,6 +37,21 @@ async def get_url_processor():
     if _url_processor_instance is None:
         _url_processor_instance = UrlProcessor()
     return _url_processor_instance
+
+# Singleton Image processor for resource efficiency
+_image_processor_instance = None
+
+def get_image_processor():
+    """
+    Get a singleton instance of ImageProcessingService for resource efficiency.
+    
+    Returns:
+        ImageProcessingService: The singleton ImageProcessingService instance
+    """
+    global _image_processor_instance
+    if _image_processor_instance is None:
+        _image_processor_instance = ImageProcessingService()
+    return _image_processor_instance
 
 @router.post("/text", response_model=RecipeResponse)
 async def process_recipe_text(
@@ -103,3 +119,21 @@ async def process_recipe_url(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing recipe URL: {str(e)}")
+
+
+@router.post("/image", response_model=RecipeResponse)
+async def process_recipe_image(
+    request: ImageProcessRequest,
+    image_processor: ImageProcessingService = Depends(get_image_processor)
+):
+    """
+    Process a recipe image to extract structured recipe data.
+    
+    - **image_data**: Base64 encoded image data (JPEG, PNG, WebP, or GIF)
+    - **options**: Optional processing parameters
+    """
+    try:
+        result = await image_processor.extract_recipe_from_image(request.image_data, request.options)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing recipe image: {str(e)}")

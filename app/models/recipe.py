@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
+import base64
 
 
 class Ingredient(BaseModel):
@@ -118,6 +119,36 @@ class UrlProcessRequest(BaseModel):
                 raise ValueError("Invalid URL format")
         except Exception:
             raise ValueError("Invalid URL format")
+            
+        return self
+
+
+class ImageProcessRequest(BaseModel):
+    """Request model for image processing endpoint."""
+    image_data: str = Field(..., description="Base64 encoded image data")
+    options: Optional[Dict[str, Any]] = Field({}, description="Processing options")
+    
+    @model_validator(mode='after')
+    def validate_image_data(self) -> 'ImageProcessRequest':
+        """Validate base64 image data."""
+        try:
+            # Handle data URL format
+            if self.image_data.startswith('data:'):
+                header, encoded = self.image_data.split(',', 1)
+                # Validate mime type
+                if not any(img_type in header.lower() for img_type in ['image/jpeg', 'image/png', 'image/webp', 'image/gif']):
+                    raise ValueError("Unsupported image format")
+                # Try to decode
+                base64.b64decode(encoded)
+            else:
+                # Direct base64 string
+                base64.b64decode(self.image_data)
+        except ValueError as e:
+            if "Unsupported image format" in str(e):
+                raise e
+            raise ValueError("Invalid base64 image data")
+        except Exception:
+            raise ValueError("Invalid base64 image data")
             
         return self
 
