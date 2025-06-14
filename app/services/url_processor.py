@@ -5,6 +5,7 @@ import json
 import time
 import logging
 import asyncio
+import ipaddress
 from typing import Dict, Any, Optional
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
@@ -34,10 +35,29 @@ class UrlProcessor:
         self.max_content_size = 5 * 1024 * 1024  # 5MB
         
     def validate_url(self, url: str) -> bool:
-        """Validate if the URL is properly formatted and accessible."""
+        """Validate URL with SSRF protection."""
         try:
             parsed = urlparse(url)
-            return all([parsed.scheme in ['http', 'https'], parsed.netloc])
+            if not all([parsed.scheme in ['http', 'https'], parsed.netloc]):
+                return False
+            
+            # SSRF protection - block private/internal networks
+            try:
+                ip = ipaddress.ip_address(parsed.hostname)
+                if ip.is_private or ip.is_loopback or ip.is_reserved:
+                    self.logger.warning(f"Blocked private/internal IP: {parsed.hostname}")
+                    return False
+            except ValueError:
+                # It's a domain name, not an IP - additional validation could be added
+                pass
+            
+            # Block dangerous ports commonly used for internal services
+            dangerous_ports = {22, 23, 25, 53, 135, 139, 445, 993, 995, 1433, 3306, 3389, 5432, 6379}
+            if parsed.port and parsed.port in dangerous_ports:
+                self.logger.warning(f"Blocked dangerous port: {parsed.port}")
+                return False
+            
+            return True
         except Exception:
             return False
     
