@@ -1,7 +1,7 @@
 # tests/test_url_processor.py
 
 import pytest
-import json
+import pytest_asyncio
 from unittest.mock import Mock, patch, AsyncMock
 import httpx
 from app.services.url_processor import UrlProcessor
@@ -10,10 +10,13 @@ from app.services.url_processor import UrlProcessor
 class TestUrlProcessor:
     """Test suite for UrlProcessor service."""
 
-    @pytest.fixture
-    def url_processor(self):
-        """Create a UrlProcessor instance for testing."""
-        return UrlProcessor()
+    @pytest_asyncio.fixture
+    async def url_processor(self):
+        """Create a UrlProcessor instance for testing with proper cleanup."""
+        processor = UrlProcessor()
+        yield processor
+        # Cleanup: close the HTTP client after test
+        await processor.http_client.aclose()
 
     @pytest.fixture
     def mock_html_recipe(self):
@@ -184,8 +187,9 @@ class TestUrlProcessor:
         mock_response.headers = {"content-type": "text/html"}
         mock_response.encoding = "utf-8"
 
-        with patch('httpx.AsyncClient') as mock_client:
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+        # Mock the persistent HTTP client's get method
+        with patch.object(url_processor.http_client, 'get', new_callable=AsyncMock) as mock_get:
+            mock_get.return_value = mock_response
             
             result = await url_processor.fetch_content("https://example.com/recipe")
             
@@ -200,10 +204,9 @@ class TestUrlProcessor:
         mock_response.status_code = 404
         mock_response.request = Mock()
 
-        with patch('httpx.AsyncClient') as mock_client:
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                side_effect=httpx.HTTPStatusError("404", request=mock_response.request, response=mock_response)
-            )
+        # Mock the persistent HTTP client's get method
+        with patch.object(url_processor.http_client, 'get', new_callable=AsyncMock) as mock_get:
+            mock_get.side_effect = httpx.HTTPStatusError("404", request=mock_response.request, response=mock_response)
             
             with pytest.raises(Exception, match="Failed to fetch URL"):
                 await url_processor.fetch_content("https://example.com/404")
@@ -211,10 +214,9 @@ class TestUrlProcessor:
     @pytest.mark.asyncio
     async def test_fetch_content_timeout(self, url_processor):
         """Test content fetching with timeout."""
-        with patch('httpx.AsyncClient') as mock_client:
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                side_effect=httpx.TimeoutException("Request timeout")
-            )
+        # Mock the persistent HTTP client's get method
+        with patch.object(url_processor.http_client, 'get', new_callable=AsyncMock) as mock_get:
+            mock_get.side_effect = httpx.TimeoutException("Request timeout")
             
             with pytest.raises(Exception, match="Failed to fetch URL"):
                 await url_processor.fetch_content("https://example.com/slow", {'max_retries': 1})
@@ -224,7 +226,7 @@ class TestUrlProcessor:
         result = url_processor.extract_recipe_content(mock_html_recipe, "https://example.com")
         
         assert result['extraction_method'] == 'json-ld'
-        assert result['confidence'] == 0.95
+        assert result['confidence'] == UrlProcessor.CONFIDENCE_JSON_LD
         
         content = result['content']
         assert "Chocolate Chip Cookies" in content
@@ -339,15 +341,16 @@ class TestUrlProcessor:
         mock_response.headers = {"content-type": "text/html"}
         mock_response.encoding = "utf-8"
 
-        with patch('httpx.AsyncClient') as mock_client:
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(return_value=mock_response)
+        # Mock the persistent HTTP client's get method
+        with patch.object(url_processor.http_client, 'get', new_callable=AsyncMock) as mock_get:
+            mock_get.return_value = mock_response
             
             result = await url_processor.process_url("https://example.com/recipe")
             
             assert result['success'] is True
             assert result['source_url'] == "https://example.com/recipe"
             assert result['extraction_method'] == 'json-ld'
-            assert result['confidence'] == 0.95
+            assert result['confidence'] == UrlProcessor.CONFIDENCE_JSON_LD
             assert "Chocolate Chip Cookies" in result['content']
             assert 'processing_time' in result
             assert 'metadata' in result
@@ -355,10 +358,9 @@ class TestUrlProcessor:
     @pytest.mark.asyncio
     async def test_process_url_failure(self, url_processor):
         """Test URL processing failure handling."""
-        with patch('httpx.AsyncClient') as mock_client:
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                side_effect=httpx.HTTPStatusError("404", request=Mock(), response=Mock(status_code=404))
-            )
+        # Mock the persistent HTTP client's get method
+        with patch.object(url_processor.http_client, 'get', new_callable=AsyncMock) as mock_get:
+            mock_get.side_effect = httpx.HTTPStatusError("404", request=Mock(), response=Mock(status_code=404))
             
             result = await url_processor.process_url("https://example.com/404", {'max_retries': 1})
             
@@ -445,17 +447,16 @@ class TestUrlProcessorEdgeCases:
         mock_response_200.status_code = 200
         mock_response_200.text = "<html><body>Success</body></html>"
         mock_response_200.url = "https://example.com"
-        mock_response_200.headers = {}
+        mock_response_200.headers = {"content-type": "text/html"}
         mock_response_200.encoding = "utf-8"
 
-        with patch('httpx.AsyncClient') as mock_client:
-            # First call returns 429, second call succeeds
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                side_effect=[
-                    httpx.HTTPStatusError("429", request=mock_response_429.request, response=mock_response_429),
-                    mock_response_200
-                ]
-            )
+        # Mock the persistent HTTP client's get method
+        with patch.object(url_processor.http_client, 'get', new_callable=AsyncMock) as mock_get:
+            # First call returns 429 response, second call succeeds
+            mock_get.side_effect = [
+                mock_response_429,  # Return 429 response object
+                mock_response_200   # Return 200 response object
+            ]
             
             with patch('asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
                 result = await url_processor.fetch_content("https://example.com", {'retry_delay': 0.1})

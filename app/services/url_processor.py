@@ -47,6 +47,17 @@ class UrlProcessor:
         # Content size limits
         self.max_content_size = 5 * 1024 * 1024  # 5MB
         
+        # HTTP client with connection pooling for better performance
+        self.http_client = httpx.AsyncClient(
+            timeout=self.timeout,
+            follow_redirects=True,
+            limits=httpx.Limits(
+                max_keepalive_connections=20,  # Keep 20 connections alive
+                max_connections=100,           # Total connection pool size
+                keepalive_expiry=30.0         # Keep connections for 30 seconds
+            )
+        )
+        
     def validate_url(self, url: str) -> bool:
         """Validate URL with SSRF protection."""
         try:
@@ -116,45 +127,45 @@ class UrlProcessor:
             try:
                 self.logger.info(f"Fetching URL (attempt {attempt + 1}/{max_retries}): {url}")
                 
-                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-                    response = await client.get(url, headers=headers)
+                # Use persistent HTTP client with connection pooling
+                response = await self.http_client.get(url, headers=headers)
+                
+                # Check response status
+                if response.status_code == 200:
+                    # Validate content type for security
+                    content_type = response.headers.get('content-type', '').lower()
+                    allowed_types = ['text/html', 'application/xhtml+xml', 'text/plain']
+                    if not any(ct in content_type for ct in allowed_types):
+                        raise ValueError(f"Unsupported content type for recipe extraction: {content_type}")
                     
-                    # Check response status
-                    if response.status_code == 200:
-                        # Validate content type for security
-                        content_type = response.headers.get('content-type', '').lower()
-                        allowed_types = ['text/html', 'application/xhtml+xml', 'text/plain']
-                        if not any(ct in content_type for ct in allowed_types):
-                            raise ValueError(f"Unsupported content type for recipe extraction: {content_type}")
-                        
-                        content = response.text
-                        
-                        # Check content size
-                        if len(content) > self.max_content_size:
-                            self.logger.warning(f"Content too large ({len(content)} bytes), truncating")
-                            content = content[:self.max_content_size]
-                        
-                        return {
-                            'content': content,
-                            'url': str(response.url),  # Final URL after redirects
-                            'status_code': response.status_code,
-                            'headers': dict(response.headers),
-                            'encoding': response.encoding,
-                            'success': True
-                        }
+                    content = response.text
                     
-                    elif response.status_code == 429:  # Rate limited
-                        wait_time = self.retry_delay * (2 ** attempt)
-                        self.logger.warning(f"Rate limited, waiting {wait_time}s before retry")
-                        await asyncio.sleep(wait_time)
-                        continue
-                        
-                    else:
-                        raise httpx.HTTPStatusError(
-                            f"HTTP {response.status_code}", 
-                            request=response.request, 
-                            response=response
-                        )
+                    # Check content size
+                    if len(content) > self.max_content_size:
+                        self.logger.warning(f"Content too large ({len(content)} bytes), truncating")
+                        content = content[:self.max_content_size]
+                    
+                    return {
+                        'content': content,
+                        'url': str(response.url),  # Final URL after redirects
+                        'status_code': response.status_code,
+                        'headers': dict(response.headers),
+                        'encoding': response.encoding,
+                        'success': True
+                    }
+                
+                elif response.status_code == 429:  # Rate limited
+                    wait_time = self.retry_delay * (2 ** attempt)
+                    self.logger.warning(f"Rate limited, waiting {wait_time}s before retry")
+                    await asyncio.sleep(wait_time)
+                    continue
+                    
+                else:
+                    raise httpx.HTTPStatusError(
+                        f"HTTP {response.status_code}", 
+                        request=response.request, 
+                        response=response
+                    )
                         
             except Exception as e:
                 last_error = e
@@ -569,3 +580,11 @@ class UrlProcessor:
                 'source_url': url,
                 'processing_time': processing_time
             }
+    
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+    
+    async def __aexit__(self, _exc_type, _exc_val, _exc_tb):
+        """Async context manager exit - cleanup HTTP client."""
+        await self.http_client.aclose()

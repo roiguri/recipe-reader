@@ -17,8 +17,14 @@ AI_PROCESSING_CONFIDENCE_WEIGHT = 0.7
 def get_text_processor():
     return TextProcessor()
 
-def get_url_processor():
-    return UrlProcessor()
+# Singleton URL processor for connection pooling efficiency
+_url_processor_instance = None
+
+async def get_url_processor():
+    global _url_processor_instance
+    if _url_processor_instance is None:
+        _url_processor_instance = UrlProcessor()
+    return _url_processor_instance
 
 @router.post("/text", response_model=RecipeResponse)
 async def process_recipe_text(
