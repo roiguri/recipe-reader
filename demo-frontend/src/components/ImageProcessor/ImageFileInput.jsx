@@ -10,7 +10,6 @@ const ImageFileInput = ({
   className = ''
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [, setDragCounter] = useState(0);
   const fileInputRef = useRef(null);
 
   const validateFiles = useCallback((files) => {
@@ -55,8 +54,6 @@ const ImageFileInput = ({
     e.preventDefault();
     e.stopPropagation();
     
-    setDragCounter(prev => prev + 1);
-    
     if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
       setIsDragOver(true);
     }
@@ -66,13 +63,10 @@ const ImageFileInput = ({
     e.preventDefault();
     e.stopPropagation();
     
-    setDragCounter(prev => {
-      const newCount = prev - 1;
-      if (newCount === 0) {
-        setIsDragOver(false);
-      }
-      return newCount;
-    });
+    // Only set drag over to false if we're leaving the drop zone container
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragOver(false);
+    }
   }, []);
 
   const handleDragOver = useCallback((e) => {
@@ -85,7 +79,6 @@ const ImageFileInput = ({
     e.stopPropagation();
     
     setIsDragOver(false);
-    setDragCounter(0);
     
     if (disabled) return;
     
