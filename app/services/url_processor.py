@@ -15,6 +15,19 @@ import httpx
 class UrlProcessor:
     """Service for processing recipe URLs and extracting content."""
     
+    # Extraction method confidence scores
+    CONFIDENCE_JSON_LD = 0.95
+    CONFIDENCE_MICRODATA = 0.85
+    CONFIDENCE_CSS_SELECTORS = 0.75
+    CONFIDENCE_FULL_TEXT = 0.5
+    
+    # Content scoring constants
+    MIN_CONTENT_SCORE_THRESHOLD = 10
+    SHORT_CONTENT_PENALTY = 0.5
+    LONG_CONTENT_PENALTY = 0.8
+    MIN_CONTENT_LENGTH = 100
+    MAX_CONTENT_LENGTH = 10000
+    
     def __init__(self):
         """Initialize the URL processor with configuration."""
         self.logger = logging.getLogger(__name__)
@@ -176,7 +189,7 @@ class UrlProcessor:
             return {
                 'content': json_ld_content,
                 'extraction_method': 'json-ld',
-                'confidence': 0.95
+                'confidence': self.CONFIDENCE_JSON_LD
             }
         
         # Strategy 2: Try microdata
@@ -186,7 +199,7 @@ class UrlProcessor:
             return {
                 'content': microdata_content,
                 'extraction_method': 'microdata',
-                'confidence': 0.85
+                'confidence': self.CONFIDENCE_MICRODATA
             }
         
         # Strategy 3: Try common recipe selectors
@@ -196,7 +209,7 @@ class UrlProcessor:
             return {
                 'content': selector_content,
                 'extraction_method': 'css-selectors',
-                'confidence': 0.75
+                'confidence': self.CONFIDENCE_CSS_SELECTORS
             }
         
         # Strategy 4: Fallback to full text extraction
@@ -205,7 +218,7 @@ class UrlProcessor:
         return {
             'content': text_content,
             'extraction_method': 'full-text',
-            'confidence': 0.5
+            'confidence': self.CONFIDENCE_FULL_TEXT
         }
     
     def _extract_json_ld(self, soup: BeautifulSoup) -> Optional[str]:
@@ -414,7 +427,7 @@ class UrlProcessor:
                         best_score = score
                         best_content = text
             
-            if best_content and best_score > 10:  # Minimum threshold
+            if best_content and best_score > self.MIN_CONTENT_SCORE_THRESHOLD:
                 return self._clean_extracted_text(best_content)
                 
         except Exception as e:
@@ -467,10 +480,10 @@ class UrlProcessor:
         
         # Penalty for very short or very long content
         length = len(text)
-        if length < 100:
-            score = score * 0.5
-        elif length > 10000:
-            score = score * 0.8
+        if length < self.MIN_CONTENT_LENGTH:
+            score = score * self.SHORT_CONTENT_PENALTY
+        elif length > self.MAX_CONTENT_LENGTH:
+            score = score * self.LONG_CONTENT_PENALTY
         
         return int(score)
     

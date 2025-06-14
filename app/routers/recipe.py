@@ -9,6 +9,10 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+# Confidence score weighting constants
+URL_EXTRACTION_CONFIDENCE_WEIGHT = 0.3
+AI_PROCESSING_CONFIDENCE_WEIGHT = 0.7
+
 # Dependencies to get services
 def get_text_processor():
     return TextProcessor()
@@ -73,7 +77,7 @@ async def process_recipe_url(
         original_confidence = result.confidence_score
         
         # Combined confidence: both URL extraction and AI processing must be good
-        combined_confidence = (url_confidence * 0.3) + (original_confidence * 0.7)
+        combined_confidence = (url_confidence * URL_EXTRACTION_CONFIDENCE_WEIGHT) + (original_confidence * AI_PROCESSING_CONFIDENCE_WEIGHT)
         result.confidence_score = min(combined_confidence, original_confidence)
         
         return result
