@@ -108,6 +108,12 @@ class UrlProcessor:
                     
                     # Check response status
                     if response.status_code == 200:
+                        # Validate content type for security
+                        content_type = response.headers.get('content-type', '').lower()
+                        allowed_types = ['text/html', 'application/xhtml+xml', 'text/plain']
+                        if not any(ct in content_type for ct in allowed_types):
+                            raise ValueError(f"Unsupported content type for recipe extraction: {content_type}")
+                        
                         content = response.text
                         
                         # Check content size
