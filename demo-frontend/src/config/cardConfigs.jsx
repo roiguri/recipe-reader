@@ -37,7 +37,7 @@ export const CARD_CONFIGS = {
     inputType: "url",
     placeholder: "https://example.com/recipe",
     buttonText: "Extract from URL",
-    isComingSoon: true
+    isComingSoon: false
   },
   image: {
     icon: (
