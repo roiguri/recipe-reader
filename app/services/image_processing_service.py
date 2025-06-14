@@ -6,7 +6,7 @@ import time
 import base64
 import hashlib
 import logging
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Union, List
 import asyncio
 from datetime import datetime
 import uuid
@@ -18,8 +18,9 @@ from PIL import Image
 from google import genai
 from google.genai import types
 
-# Import our existing recipe models
-from app.models import Recipe, Ingredient, Stage, RecipeResponse, RecipeBase
+# Import our existing recipe models and text processor
+from app.models import Recipe, RecipeResponse, RecipeBase
+from app.services.text_processor import TextProcessor
 
 
 class ImageProcessingService:
@@ -56,6 +57,9 @@ class ImageProcessingService:
             self.supported_formats = {'JPEG', 'PNG', 'WEBP', 'GIF'}
             self.max_dimension = 2048  # Max width or height
             
+            # Initialize text processor for multi-image consolidation
+            self.text_processor = TextProcessor()
+            
             self.logger.info("ImageProcessingService initialized successfully")
             
         except Exception as e:
@@ -64,14 +68,14 @@ class ImageProcessingService:
     
     async def extract_recipe_from_image(
         self, 
-        image_data: Union[str, bytes], 
+        image_data: Union[str, bytes, List[str]], 
         options: Optional[Dict[str, Any]] = None
     ) -> RecipeResponse:
         """
-        Extract structured recipe data from an image using Gemini Vision.
+        Extract structured recipe data from single or multiple images.
         
         Args:
-            image_data: Base64 encoded image string or raw bytes
+            image_data: Base64 encoded image string, raw bytes, or list of base64 strings
             options: Optional processing parameters
             
         Returns:
@@ -83,6 +87,19 @@ class ImageProcessingService:
         options = options or {}
         start_time = time.time()
         
+        # Handle multiple images vs single image
+        if isinstance(image_data, list):
+            return await self._extract_recipe_from_multiple_images(image_data, options, start_time)
+        else:
+            return await self._extract_recipe_from_single_image(image_data, options, start_time)
+    
+    async def _extract_recipe_from_single_image(
+        self, 
+        image_data: Union[str, bytes], 
+        options: Dict[str, Any],
+        start_time: float
+    ) -> RecipeResponse:
+        """Extract recipe from a single image using Gemini Vision."""
         # Process and validate image
         processed_image = await self._process_image(image_data, options)
         
@@ -204,6 +221,131 @@ class ImageProcessingService:
                         confidence_score=0.1,  # Very low confidence for fallback
                         processing_time=time.time() - start_time
                     )
+    
+    async def _extract_recipe_from_multiple_images(
+        self, 
+        image_data_list: List[str], 
+        options: Dict[str, Any],
+        start_time: float
+    ) -> RecipeResponse:
+        """Extract recipe from multiple images by consolidating OCR text."""
+        self.logger.info(f"Processing {len(image_data_list)} images for multi-page recipe")
+        
+        # Extract text from each image
+        extracted_texts = []
+        for i, image_data in enumerate(image_data_list):
+            try:
+                text = await self._extract_text_from_image(image_data, options)
+                if text.strip():
+                    extracted_texts.append({
+                        'page': i + 1,
+                        'text': text
+                    })
+                    self.logger.info(f"Successfully extracted text from image {i+1}")
+                else:
+                    self.logger.warning(f"No text extracted from image {i+1}")
+            except Exception as e:
+                self.logger.warning(f"Failed to extract text from image {i+1}: {str(e)}")
+                continue
+        
+        if not extracted_texts:
+            # No text extracted from any image, create fallback
+            fallback_result = self._create_image_fallback_result()
+            recipe = self._convert_to_recipe_model(fallback_result)
+            return RecipeResponse(
+                recipe=recipe,
+                confidence_score=0.1,
+                processing_time=time.time() - start_time
+            )
+        
+        # Consolidate all extracted text
+        consolidated_text = self._consolidate_extracted_texts(extracted_texts)
+        
+        # Use TextProcessor to extract recipe from consolidated text
+        self.logger.info("Processing consolidated text through TextProcessor")
+        text_options = options.copy()
+        text_options['source'] = 'multi-image'
+        text_options['image_count'] = len(image_data_list)
+        
+        result = await self.text_processor.process_text(consolidated_text, text_options)
+        
+        # Adjust confidence score for multi-image processing
+        original_confidence = result.confidence_score
+        # Multi-image processing is generally more reliable due to more complete information
+        adjusted_confidence = min(0.95, original_confidence * 1.1)
+        result.confidence_score = adjusted_confidence
+        
+        # Update processing time
+        result.processing_time = time.time() - start_time
+        
+        self.logger.info(f"Successfully processed multi-page recipe with confidence {adjusted_confidence:.2f}")
+        return result
+    
+    async def _extract_text_from_image(
+        self, 
+        image_data: Union[str, bytes], 
+        options: Dict[str, Any]
+    ) -> str:
+        """Extract text content from a single image using Gemini Vision (OCR only)."""
+        # Process and validate image
+        processed_image = await self._process_image(image_data, options)
+        
+        # Generate prompt for OCR-only extraction
+        ocr_prompt = self._generate_ocr_prompt()
+        
+        # Retry logic for robustness
+        max_retries = options.get("max_retries", 2)  # Fewer retries for OCR
+        retry_delay = options.get("retry_delay", 1.0)
+        
+        for attempt in range(max_retries):
+            try:
+                self.logger.debug(f"OCR attempt {attempt + 1}/{max_retries}")
+                
+                # Configure generation parameters for text extraction
+                config = types.GenerateContentConfig(
+                    temperature=0.0,  # Very low temperature for OCR accuracy
+                    max_output_tokens=4096,  # More tokens for longer recipes
+                    top_p=0.8,
+                    top_k=40
+                )
+                
+                # Prepare content with image and OCR prompt
+                content = [
+                    types.Part(text=ocr_prompt),
+                    types.Part(
+                        inline_data=types.Blob(
+                            data=processed_image['data'],
+                            mime_type=processed_image['mime_type']
+                        )
+                    )
+                ]
+                
+                # Make the API call using Gemini Vision
+                response = await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: self.client.models.generate_content(
+                        model="gemini-1.5-pro",
+                        contents=content,
+                        config=config
+                    )
+                )
+                
+                # Return the extracted text
+                extracted_text = response.text.strip()
+                self.logger.debug(f"OCR extracted {len(extracted_text)} characters")
+                return extracted_text
+                
+            except Exception as e:
+                self.logger.warning(f"OCR attempt {attempt + 1} failed: {str(e)}")
+                
+                if attempt < max_retries - 1:
+                    wait_time = retry_delay * (2 ** attempt)
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    # All retries failed
+                    self.logger.error("All OCR attempts failed")
+                    return ""
     
     async def _process_image(
         self, 
@@ -358,6 +500,199 @@ Extract the recipe information as a valid JSON object that matches the required 
             base_prompt += "\nPREFERENCE: Use flat 'instructions' array for step-by-step directions.\n"
         
         return base_prompt
+    
+    def _generate_ocr_prompt(self) -> str:
+        """Generate a prompt optimized for OCR text extraction only."""
+        return """
+Please extract all text content from this image accurately. This appears to be a recipe or cookbook page.
+
+EXTRACTION GUIDELINES:
+- Extract ALL visible text exactly as it appears
+- Maintain the original text structure and formatting
+- Include ingredients lists, instructions, titles, and any other text
+- Preserve Hebrew and English text accurately
+- Include numbers, measurements, and cooking times
+- Don't interpret or modify the text - just extract it faithfully
+- If text is unclear, indicate with [unclear text] but extract what you can
+
+OUTPUT FORMAT:
+Provide the extracted text in a clean, readable format that preserves the original structure.
+"""
+    
+    def _consolidate_extracted_texts(self, extracted_texts: List[Dict[str, Any]]) -> str:
+        """Consolidate text from multiple images into a unified recipe text."""
+        if not extracted_texts:
+            return ""
+        
+        if len(extracted_texts) == 1:
+            return extracted_texts[0]['text']
+        
+        # Sort by page number to ensure correct order
+        sorted_texts = sorted(extracted_texts, key=lambda x: x['page'])
+        
+        # Start consolidation
+        consolidated_parts = []
+        
+        # Add a header indicating this is a multi-page recipe
+        consolidated_parts.append("MULTI-PAGE RECIPE (Consolidated from multiple images)")
+        consolidated_parts.append("=" * 50)
+        
+        # Process each page
+        for page_data in sorted_texts:
+            page_num = page_data['page']
+            text = page_data['text']
+            
+            # Clean up the text
+            cleaned_text = self._clean_extracted_text(text)
+            
+            if cleaned_text.strip():
+                consolidated_parts.append(f"\n--- PAGE {page_num} ---")
+                consolidated_parts.append(cleaned_text)
+        
+        # Join all parts
+        full_text = "\n".join(consolidated_parts)
+        
+        # Post-process the consolidated text
+        return self._post_process_consolidated_text(full_text)
+    
+    def _clean_extracted_text(self, text: str) -> str:
+        """Clean extracted text from a single image."""
+        if not text:
+            return ""
+        
+        # Remove excessive whitespace
+        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r'\n\s*\n', '\n\n', text)
+        
+        # Remove common OCR artifacts
+        ocr_noise_patterns = [
+            r'\[unclear text\]',
+            r'page \d+',
+            r'continued on next page',
+            r'see page \d+',
+            r'^page \d+$',
+        ]
+        
+        for pattern in ocr_noise_patterns:
+            text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.MULTILINE)
+        
+        return text.strip()
+    
+    def _post_process_consolidated_text(self, text: str) -> str:
+        """Post-process the consolidated text to remove duplicates and improve structure."""
+        lines = text.split('\n')
+        processed_lines = []
+        seen_ingredients = set()
+        seen_instructions = set()
+        
+        current_section = None
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                processed_lines.append('')
+                continue
+            
+            # Skip duplicate lines that are likely repeated across pages
+            line_lower = line.lower()
+            
+            # Detect section headers
+            if any(keyword in line_lower for keyword in ['ingredients', 'מרכיבים', 'חומרים']):
+                current_section = 'ingredients'
+                processed_lines.append(line)
+                continue
+            elif any(keyword in line_lower for keyword in ['instructions', 'הוראות', 'אופן הכנה', 'דרך הכנה']):
+                current_section = 'instructions'
+                processed_lines.append(line)
+                continue
+            elif line.startswith('---'):
+                current_section = None
+                processed_lines.append(line)
+                continue
+            
+            # Handle ingredients deduplication
+            if current_section == 'ingredients':
+                # Simple ingredient deduplication based on main ingredient name
+                ingredient_key = self._extract_ingredient_key(line)
+                if ingredient_key and ingredient_key not in seen_ingredients:
+                    seen_ingredients.add(ingredient_key)
+                    processed_lines.append(line)
+                elif not ingredient_key:  # Not an ingredient line
+                    processed_lines.append(line)
+            # Handle instructions deduplication
+            elif current_section == 'instructions':
+                # Simple instruction deduplication
+                instruction_key = self._extract_instruction_key(line)
+                if instruction_key and instruction_key not in seen_instructions:
+                    seen_instructions.add(instruction_key)
+                    processed_lines.append(line)
+                elif not instruction_key:  # Not an instruction line
+                    processed_lines.append(line)
+            else:
+                # Other content (titles, descriptions, etc.)
+                processed_lines.append(line)
+        
+        return '\n'.join(processed_lines)
+    
+    def _extract_ingredient_key(self, line: str) -> Optional[str]:
+        """Extract a key for ingredient deduplication."""
+        line_lower = line.lower().strip()
+        
+        # Skip if it doesn't look like an ingredient
+        if not line_lower or len(line_lower) < 3:
+            return None
+        
+        # Simple patterns that suggest this is an ingredient line
+        ingredient_indicators = [
+            r'\d+.*?(?:cup|cups|tsp|tbsp|oz|lb|gram|kg|ml|liter)',  # English measurements
+            r'\d+.*?(?:כוס|כוסות|כף|כפות|גרם|קילו|מ"ל|ליטר)',  # Hebrew measurements
+            r'^\d+\s*[-.]',  # Numbered list
+            r'^[-*•]\s*',  # Bulleted list
+        ]
+        
+        is_ingredient = any(re.search(pattern, line_lower) for pattern in ingredient_indicators)
+        
+        if is_ingredient:
+            # Extract the main ingredient name (rough heuristic)
+            # Remove measurements and common words
+            clean_line = re.sub(r'\d+[\d\s/.-]*(?:cup|cups|tsp|tbsp|oz|lb|gram|kg|ml|liter|כוס|כוסות|כף|כפות|גרם|קילו|מ"ל|ליטר)', '', line_lower)
+            clean_line = re.sub(r'^[-*•\d\s.]+', '', clean_line)  # Remove list markers and numbers
+            clean_line = clean_line.strip()
+            
+            # Take first few words as the key
+            words = clean_line.split()[:3]  # First 3 words should be sufficient
+            return ' '.join(words) if words else None
+        
+        return None
+    
+    def _extract_instruction_key(self, line: str) -> Optional[str]:
+        """Extract a key for instruction deduplication."""
+        line_lower = line.lower().strip()
+        
+        # Skip if it doesn't look like an instruction
+        if not line_lower or len(line_lower) < 10:
+            return None
+        
+        # Simple patterns that suggest this is an instruction line
+        instruction_indicators = [
+            r'^\d+\s*[-.]',  # Numbered steps
+            r'^[-*•]\s*',  # Bulleted steps
+            r'\b(?:mix|stir|add|cook|bake|heat|pour|chop|dice|slice)\b',  # English cooking verbs
+            r'\b(?:לערבב|להוסיף|לבשל|לאפות|לחמם|לשפוך|לקצוץ|לחתוך)\b',  # Hebrew cooking verbs
+        ]
+        
+        is_instruction = any(re.search(pattern, line_lower) for pattern in instruction_indicators)
+        
+        if is_instruction:
+            # Remove step numbers and markers
+            clean_line = re.sub(r'^[-*•\d\s.]+', '', line_lower)
+            clean_line = clean_line.strip()
+            
+            # Take first few words as the key
+            words = clean_line.split()[:5]  # First 5 words should be sufficient
+            return ' '.join(words) if words else None
+        
+        return None
     
     def _convert_to_recipe_model(self, data: Dict[str, Any]) -> Recipe:
         """Convert the extracted data to a full Recipe model with ID and timestamps."""

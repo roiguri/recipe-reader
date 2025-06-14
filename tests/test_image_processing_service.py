@@ -284,21 +284,39 @@ async def test_image_cache_functionality():
 
 
 def test_image_process_request_validation():
-    """Test ImageProcessRequest validation."""
-    # Valid base64 data
+    """Test ImageProcessRequest validation for single and multiple images."""
+    # Valid single image
     image_bytes = create_test_image()
     valid_b64 = image_to_base64(image_bytes)
     
     request = ImageProcessRequest(image_data=valid_b64, options={})
     assert request.image_data == valid_b64
     
-    # Invalid base64 data
-    with pytest.raises(ValueError, match="Invalid base64 image data"):
+    # Valid multiple images
+    image_list = [valid_b64, valid_b64]
+    request_multi = ImageProcessRequest(image_data=image_list, options={})
+    assert request_multi.image_data == image_list
+    
+    # Invalid base64 data (single)
+    with pytest.raises(ValueError, match="Invalid base64 image data in image 1"):
         ImageProcessRequest(image_data="invalid_base64", options={})
+    
+    # Invalid base64 data (multiple)
+    with pytest.raises(ValueError, match="Invalid base64 image data in image 2"):
+        ImageProcessRequest(image_data=[valid_b64, "invalid_base64"], options={})
+    
+    # Empty list
+    with pytest.raises(ValueError, match="At least one image is required"):
+        ImageProcessRequest(image_data=[], options={})
+    
+    # Too many images
+    too_many_images = [valid_b64] * 11
+    with pytest.raises(ValueError, match="Maximum 10 images allowed"):
+        ImageProcessRequest(image_data=too_many_images, options={})
     
     # Unsupported format
     unsupported_data = "data:image/bmp;base64," + base64.b64encode(b"test").decode()
-    with pytest.raises(ValueError, match="Unsupported image format"):
+    with pytest.raises(ValueError, match="Unsupported image format in image 1"):
         ImageProcessRequest(image_data=unsupported_data, options={})
 
 
@@ -346,3 +364,138 @@ async def test_confidence_scoring():
     assert complete_confidence > incomplete_confidence
     assert complete_confidence <= 0.9  # Cap for images
     assert incomplete_confidence >= 0.1  # Minimum confidence
+
+
+@pytest.mark.asyncio
+async def test_multiple_images_processing():
+    """Test processing multiple images for multi-page recipes."""
+    service = ImageProcessingService(api_key="test_key")
+    
+    # Mock OCR responses for each image
+    mock_ocr_responses = [
+        "Recipe Title: Multi-Page Recipe\nIngredients:\n2 cups flour\n1 cup sugar",
+        "Instructions:\n1. Mix flour and sugar\n2. Bake at 350F for 30 minutes"
+    ]
+    
+    # Mock final recipe response from TextProcessor
+    mock_recipe_data = {
+        "name": "Multi-Page Recipe", 
+        "ingredients": [
+            {"item": "flour", "amount": "2", "unit": "cups"},
+            {"item": "sugar", "amount": "1", "unit": "cup"}
+        ],
+        "instructions": ["Mix flour and sugar", "Bake at 350F for 30 minutes"],
+        "stages": None,
+        "prepTime": None,
+        "cookTime": 30,
+        "totalTime": None,
+        "servings": None,
+        "tags": [],
+        "mainIngredient": "flour"
+    }
+    
+    # Mock the OCR calls
+    with patch.object(service, '_extract_text_from_image') as mock_ocr:
+        mock_ocr.side_effect = mock_ocr_responses
+        
+        # Mock the TextProcessor
+        with patch.object(service.text_processor, 'process_text') as mock_text_processor:
+            mock_text_processor.return_value = RecipeResponse(
+                recipe=service._convert_to_recipe_model(mock_recipe_data),
+                confidence_score=0.85,
+                processing_time=1.0
+            )
+            
+            # Test with multiple images
+            image_bytes = create_test_image()
+            image_list = [image_to_base64(image_bytes), image_to_base64(image_bytes)]
+            
+            result = await service.extract_recipe_from_image(image_list)
+            
+            assert isinstance(result, RecipeResponse)
+            assert result.recipe.name == "Multi-Page Recipe"
+            assert len(result.recipe.ingredients) == 2
+            assert result.confidence_score > 0.8  # Should be boosted for multi-image
+            
+            # Verify OCR was called for each image
+            assert mock_ocr.call_count == 2
+            
+            # Verify consolidated text was processed
+            mock_text_processor.assert_called_once()
+            call_args = mock_text_processor.call_args
+            consolidated_text = call_args[0][0]
+            assert "MULTI-PAGE RECIPE" in consolidated_text
+            assert "PAGE 1" in consolidated_text
+            assert "PAGE 2" in consolidated_text
+
+
+@pytest.mark.asyncio
+async def test_ocr_text_extraction():
+    """Test OCR-only text extraction from images."""
+    service = ImageProcessingService(api_key="test_key")
+    
+    mock_ocr_text = "Recipe: Test OCR\nIngredients: flour, sugar\nInstructions: mix and bake"
+    
+    # Mock the Gemini Vision API response for OCR
+    mock_response = MagicMock()
+    mock_response.text = mock_ocr_text
+    
+    with patch.object(service, 'client') as mock_client:
+        mock_client.models.generate_content.return_value = mock_response
+        
+        image_bytes = create_test_image()
+        extracted_text = await service._extract_text_from_image(image_bytes, {})
+        
+        assert extracted_text == mock_ocr_text
+        
+        # Verify the API was called with OCR-specific config
+        call_args = mock_client.models.generate_content.call_args
+        config = call_args[1]['config']
+        assert config.temperature == 0.0  # Should use very low temperature for OCR
+
+
+@pytest.mark.asyncio
+async def test_text_consolidation():
+    """Test text consolidation logic for multiple pages."""
+    service = ImageProcessingService(api_key="test_key")
+    
+    # Sample extracted texts from multiple pages
+    extracted_texts = [
+        {
+            'page': 1,
+            'text': 'Chocolate Chip Cookies\n\nIngredients:\n2 cups flour\n1 cup sugar\n2 eggs'
+        },
+        {
+            'page': 2, 
+            'text': 'Instructions:\n1. Mix flour and sugar\n2. Add eggs\n3. Bake at 350F for 12 minutes'
+        }
+    ]
+    
+    consolidated = service._consolidate_extracted_texts(extracted_texts)
+    
+    # Check that consolidation worked properly
+    assert "MULTI-PAGE RECIPE" in consolidated
+    assert "PAGE 1" in consolidated
+    assert "PAGE 2" in consolidated
+    assert "Chocolate Chip Cookies" in consolidated
+    assert "2 cups flour" in consolidated
+    assert "Mix flour and sugar" in consolidated
+
+
+@pytest.mark.asyncio
+async def test_fallback_when_no_text_extracted():
+    """Test fallback behavior when no text can be extracted from any image."""
+    service = ImageProcessingService(api_key="test_key")
+    
+    # Mock OCR to return empty strings
+    with patch.object(service, '_extract_text_from_image') as mock_ocr:
+        mock_ocr.return_value = ""
+        
+        image_bytes = create_test_image()
+        image_list = [image_to_base64(image_bytes), image_to_base64(image_bytes)]
+        
+        result = await service.extract_recipe_from_image(image_list)
+        
+        assert isinstance(result, RecipeResponse)
+        assert result.recipe.name == "Image Processing Failed"
+        assert result.confidence_score == 0.1  # Low confidence for fallback

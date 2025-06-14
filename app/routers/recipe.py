@@ -127,13 +127,16 @@ async def process_recipe_image(
     image_processor: ImageProcessingService = Depends(get_image_processor)
 ):
     """
-    Process a recipe image to extract structured recipe data.
+    Process single or multiple recipe images to extract structured recipe data.
     
-    - **image_data**: Base64 encoded image data (JPEG, PNG, WebP, or GIF)
+    - **image_data**: Base64 encoded image data (single string or list of strings)
     - **options**: Optional processing parameters
+    
+    For multiple images: provide a list of base64 strings representing pages of the same recipe.
+    The service will extract text from each image and consolidate them into a single recipe.
     """
     try:
         result = await image_processor.extract_recipe_from_image(request.image_data, request.options)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing recipe image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing recipe image(s): {str(e)}")
