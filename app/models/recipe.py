@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
 
@@ -93,6 +93,33 @@ class TextProcessRequest(BaseModel):
     """Request model for text processing endpoint."""
     text: str = Field(..., description="Recipe text to process")
     options: Optional[Dict[str, Any]] = Field({}, description="Processing options")
+
+
+class UrlProcessRequest(BaseModel):
+    """Request model for URL processing endpoint."""
+    url: str = Field(..., description="Recipe URL to process", min_length=1)
+    options: Optional[Dict[str, Any]] = Field({}, description="Processing options")
+    
+    @model_validator(mode='after')
+    def validate_url_format(self) -> 'UrlProcessRequest':
+        """Basic URL validation."""
+        from urllib.parse import urlparse
+        
+        # Normalize URL
+        url = self.url.strip()
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+            self.url = url
+        
+        # Parse and validate
+        try:
+            parsed = urlparse(url)
+            if not all([parsed.scheme in ['http', 'https'], parsed.netloc]):
+                raise ValueError("Invalid URL format")
+        except Exception:
+            raise ValueError("Invalid URL format")
+            
+        return self
 
 
 class RecipeResponse(BaseModel):
