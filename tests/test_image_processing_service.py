@@ -50,7 +50,7 @@ async def test_image_processing_service_initialization():
     assert service.available is True
     assert hasattr(service, 'client')
     assert service.max_image_size == 4 * 1024 * 1024
-    assert service.supported_formats == {'JPEG', 'PNG', 'WEBP', 'GIF'}
+    assert service.supported_formats == {'JPEG', 'JPG', 'PNG', 'WEBP', 'GIF'}
     
     # Test without API key
     with patch.dict('os.environ', {}, clear=True):
@@ -166,7 +166,7 @@ async def test_extract_recipe_from_image_success():
     mock_response = MockGeminiResponse(json.dumps(mock_response_data))
     
     # Mock the client call
-    with patch.object(service, 'client') as mock_client:
+    with patch.object(service, 'client', autospec=True) as mock_client:
         mock_client.models.generate_content.return_value = mock_response
         
         # Test image

@@ -16,6 +16,20 @@ function App() {
     setExpandedCard(expandedCard === cardId ? null : cardId);
   };
 
+  const getExpandedContent = (id, config) => {
+    if (config.isComingSoon) {
+      return <ComingSoonContent feature={config.title.toLowerCase()} />;
+    }
+
+    const processors = {
+      text: <ErrorBoundary><TextProcessor /></ErrorBoundary>,
+      url: <ErrorBoundary><UrlProcessor /></ErrorBoundary>,
+      image: <ErrorBoundary><ImageProcessor /></ErrorBoundary>
+    };
+
+    return processors[id] || <ComingSoonContent feature={config.title.toLowerCase()} />;
+  };
+
   const getCardItems = () => {
     return Object.entries(CARD_CONFIGS).map(([id, config]) => ({
       id,
@@ -24,15 +38,7 @@ function App() {
         title: config.title,
         description: config.description
       },
-      expanded: config.isComingSoon 
-        ? <ComingSoonContent feature={config.title.toLowerCase()} />
-        : id === 'text' 
-          ? <ErrorBoundary><TextProcessor /></ErrorBoundary>
-          : id === 'url'
-            ? <ErrorBoundary><UrlProcessor /></ErrorBoundary>
-            : id === 'image'
-              ? <ErrorBoundary><ImageProcessor /></ErrorBoundary>
-              : <ComingSoonContent feature={config.title.toLowerCase()} />
+      expanded: getExpandedContent(id, config)
     }));
   };
 

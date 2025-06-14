@@ -22,6 +22,18 @@ from google.genai import types
 from app.models import Recipe, RecipeResponse, RecipeBase
 from app.services.text_processor import TextProcessor
 
+# Define compatible resampling filter for Pillow versions
+try:
+    # Pillow >= 9.1.0
+    RESAMPLE_FILTER = Image.Resampling.LANCZOS
+except AttributeError:
+    try:
+        # Pillow < 9.1.0
+        RESAMPLE_FILTER = Image.LANCZOS
+    except AttributeError:
+        # Very old Pillow versions
+        RESAMPLE_FILTER = Image.ANTIALIAS
+
 
 class ImageProcessingService:
     """Service for recipe extraction from images using Google's Gemini Vision API."""
@@ -54,7 +66,7 @@ class ImageProcessingService:
             
             # Image processing settings
             self.max_image_size = 4 * 1024 * 1024  # 4MB
-            self.supported_formats = {'JPEG', 'PNG', 'WEBP', 'GIF'}
+            self.supported_formats = {'JPEG', 'JPG', 'PNG', 'WEBP', 'GIF'}
             self.max_dimension = 2048  # Max width or height
             
             # Initialize text processor for multi-image consolidation
@@ -379,7 +391,7 @@ class ImageProcessingService:
             # Resize if too large
             original_size = image.size
             if max(image.size) > self.max_dimension:
-                image.thumbnail((self.max_dimension, self.max_dimension), Image.Resampling.LANCZOS)
+                image.thumbnail((self.max_dimension, self.max_dimension), RESAMPLE_FILTER)
                 self.logger.info(f"Resized image from {original_size} to {image.size}")
             
             # Convert to RGB if necessary (for JPEG compatibility)
