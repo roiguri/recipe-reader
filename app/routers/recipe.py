@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from ..models.recipe import TextProcessRequest, UrlProcessRequest, RecipeResponse
 from ..services.text_processor import TextProcessor
 from ..services.url_processor import UrlProcessor
+from ..config.confidence import URL_EXTRACTION_CONFIDENCE_WEIGHT, AI_PROCESSING_CONFIDENCE_WEIGHT
 
 router = APIRouter(
     prefix="/recipe",
@@ -9,9 +10,6 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# Confidence score weighting constants
-URL_EXTRACTION_CONFIDENCE_WEIGHT = 0.3
-AI_PROCESSING_CONFIDENCE_WEIGHT = 0.7
 
 # Dependencies to get services
 def get_text_processor():
@@ -21,6 +19,19 @@ def get_text_processor():
 _url_processor_instance = None
 
 async def get_url_processor():
+    """
+    Get a singleton instance of UrlProcessor for connection pooling efficiency.
+    
+    This function implements a singleton pattern to ensure only one UrlProcessor
+    instance is created per application lifecycle. This is important for:
+    
+    - Connection pooling: Reuses HTTP connections across requests
+    - Resource optimization: Avoids overhead of creating multiple instances
+    - Rate limiting: Maintains consistent request patterns to external sites
+    
+    Returns:
+        UrlProcessor: The singleton UrlProcessor instance
+    """
     global _url_processor_instance
     if _url_processor_instance is None:
         _url_processor_instance = UrlProcessor()
