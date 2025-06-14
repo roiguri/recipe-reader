@@ -1,6 +1,7 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
+import base64
 
 
 class Ingredient(BaseModel):
@@ -118,6 +119,46 @@ class UrlProcessRequest(BaseModel):
                 raise ValueError("Invalid URL format")
         except Exception:
             raise ValueError("Invalid URL format")
+            
+        return self
+
+
+class ImageProcessRequest(BaseModel):
+    """Request model for image processing endpoint. Supports single or multiple images."""
+    image_data: Union[str, List[str]] = Field(..., description="Base64 encoded image data (single string or list of strings)")
+    options: Optional[Dict[str, Any]] = Field({}, description="Processing options")
+    
+    @model_validator(mode='after')
+    def validate_image_data(self) -> 'ImageProcessRequest':
+        """Validate base64 image data for single or multiple images."""
+        # Convert single image to list for unified processing
+        images_to_validate = [self.image_data] if isinstance(self.image_data, str) else self.image_data
+        
+        if not images_to_validate:
+            raise ValueError("At least one image is required")
+        
+        if len(images_to_validate) > 10:  # Reasonable limit
+            raise ValueError("Maximum 10 images allowed per request")
+        
+        for i, image_data in enumerate(images_to_validate):
+            try:
+                # Handle data URL format
+                if image_data.startswith('data:'):
+                    header, encoded = image_data.split(',', 1)
+                    # Validate mime type
+                    if not any(img_type in header.lower() for img_type in ['image/jpeg', 'image/png', 'image/webp', 'image/gif']):
+                        raise ValueError(f"Unsupported image format in image {i+1}")
+                    # Try to decode
+                    base64.b64decode(encoded)
+                else:
+                    # Direct base64 string
+                    base64.b64decode(image_data)
+            except ValueError as e:
+                if "Unsupported image format" in str(e):
+                    raise e
+                raise ValueError(f"Invalid base64 image data in image {i+1}")
+            except Exception:
+                raise ValueError(f"Invalid base64 image data in image {i+1}")
             
         return self
 
