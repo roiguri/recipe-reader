@@ -55,7 +55,8 @@
     "placeholder": "https://example.com/recipe-url",
     "validation": {
       "invalidUrl": "Please enter a valid URL",
-      "validUrl": "Valid URL format"
+      "validUrl": "Valid URL format",
+      "notRecipeUrl": "This URL doesn't appear to be from a recipe website, but we'll try to extract recipe content anyway."
     },
     "buttons": {
       "extract": "Extract from URL",

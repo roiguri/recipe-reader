@@ -55,7 +55,8 @@
     "placeholder": "https://example.com/recipe-url",
     "validation": {
       "invalidUrl": "אנא הזן קישור תקין",
-      "validUrl": "פורמט קישור תקין"
+      "validUrl": "פורמט קישור תקין",
+      "notRecipeUrl": "הקישור הזה לא נראה כמו מאתר מתכונים, אבל ננסה לחלץ תוכן מתכון בכל זאת."
     },
     "buttons": {
       "extract": "חלץ מקישור",

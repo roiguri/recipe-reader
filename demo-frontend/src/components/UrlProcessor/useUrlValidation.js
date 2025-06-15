@@ -48,7 +48,7 @@ const useUrlValidation = (url) => {
     }
     
     if (!isLikelyRecipeUrl) {
-      return 'This URL doesn\'t appear to be from a recipe website, but we\'ll try to extract recipe content anyway.';
+      return t('urlProcessor.validation.notRecipeUrl');
     }
     
     return null;
