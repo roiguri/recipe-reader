@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { withTranslation } from 'react-i18next';
 import Card from './ui/Card';
 import Button from './ui/Button';
 
@@ -18,12 +19,14 @@ class ErrorBoundary extends Component {
   
   static getDerivedStateFromError(error) {
     // Update state so the next render will show the fallback UI
-    return { hasError: true, error };
+    return { hasError: true, error, errorInfo: null };
   }
   
   componentDidCatch(error, errorInfo) {
     console.error("Error caught by ErrorBoundary:", error, errorInfo);
-    this.setState({ errorInfo });
+    
+    // Store errorInfo for development display, but avoid setState to prevent loops
+    this.errorInfo = errorInfo;
     
     // TODO: Send error to logging service
   }
@@ -34,9 +37,14 @@ class ErrorBoundary extends Component {
       error: null,
       errorInfo: null
     });
+    // Clear the instance errorInfo as well
+    this.errorInfo = null;
   };
   
   render() {
+    const { t, i18n } = this.props;
+    const isRTL = i18n.language === 'he';
+    
     if (this.state.hasError) {
       // Render fallback UI
       return (
@@ -47,27 +55,33 @@ class ErrorBoundary extends Component {
                 <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V88a8,8,0,0,1,16,0v48a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z"></path>
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-[#1b0e0e] mb-2">Something went wrong</h2>
-            <p className="text-[#994d51] mb-6 max-w-md">
-              We encountered an error while processing your request. Please try again or contact support if the problem persists.
+            <h2 className={`text-xl font-bold text-[#1b0e0e] mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {t('errorBoundary.title')}
+            </h2>
+            <p className={`text-[#994d51] mb-6 max-w-md ${isRTL ? 'text-right' : 'text-left'}`}>
+              {t('errorBoundary.description')}
             </p>
-            <div className="space-x-4">
+            <div className={`${isRTL ? 'space-x-reverse' : ''} space-x-4`}>
               <Button variant="primary" onClick={this.handleReset}>
-                Try Again
+                {t('errorBoundary.tryAgain')}
               </Button>
               <Button variant="secondary" onClick={() => window.location.reload()}>
-                Reload Page
+                {t('errorBoundary.reloadPage')}
               </Button>
             </div>
             
             {/* Show error details in development */}
             {process.env.NODE_ENV === 'development' && (
-              <div className="mt-8 text-left w-full">
+              <div className={`mt-8 w-full ${isRTL ? 'text-right' : 'text-left'}`}>
                 <details className="bg-gray-50 p-4 rounded-lg text-sm">
-                  <summary className="cursor-pointer font-medium mb-2">Error Details</summary>
-                  <p className="mb-2 text-red-600">{this.state.error?.toString()}</p>
-                  <pre className="whitespace-pre-wrap overflow-auto max-h-60">
-                    {this.state.errorInfo?.componentStack}
+                  <summary className={`cursor-pointer font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {t('errorBoundary.errorDetails')}
+                  </summary>
+                  <p className="mb-2 text-red-600" dir="ltr" style={{ textAlign: 'left' }}>
+                    {this.state.error?.toString()}
+                  </p>
+                  <pre className="whitespace-pre-wrap overflow-auto max-h-60" dir="ltr" style={{ textAlign: 'left' }}>
+                    {this.errorInfo?.componentStack}
                   </pre>
                 </details>
               </div>
@@ -82,4 +96,4 @@ class ErrorBoundary extends Component {
   }
 }
 
-export default ErrorBoundary; 
+export default withTranslation()(ErrorBoundary); 
