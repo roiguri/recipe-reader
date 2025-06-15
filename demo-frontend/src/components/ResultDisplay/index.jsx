@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import useClipboard from '../../hooks/useClipboard';
@@ -15,6 +16,7 @@ import TagList from './TagList';
 import ExportOptions from './ExportOptions';
 
 const ResultDisplay = ({ result, onStartOver }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('recipe');
   const [copyToClipboard, copiedSection] = useClipboard();
 
@@ -22,14 +24,14 @@ const ResultDisplay = ({ result, onStartOver }) => {
 
   // Define tabs
   const tabs = [
-    { id: 'recipe', label: 'Recipe', icon: '🍽️' },
-    { id: 'raw', label: 'Raw Data', icon: '📋' },
-    { id: 'export', label: 'Export', icon: '📤' }
+    { id: 'recipe', icon: '🍽️' },
+    { id: 'raw', icon: '📋' },
+    { id: 'export', icon: '📤' }
   ];
 
   // TODO: Implement export functionality
   const handleExport = (type, recipeData) => {
-    alert(`Export as ${type} functionality would be implemented here`);
+    alert(t('resultDisplay.export.notImplemented', { type }));
   };
 
   return (
@@ -87,9 +89,13 @@ const ResultDisplay = ({ result, onStartOver }) => {
           )}
 
           {activeTab === 'raw' && (
-            <div className="h-full overflow-y-auto">
-              <div className="relative">
-                <pre className="bg-gray-50 p-4 rounded-lg text-sm overflow-x-auto">
+            <div className="h-full overflow-y-auto" dir="ltr" style={{ direction: 'ltr', textAlign: 'left' }}>
+              <div className="relative" dir="ltr">
+                <pre 
+                  className="bg-gray-50 p-4 rounded-lg text-sm overflow-x-auto" 
+                  dir="ltr" 
+                  style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'embed' }}
+                >
                   {JSON.stringify(recipe, null, 2)}
                 </pre>
                 <div className="absolute top-2 right-2">
@@ -98,7 +104,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
                     sectionId="raw"
                     copiedSection={copiedSection}
                     onCopy={copyToClipboard}
-                    title="Copy JSON data"
+                    title={t('resultDisplay.copy.json')}
                   />
                 </div>
               </div>

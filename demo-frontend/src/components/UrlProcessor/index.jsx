@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { processRecipeUrl, createRequestController, APIError } from '../../utils/api';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
@@ -11,6 +13,8 @@ import UrlInput from './UrlInput';
 import useUrlValidation from './useUrlValidation';
 
 const UrlProcessor = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -60,16 +64,17 @@ const UrlProcessor = () => {
     } catch (err) {
       if (err instanceof APIError) {
         if (err.details?.cancelled) {
-          setError('Request was cancelled');
+          setError(t('errors.cancelled'));
         } else if (err.details?.offline) {
-          setError('No internet connection. Please check your network and try again.');
+          setError(t('errors.offline'));
         } else if (err.details?.networkError) {
-          setError('Cannot connect to the recipe processing service. Please make sure the server is running.');
+          setError(t('errors.networkError'));
         } else {
-          setError(err.message);
+          console.error('URL processing error:', err.message);
+          setError(t('errors.processingFailed'));
         }
       } else {
-        setError('An unexpected error occurred. Please try again.');
+        setError(t('errors.unexpected'));
       }
     } finally {
       setIsLoading(false);
@@ -120,12 +125,12 @@ const UrlProcessor = () => {
       <Card>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Header */}
-          <div className="text-center mb-6">
+          <div className={`text-center mb-6 ${isRTL ? 'text-right' : 'text-left'} sm:text-center`}>
             <h2 className="text-xl font-bold text-[#1b0e0e] mb-2">
-              Extract Recipe from URL
+              {t('urlProcessor.title')}
             </h2>
             <p className="text-sm text-[#994d51] mb-4">
-              Paste a recipe URL and we'll extract the structured recipe data. Supports most popular recipe websites.
+              {t('urlProcessor.description')}
             </p>
           </div>
 
@@ -147,7 +152,7 @@ const UrlProcessor = () => {
                 showWarning 
                   ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
                   : 'bg-blue-50 border-blue-200 text-blue-800'
-              }`}
+              } ${isRTL ? 'text-right' : 'text-left'}`}
             >
               {validationMessage}
             </motion.div>
@@ -158,7 +163,7 @@ const UrlProcessor = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800"
+              className={`p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800 ${isRTL ? 'text-right' : 'text-left'}`}
             >
               {error}
             </motion.div>
@@ -174,11 +179,11 @@ const UrlProcessor = () => {
                   onClick={handleCancel}
                   className="w-full"
                 >
-                  Cancel
+                  {t('urlProcessor.buttons.cancel')}
                 </Button>
-                <div className="flex items-center justify-center gap-2 text-[#994d51] text-sm">
+                <div className={`flex items-center justify-center gap-2 text-[#994d51] text-sm ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                   <div className="animate-spin w-5 h-5 border-2 border-[#994d51] border-t-transparent rounded-full"></div>
-                  Extracting recipe from URL...
+                  {t('urlProcessor.buttons.extracting')}
                 </div>
               </>
             ) : (
@@ -189,7 +194,7 @@ const UrlProcessor = () => {
                   disabled={!isValidUrl}
                   className="w-full"
                 >
-                  Extract from URL
+                  {t('urlProcessor.buttons.extract')}
                 </Button>
                 {url.length > 0 && (
                   <Button
@@ -198,7 +203,7 @@ const UrlProcessor = () => {
                     onClick={handleClear}
                     className="w-full"
                   >
-                    Clear URL
+                    {t('urlProcessor.buttons.clear')}
                   </Button>
                 )}
               </>
@@ -206,13 +211,13 @@ const UrlProcessor = () => {
           </div>
 
           {/* Processing tips */}
-          <div className="mt-6 p-4 bg-[#fcf8f8] border border-[#f3e7e8] rounded-lg">
-            <h3 className="font-medium text-[#1b0e0e] mb-2">Tips for best results:</h3>
-            <ul className="text-sm text-[#994d51] space-y-1 list-disc list-inside">
-              <li>Use direct links to recipe pages, not search results or category pages</li>
-              <li>Popular recipe websites work best (AllRecipes, Food Network, etc.)</li>
-              <li>Processing may take 15-30 seconds depending on the website</li>
-              <li>Some websites may require multiple attempts due to rate limiting</li>
+          <div className={`mt-6 p-4 bg-[#fcf8f8] border border-[#f3e7e8] rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+            <h3 className="font-medium text-[#1b0e0e] mb-2">{t('urlProcessor.tips.title')}</h3>
+            <ul className={`text-sm text-[#994d51] space-y-1 ${isRTL ? 'list-disc list-inside' : 'list-disc list-inside'}`}>
+              <li>{t('urlProcessor.tips.items.0')}</li>
+              <li>{t('urlProcessor.tips.items.1')}</li>
+              <li>{t('urlProcessor.tips.items.2')}</li>
+              <li>{t('urlProcessor.tips.items.3')}</li>
             </ul>
           </div>
         </form>

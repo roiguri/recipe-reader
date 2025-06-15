@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Custom hook for URL validation
@@ -6,6 +7,7 @@ import { useState, useEffect, useMemo } from 'react';
  * @returns {Object} - Validation state and functions
  */
 const useUrlValidation = (url) => {
+  const { t } = useTranslation();
   const [error, setError] = useState(null);
 
   // Validate URL format
@@ -42,25 +44,25 @@ const useUrlValidation = (url) => {
     }
     
     if (!isValidUrl) {
-      return 'Please enter a valid URL (must start with http:// or https://)';
+      return t('urlProcessor.validation.invalidUrl');
     }
     
     if (!isLikelyRecipeUrl) {
-      return 'This URL doesn\'t appear to be from a recipe website, but we\'ll try to extract recipe content anyway.';
+      return t('urlProcessor.validation.notRecipeUrl');
     }
     
     return null;
-  }, [url, isValidUrl, isLikelyRecipeUrl]);
+  }, [url, isValidUrl, isLikelyRecipeUrl, t]);
 
   // Validate for form submission
   const validateForSubmission = () => {
     if (!url || url.trim().length === 0) {
-      setError('Please enter a recipe URL');
+      setError(t('urlProcessor.validation.invalidUrl'));
       return false;
     }
     
     if (!isValidUrl) {
-      setError('Please enter a valid URL (must start with http:// or https://)');
+      setError(t('urlProcessor.validation.invalidUrl'));
       return false;
     }
     

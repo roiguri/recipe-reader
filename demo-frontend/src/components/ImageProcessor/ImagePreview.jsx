@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const ImageThumbnail = ({ 
   file, 
@@ -12,7 +14,8 @@ const ImageThumbnail = ({
   onDragOver,
   onDragLeave,
   onDrop,
-  onDragEnd
+  onDragEnd,
+  t
 }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -98,7 +101,7 @@ const ImageThumbnail = ({
               opacity-0 group-hover:opacity-100 transition-opacity duration-200
               hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
             "
-            aria-label={`Remove image ${index + 1}`}
+            aria-label={t('aria.removeImage', { index: index + 1 })}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -119,7 +122,7 @@ const ImageThumbnail = ({
             #{index + 1}
           </span>
           {isDragOver && (
-            <span className="text-xs text-blue-600 font-medium">Drop here</span>
+            <span className="text-xs text-blue-600 font-medium">{t('imageProcessor.preview.dropHere')}</span>
           )}
         </div>
         <p className="text-xs font-medium text-gray-900 truncate" title={file.name}>
@@ -146,6 +149,8 @@ const ImagePreview = ({
   isProcessing = false,
   className = '' 
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
 
@@ -206,7 +211,7 @@ const ImagePreview = ({
     <div className={`w-full ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-gray-900">
-          Selected Images ({files.length})
+          {t('imageProcessor.preview.selectedImages', { count: files.length })}
         </h3>
         {!isProcessing && (
           <button
@@ -216,9 +221,9 @@ const ImagePreview = ({
               text-xs text-red-600 hover:text-red-700 font-medium
               focus:outline-none focus:underline
             "
-            aria-label="Remove all images"
+            aria-label={t('aria.removeAllImages')}
           >
-            Clear All
+            {t('imageProcessor.preview.clearAll')}
           </button>
         )}
       </div>
@@ -239,6 +244,7 @@ const ImagePreview = ({
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onDragEnd={handleDragEnd}
+              t={t}
             />
           ))}
         </AnimatePresence>
@@ -246,17 +252,16 @@ const ImagePreview = ({
       
       {files.length > 1 && (
         <div className="mt-3 p-2 bg-blue-50 rounded-md">
-          <p className="text-xs text-blue-700">
-            <strong>Multi-page recipe:</strong> These images will be processed together as a single recipe. 
-            Drag and drop to reorder pages.
+          <p className={`text-xs text-blue-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+            {t('imageProcessor.preview.multiPageInfo')}
           </p>
         </div>
       )}
       
       {files.length >= 10 && (
         <div className="mt-2 p-2 bg-amber-50 rounded-md">
-          <p className="text-xs text-amber-700">
-            <strong>Maximum reached:</strong> You've selected the maximum number of images (10).
+          <p className={`text-xs text-amber-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+            {t('imageProcessor.preview.maxReached', { maxFiles: 10 })}
           </p>
         </div>
       )}

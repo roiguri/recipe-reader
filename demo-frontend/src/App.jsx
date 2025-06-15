@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import AppHeader from './components/AppHeader.jsx';
 import MainContent from './components/MainContent.jsx';
 import ComingSoonContent from './components/ComingSoonContent.jsx';
 import TextProcessor from './components/TextProcessor/index';
 import UrlProcessor from './components/UrlProcessor/index';
 import ImageProcessor from './components/ImageProcessor/index';
-import { CARD_CONFIGS } from './config/cardConfigs.jsx';
+import { useCardConfigs } from './config/cardConfigs.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
-
   const [expandedCard, setExpandedCard] = useState(null);
+  const cardConfigs = useCardConfigs();
 
   const handleCardClick = (cardId) => {
     setExpandedCard(expandedCard === cardId ? null : cardId);
@@ -30,8 +30,8 @@ function App() {
     return processors[id] || <ComingSoonContent feature={config.title.toLowerCase()} />;
   };
 
-  const getCardItems = () => {
-    return Object.entries(CARD_CONFIGS).map(([id, config]) => ({
+  const cardItems = useMemo(() => {
+    return Object.entries(cardConfigs).map(([id, config]) => ({
       id,
       preview: {
         icon: config.icon,
@@ -40,7 +40,7 @@ function App() {
       },
       expanded: getExpandedContent(id, config)
     }));
-  };
+  }, [cardConfigs]);
 
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-[#fcf8f8]" style={{fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif'}}>
@@ -48,7 +48,7 @@ function App() {
         <ErrorBoundary>
           <AppHeader />
           <MainContent 
-            cardItems={getCardItems()}
+            cardItems={cardItems}
             expandedCard={expandedCard}
             onCardClick={handleCardClick}
             onBackClick={() => setExpandedCard(null)}

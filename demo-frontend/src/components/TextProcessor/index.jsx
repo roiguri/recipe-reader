@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { processRecipeText, createRequestController, APIError } from '../../utils/api';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
@@ -12,6 +14,8 @@ import ActionButtons from './ActionButtons';
 import useFormValidation from './useFormValidation';
 
 const TextProcessor = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -62,16 +66,16 @@ const TextProcessor = () => {
     } catch (err) {
       if (err instanceof APIError) {
         if (err.details?.cancelled) {
-          setError('Request was cancelled');
+          setError(t('errors.cancelled'));
         } else if (err.details?.offline) {
-          setError('No internet connection. Please check your network and try again.');
+          setError(t('errors.offline'));
         } else if (err.details?.networkError) {
-          setError('Cannot connect to the recipe processing service. Please make sure the server is running.');
+          setError(t('errors.networkError'));
         } else {
           setError(err.message);
         }
       } else {
-        setError('An unexpected error occurred. Please try again.');
+        setError(t('errors.unexpected'));
       }
     } finally {
       setIsLoading(false);
@@ -122,12 +126,12 @@ const TextProcessor = () => {
       <Card>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Header */}
-          <div className="text-center mb-6">
+          <div className={`text-center mb-6 ${isRTL ? 'text-right' : 'text-left'} sm:text-center`}>
             <h2 className="text-xl font-bold text-[#1b0e0e] mb-2">
-              Paste Your Recipe Text
+              {t('textProcessor.title')}
             </h2>
             <p className="text-sm text-[#994d51] mb-4">
-              Copy and paste recipe text from any source. Supports Hebrew and English.
+              {t('textProcessor.description')}
             </p>
           </div>
 
@@ -152,12 +156,12 @@ const TextProcessor = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800"
+              className={`p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800 ${isRTL ? 'text-right' : 'text-left'}`}
             >
               {text.length < MIN_CHARS ? (
-                <>Need {MIN_CHARS - text.length} more characters for better recipe extraction</>
+                t('textProcessor.validation.tooShort', { count: MIN_CHARS - text.length })
               ) : (
-                <>Text too long by {text.length - MAX_CHARS} characters. Please shorten.</>
+                t('textProcessor.validation.tooLong', { count: text.length - MAX_CHARS })
               )}
             </motion.div>
           )}
@@ -167,7 +171,7 @@ const TextProcessor = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800"
+              className={`p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800 ${isRTL ? 'text-right' : 'text-left'}`}
             >
               {error}
             </motion.div>

@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { processRecipeImage, createRequestController, APIError } from '../../utils/api';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
@@ -11,6 +13,8 @@ import ImagePreview from './ImagePreview';
 import { useImageValidation } from './useImageValidation';
 
 const ImageProcessor = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -68,7 +72,7 @@ const ImageProcessor = () => {
     e.preventDefault();
     
     if (selectedFiles.length === 0) {
-      setError('Please select at least one image to process');
+      setError(t('imageProcessor.validation.noImages'));
       return;
     }
 
@@ -107,16 +111,16 @@ const ImageProcessor = () => {
     } catch (err) {
       if (err instanceof APIError) {
         if (err.details?.cancelled) {
-          setError('Request was cancelled');
+          setError(t('errors.cancelled'));
         } else if (err.details?.offline) {
-          setError('No internet connection. Please check your network and try again.');
+          setError(t('errors.offline'));
         } else if (err.details?.networkError) {
-          setError('Cannot connect to the recipe processing service. Please make sure the server is running.');
+          setError(t('errors.networkError'));
         } else {
           setError(err.message);
         }
       } else {
-        setError(err.message || 'An unexpected error occurred. Please try again.');
+        setError(err.message || t('errors.unexpected'));
       }
     } finally {
       setIsLoading(false);
@@ -161,15 +165,19 @@ const ImageProcessor = () => {
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Header */}
-          <div className="text-center mb-6">
+          <div className={`text-center mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
             <h2 className="text-xl font-bold text-[#1b0e0e] mb-2">
-              Upload Recipe Images
+              {t('imageProcessor.title')}
             </h2>
             <p className="text-sm text-[#994d51] mb-2">
-              Upload photos of recipe cards, cookbook pages, or handwritten recipes.
+              {t('imageProcessor.description')}
             </p>
             <p className="text-xs text-gray-600">
-              Supports {getSupportedFormats().join(', ')} • Max {getMaxFileSizeMB()}MB each • Up to {maxFiles} images
+              {t('imageProcessor.formatInfo', {
+                formats: getSupportedFormats().join(', '),
+                maxSize: getMaxFileSizeMB(),
+                maxFiles: maxFiles
+              })}
             </p>
           </div>
 
@@ -211,15 +219,18 @@ const ImageProcessor = () => {
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 style={{ overflow: "hidden" }}
               >
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-                  <h4 className="font-medium text-blue-900 mb-2">Tips for better results:</h4>
-                  <ul className="text-blue-800 space-y-1 list-disc list-inside">
-                    <li>Ensure images are clear and well-lit</li>
-                    <li>Make sure all text is readable</li>
-                    {selectedFiles.length > 1 && (
-                      <li>Drag and drop images to reorder pages</li>
-                    )}
-                    <li>Supports both Hebrew and English text</li>
+                <div className={`p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <h4 className="font-medium text-blue-900 mb-2">{t('imageProcessor.tips.title')}</h4>
+                  <ul className={`text-blue-800 space-y-1 list-disc ${isRTL ? 'list-inside pr-4' : 'list-inside'}`}>
+                    {(() => {
+                      const tipItems = t('imageProcessor.tips.items', { returnObjects: true });
+                      if (!Array.isArray(tipItems)) return null;
+                      return tipItems.map((tip, index) => {
+                        // Skip the reorder tip if we don't have multiple files
+                        if (index === 2 && selectedFiles.length <= 1) return null;
+                        return <li key={index}>{tip}</li>;
+                      });
+                    })()}
                   </ul>
                 </div>
               </motion.div>
@@ -238,7 +249,7 @@ const ImageProcessor = () => {
           )}
 
           {/* Action buttons */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className={`flex flex-col ${isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row'} gap-3`}>
             {!isLoading ? (
               <>
                 <button
@@ -251,7 +262,7 @@ const ImageProcessor = () => {
                     transition-colors duration-200
                   "
                 >
-                  Process Images
+                  {t('imageProcessor.buttons.processImages')}
                 </button>
                 
                 {selectedFiles.length > 0 && (
@@ -264,15 +275,15 @@ const ImageProcessor = () => {
                       transition-colors duration-200
                     "
                   >
-                    Clear All
+                    {t('imageProcessor.buttons.clearAll')}
                   </button>
                 )}
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center space-x-3">
+              <div className={`flex-1 flex items-center justify-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
                 <span className="text-sm text-gray-600">
-                  Processing images... This may take a moment.
+                  {t('imageProcessor.processing')}
                 </span>
                 <button
                   type="button"
@@ -283,7 +294,7 @@ const ImageProcessor = () => {
                     transition-colors duration-200
                   "
                 >
-                  Cancel
+                  {t('imageProcessor.buttons.cancel')}
                 </button>
               </div>
             )}

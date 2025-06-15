@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const ImageFileInput = ({ 
   onFilesSelected, 
@@ -9,6 +11,8 @@ const ImageFileInput = ({
   disabled = false,
   className = ''
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -21,13 +25,13 @@ const ImageFileInput = ({
       
       // Check file type
       if (!acceptedFormats.includes(file.type)) {
-        errors.push(`${file.name}: Unsupported format. Please use JPEG, PNG, WebP, or GIF.`);
+        errors.push(`${file.name}: ${t('imageProcessor.validation.invalidFormat')}`);
         continue;
       }
       
       // Check file size
       if (file.size > maxFileSize) {
-        errors.push(`${file.name}: File too large. Maximum size is ${Math.round(maxFileSize / (1024 * 1024))}MB.`);
+        errors.push(`${file.name}: ${t('imageProcessor.validation.tooLarge', { maxSize: Math.round(maxFileSize / (1024 * 1024)) })}`);
         continue;
       }
       
@@ -36,12 +40,12 @@ const ImageFileInput = ({
 
     // Check total count
     if (validFiles.length > maxFiles) {
-      errors.push(`Too many files selected. Maximum is ${maxFiles} images.`);
+      errors.push(t('imageProcessor.validation.tooMany', { maxFiles }));
       return { validFiles: validFiles.slice(0, maxFiles), errors };
     }
 
     return { validFiles, errors };
-  }, [acceptedFormats, maxFileSize, maxFiles]);
+  }, [acceptedFormats, maxFileSize, maxFiles, t]);
 
   const handleFiles = useCallback((files) => {
     if (disabled) return;
@@ -129,7 +133,7 @@ const ImageFileInput = ({
         onKeyDown={handleKeyDown}
         tabIndex={disabled ? -1 : 0}
         role="button"
-        aria-label="Upload recipe images"
+        aria-label={t('aria.uploadImages')}
         whileHover={disabled ? {} : { scale: 1.01 }}
         whileTap={disabled ? {} : { scale: 0.99 }}
       >
@@ -165,12 +169,12 @@ const ImageFileInput = ({
             </svg>
           </motion.div>
           
-          <div>
+          <div className={isRTL ? 'text-right' : 'text-left'}>
             <p className="text-sm font-medium text-gray-900 mb-1">
-              {isDragOver ? 'Drop your images here' : 'Upload recipe images'}
+              {isDragOver ? t('imageProcessor.dragDrop.active') : t('imageProcessor.dragDrop.inactive')}
             </p>
             <p className="text-xs text-gray-500">
-              Drag and drop or click to select up to {maxFiles} images
+              {t('imageProcessor.dragDrop.instruction', { maxFiles })}
             </p>
             <p className="text-xs text-gray-400 mt-1">
               JPEG, PNG, WebP, GIF • Max {Math.round(maxFileSize / (1024 * 1024))}MB each

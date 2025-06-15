@@ -1,0 +1,210 @@
+{
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "loading": "Loading...",
+    "error": "Error",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "startOver": "Start Over",
+    "notSpecified": "Not specified",
+    "processAnother": "Process Another Recipe",
+    "timeMinutes_one": "{{count}} min",
+    "timeMinutes_other": "{{count}} min",
+    "timeHours_one": "{{count}}h",
+    "timeHours_other": "{{count}}h",
+    "timeHoursMinutes": "{{hours}} {{minutes}}"
+  },
+  "header": {
+    "title": "Add a new recipe",
+    "backToOptions": {
+      "full": "Back to options",
+      "short": "Back"
+    }
+  },
+  "textProcessor": {
+    "title": "Enter text",
+    "description": "Add a recipe by entering text",
+    "placeholder": "Paste your recipe text here...",
+    "charactersRemaining": "{{count}} characters remaining",
+    "charactersOver": "{{count}} characters over limit",
+    "validation": {
+      "tooShort": "Need {{count}} more characters for better recipe extraction",
+      "tooLong": "Text too long by {{count}} characters. Please shorten."
+    },
+    "buttons": {
+      "process": "Process Recipe",
+      "processing": "Processing Recipe...",
+      "cancel": "Cancel",
+      "clear": "Clear Text"
+    },
+    "guidelines": {
+      "title": "For best results:",
+      "items": [
+        "Minimum",
+        "Hebrew",
+        "English supported",
+        "Recommended {{min}}+ characters"
+      ]
+    }
+  },
+  "urlProcessor": {
+    "title": "Provide a URL",
+    "description": "Add a recipe by providing a URL",
+    "placeholder": "https://example.com/recipe-url",
+    "validation": {
+      "invalidUrl": "Please enter a valid URL",
+      "validUrl": "Valid URL format",
+      "notRecipeUrl": "This URL doesn't appear to be from a recipe website, but we'll try to extract recipe content anyway."
+    },
+    "buttons": {
+      "extract": "Extract from URL",
+      "extracting": "Extracting recipe from URL...",
+      "cancel": "Cancel",
+      "clear": "Clear URL"
+    },
+    "tips": {
+      "title": "Tips for best results:",
+      "items": [
+        "Use direct links to recipe pages, not search results or category pages",
+        "Popular recipe websites work best (AllRecipes, Food Network, etc.)",
+        "Processing may take 15-30 seconds depending on the website",
+        "Some websites may require multiple attempts due to rate limiting"
+      ]
+    }
+  },
+  "imageProcessor": {
+    "title": "Upload Recipe Images",
+    "description": "Add a recipe by uploading images",
+    "formatInfo": "Supports {{formats}} • Max {{maxSize}}MB each • Up to {{maxFiles}} images",
+    "buttons": {
+      "selectImages": "Select Images",
+      "processImages": "Process Images",
+      "clearAll": "Clear All",
+      "cancel": "Cancel"
+    },
+    "processing": "Processing images... This may take a moment.",
+    "validation": {
+      "noImages": "Please select at least one image to process",
+      "invalidFormat": "Unsupported format. Please use JPEG, PNG, WebP, or GIF.",
+      "tooLarge": "File too large. Maximum size is {{maxSize}}MB.",
+      "tooMany": "Too many files selected. Maximum is {{maxFiles}} images."
+    },
+    "tips": {
+      "title": "Tips for better results:",
+      "items": [
+        "Ensure images are clear and well-lit",
+        "Make sure all text is readable",
+        "Drag and drop images to reorder pages",
+        "Supports both Hebrew and English text"
+      ]
+    },
+    "dragDrop": {
+      "active": "Drop your images here",
+      "inactive": "Upload recipe images",
+      "instruction": "Drag and drop or click to select up to {{maxFiles}} images"
+    },
+    "preview": {
+      "selectedImages": "Selected Images ({{count}})",
+      "clearAll": "Clear All",
+      "dropHere": "Drop here",
+      "multiPageInfo": "Multi-page recipe: These images will be processed together as a single recipe. Drag and drop to reorder pages.",
+      "maxReached": "Maximum reached: You've selected the maximum number of images ({{maxFiles}})."
+    }
+  },
+  "resultDisplay": {
+    "tabs": {
+      "recipe": "Recipe",
+      "raw": "Raw Data", 
+      "export": "Export"
+    },
+    "confidence": "confidence",
+    "processingTime": "Processed in {{time}}s",
+    "metadata": {
+      "servings": "Servings",
+      "prepTime": "Prep Time",
+      "cookTime": "Cook Time",
+      "totalTime": "Total Time",
+      "difficulty": "Difficulty",
+      "cuisine": "Cuisine",
+      "course": "Course"
+    },
+    "sections": {
+      "ingredients": "Ingredients",
+      "instructions": "Instructions",
+      "tags": "Tags"
+    },
+    "copy": {
+      "ingredients": "Copy Ingredients",
+      "instructions": "Copy Instructions",
+      "recipe": "Copy Recipe",
+      "json": "Copy JSON data"
+    },
+    "export": {
+      "title": "Export Recipe",
+      "formats": {
+        "json": "JSON Format",
+        "text": "Plain Text",
+        "markdown": "Markdown",
+        "pdf": "PDF Format"
+      },
+      "descriptions": {
+        "json": "Export as JSON data",
+        "text": "Export as plain text",
+        "markdown": "Export as Markdown document",
+        "pdf": "Export as PDF document"
+      },
+      "description": "Export your recipe in different formats for easy sharing and storage.",
+      "notImplemented": "Export as {{type}} functionality would be implemented here"
+    }
+  },
+  "errors": {
+    "networkError": "Cannot connect to the recipe processing service. Please make sure the server is running.",
+    "offline": "No internet connection. Please check your network and try again.",
+    "cancelled": "Request was cancelled",
+    "timeout": "Request timed out. Please try again.",
+    "invalidInput": "Invalid input provided",
+    "processingFailed": "Failed to process recipe. Please try again.",
+    "unexpected": "An unexpected error occurred. Please try again."
+  },
+  "language": {
+    "english": "English",
+    "hebrew": "עברית",
+    "switchTo": "Switch to {{language}}"
+  },
+  "formProcessor": {
+    "title": "Enter recipe form",
+    "description": "Fill out a structured recipe form"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "We encountered an error while processing your request. Please try again or contact support if the problem persists.",
+    "tryAgain": "Try Again",
+    "reloadPage": "Reload Page",
+    "errorDetails": "Error Details"
+  },
+  "optionsGrid": {
+    "noContent": "No content available"
+  },
+  "comingSoon": {
+    "title": "Coming Soon",
+    "description": "We're currently working on {{feature}}. This feature will be available soon!"
+  },
+  "appHeader": {
+    "home": "Home",
+    "myRecipes": "My Recipes"
+  },
+  "copyButton": {
+    "title": "Copy to clipboard",
+    "copied": "✓ Copied!"
+  },
+  "aria": {
+    "goBack": "Go back to options (Press ESC)",
+    "urlInput": "Recipe URL input",
+    "uploadImages": "Upload recipe images",
+    "removeImage": "Remove image {{index}}",
+    "removeAllImages": "Remove all images",
+    "optionCard": "{{title}}: {{description}}"
+  }
+}

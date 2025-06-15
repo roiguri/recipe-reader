@@ -1,0 +1,210 @@
+{
+  "common": {
+    "back": "חזור",
+    "cancel": "ביטול",
+    "clear": "נקה",
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "copy": "העתק",
+    "copied": "הועתק!",
+    "startOver": "התחל מחדש",
+    "notSpecified": "לא צוין",
+    "processAnother": "עבד מתכון נוסף",
+    "timeMinutes_one": "דקה",
+    "timeMinutes_other": "{{count}} דקות",
+    "timeHours_one": "שעה",
+    "timeHours_other": "{{count}} שעות",
+    "timeHoursMinutes": "{{hours}} {{minutes}}"
+  },
+  "header": {
+    "title": "הוסף מתכון חדש",
+    "backToOptions": {
+      "full": "חזור לאפשרויות",
+      "short": "חזור"
+    }
+  },
+  "textProcessor": {
+    "title": "הזן טקסט",
+    "description": "הוסף מתכון בעזרת טקסט",
+    "placeholder": "הזן כאן את טקסט המתכון...",
+    "charactersRemaining": "{{count}} תווים נותרו",
+    "charactersOver": "{{count}} תווים מעל המגבלה",
+    "validation": {
+      "tooShort": "נדרשים עוד {{count}} תווים לחילוץ מתכון טוב יותר",
+      "tooLong": "הטקסט ארוך מדי ב-{{count}} תווים. אנא קצר."
+    },
+    "buttons": {
+      "process": "עבד מתכון",
+      "processing": "מעבד מתכון...",
+      "cancel": "ביטול",
+      "clear": "נקה טקסט"
+    },
+    "guidelines": {
+      "title": "לתוצאות מיטביות:",
+      "items": [
+        "מינימום", 
+        "עברית",
+        "אנגלית נתמכים",
+        "מומלץ {{min}}+ תווים"
+      ]
+    }
+  },
+  "urlProcessor": {
+    "title": "הזן קישור",
+    "description": "הוסף מתכון בעזרת קישור",
+    "placeholder": "https://example.com/recipe-url",
+    "validation": {
+      "invalidUrl": "אנא הזן קישור תקין",
+      "validUrl": "פורמט קישור תקין",
+      "notRecipeUrl": "הקישור הזה לא נראה כמו מאתר מתכונים, אבל ננסה לחלץ תוכן מתכון בכל זאת."
+    },
+    "buttons": {
+      "extract": "חלץ מקישור",
+      "extracting": "מחלץ מתכון מהקישור...",
+      "cancel": "ביטול",
+      "clear": "נקה קישור"
+    },
+    "tips": {
+      "title": "טיפים לתוצאות מיטביות:",
+      "items": [
+        "השתמש בקישורים ישירים לדפי מתכונים, לא תוצאות חיפוש או דפי קטגוריות",
+        "אתרי מתכונים פופולריים עובדים הכי טוב (AllRecipes, Food Network, וכו')",
+        "העיבוד עשוי לקחת 15-30 שניות בהתאם לאתר",
+        "חלק מהאתרים עשויים לדרוש מספר ניסיונות בגלל הגבלות קצב"
+      ]
+    }
+  },
+  "imageProcessor": {
+    "title": "העלה תמונות מתכון",
+    "description": "הוסף מתכון בעזרת תמונות",
+    "formatInfo": "תומך ב-{{formats}} • מקסימום {{maxSize}}MB לכל תמונה • עד {{maxFiles}} תמונות",
+    "buttons": {
+      "selectImages": "בחר תמונות",
+      "processImages": "עבד תמונות",
+      "clearAll": "נקה הכל",
+      "cancel": "ביטול"
+    },
+    "processing": "מעבד תמונות... זה עשוי לקחת רגע.",
+    "validation": {
+      "noImages": "אנא בחר לפחות תמונה אחת לעיבוד",
+      "invalidFormat": "פורמט לא נתמך. אנא השתמש ב-JPEG, PNG, WebP או GIF.",
+      "tooLarge": "הקובץ גדול מדי. גודל מקסימלי הוא {{maxSize}}MB.",
+      "tooMany": "נבחרו יותר מדי קבצים. מקסימום {{maxFiles}} תמונות."
+    },
+    "tips": {
+      "title": "טיפים לתוצאות מיטביות:",
+      "items": [
+        "וודא שהתמונות בהירות ומוארות היטב",
+        "וודא שכל הטקסט קריא",
+        "גרור ושחרר תמונות כדי לסדר עמודים",
+        "תומך בטקסט בעברית ובאנגלית"
+      ]
+    },
+    "dragDrop": {
+      "active": "שחרר כאן את התמונות",
+      "inactive": "העלה תמונות מתכון",
+      "instruction": "גרור ושחרר או לחץ כדי לבחור עד {{maxFiles}} תמונות"
+    },
+    "preview": {
+      "selectedImages": "תמונות נבחרות ({{count}})",
+      "clearAll": "נקה הכל",
+      "dropHere": "שחרר כאן",
+      "multiPageInfo": "מתכון רב-עמודים: התמונות האלה יעובדו יחד כמתכון אחד. גרור ושחרר כדי לסדר עמודים.",
+      "maxReached": "הגעת למקסימום: בחרת את המספר המקסימלי של תמונות ({{maxFiles}})."
+    }
+  },
+  "resultDisplay": {
+    "tabs": {
+      "recipe": "מתכון",
+      "raw": "נתונים גולמיים",
+      "export": "יצוא"
+    },
+    "confidence": "ביטחון",
+    "processingTime": "עובד ב-{{time}} שניות",
+    "metadata": {
+      "servings": "מנות",
+      "prepTime": "זמן הכנה",
+      "cookTime": "זמן בישול",
+      "totalTime": "זמן כולל",
+      "difficulty": "רמת קושי",
+      "cuisine": "סוג מטבח",
+      "course": "מהלך"
+    },
+    "sections": {
+      "ingredients": "רכיבים",
+      "instructions": "הוראות",
+      "tags": "תגיות"
+    },
+    "copy": {
+      "ingredients": "העתק רכיבים",
+      "instructions": "העתק הוראות",
+      "recipe": "העתק מתכון",
+      "json": "העתק נתוני JSON"
+    },
+    "export": {
+      "title": "יצא מתכון",
+      "formats": {
+        "json": "פורמט JSON",
+        "text": "טקסט רגיל",
+        "markdown": "Markdown",
+        "pdf": "פורמט PDF"
+      },
+      "descriptions": {
+        "json": "יצא כנתוני JSON",
+        "text": "יצא כטקסט רגיל",
+        "markdown": "יצא כמסמך Markdown",
+        "pdf": "יצא כמסמך PDF"
+      },
+      "description": "יצא את המתכון שלך בפורמטים שונים לשיתוף ואחסון קלים.",
+      "notImplemented": "פונקציונליות יצוא בפורמט {{type}} תמומש כאן"
+    }
+  },
+  "errors": {
+    "networkError": "לא ניתן להתחבר לשירות עיבוד המתכונים. אנא וודא שהשרת פועל.",
+    "offline": "אין חיבור לאינטרנט. אנא בדוק את הרשת שלך ונסה שוב.",
+    "cancelled": "הבקשה בוטלה",
+    "timeout": "הבקשה נגמר הזמן. אנא נסה שוב.",
+    "invalidInput": "קלט לא תקין",
+    "processingFailed": "נכשל בעיבוד המתכון. אנא נסה שוב.",
+    "unexpected": "אירעה שגיאה לא צפויה. אנא נסה שוב."
+  },
+  "language": {
+    "english": "English",
+    "hebrew": "עברית",
+    "switchTo": "עבר ל{{language}}"
+  },
+  "formProcessor": {
+    "title": "הזן טופס מתכון",
+    "description": "הוסף מתכון בעזרת טופס"
+  },
+  "errorBoundary": {
+    "title": "משהו השתבש",
+    "description": "נתקלנו בשגיאה בעת עיבוד הבקשה שלך. אנא נסה שוב או פנה לתמיכה אם הבעיה נמשכת.",
+    "tryAgain": "נסה שוב",
+    "reloadPage": "טען עמוד מחדש",
+    "errorDetails": "פרטי שגיאה"
+  },
+  "optionsGrid": {
+    "noContent": "אין תוכן זמין"
+  },
+  "comingSoon": {
+    "title": "בקרוב",
+    "description": "אנחנו עובדים כרגע על {{feature}}. התכונה הזו תהיה זמינה בקרוב!"
+  },
+  "appHeader": {
+    "home": "בית",
+    "myRecipes": "המתכונים שלי"
+  },
+  "copyButton": {
+    "title": "העתק ללוח",
+    "copied": "✓ הועתק!"
+  },
+  "aria": {
+    "goBack": "חזור לאפשרויות (לחץ ESC)",
+    "urlInput": "שדה הכנסת קישור מתכון",
+    "uploadImages": "העלה תמונות מתכון",
+    "removeImage": "הסר תמונה {{index}}",
+    "removeAllImages": "הסר את כל התמונות",
+    "optionCard": "{{title}}: {{description}}"
+  }
+}
