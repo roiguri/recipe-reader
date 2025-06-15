@@ -16,8 +16,9 @@ const RecipeTextarea = React.forwardRef(({
   disabled = false, 
   maxChars = 10000
 }, ref) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isHebrew = text => /[\u0590-\u05FF]/.test(text);
+  const isCurrentLanguageHebrew = i18n.language === 'he';
   
   return (
     <div className="relative">
@@ -28,7 +29,7 @@ const RecipeTextarea = React.forwardRef(({
         placeholder={t('textProcessor.placeholder')}
         className="w-full min-h-[400px] max-h-[600px] p-4 border border-[#f3e7e8] rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:border-transparent transition-all duration-200 text-[#1b0e0e] placeholder-[#994d51]/60"
         style={{
-          direction: value && isHebrew(value) ? 'rtl' : 'ltr',
+          direction: value ? (isHebrew(value) ? 'rtl' : 'ltr') : (isCurrentLanguageHebrew ? 'rtl' : 'ltr'),
           fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif'
         }}
         disabled={disabled}
