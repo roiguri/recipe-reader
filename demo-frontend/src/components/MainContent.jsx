@@ -41,7 +41,7 @@ const MainContent = ({
                   }
                 }}
                 onClick={onBackClick}
-                aria-label="Go back to options (Press ESC)"
+                aria-label={t('aria.goBack')}
                 className="px-2 py-1"
                 leftIcon={
                   <svg 

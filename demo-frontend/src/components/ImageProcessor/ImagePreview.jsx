@@ -101,7 +101,7 @@ const ImageThumbnail = ({
               opacity-0 group-hover:opacity-100 transition-opacity duration-200
               hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
             "
-            aria-label={`Remove image ${index + 1}`}
+            aria-label={t('aria.removeImage', { index: index + 1 })}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -221,7 +221,7 @@ const ImagePreview = ({
               text-xs text-red-600 hover:text-red-700 font-medium
               focus:outline-none focus:underline
             "
-            aria-label="Remove all images"
+            aria-label={t('aria.removeAllImages')}
           >
             {t('imageProcessor.preview.clearAll')}
           </button>

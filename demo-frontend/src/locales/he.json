@@ -198,5 +198,13 @@
   "copyButton": {
     "title": "העתק ללוח",
     "copied": "✓ הועתק!"
+  },
+  "aria": {
+    "goBack": "חזור לאפשרויות (לחץ ESC)",
+    "urlInput": "שדה הכנסת קישור מתכון",
+    "uploadImages": "העלה תמונות מתכון",
+    "removeImage": "הסר תמונה {{index}}",
+    "removeAllImages": "הסר את כל התמונות",
+    "optionCard": "{{title}}: {{description}}"
   }
 }

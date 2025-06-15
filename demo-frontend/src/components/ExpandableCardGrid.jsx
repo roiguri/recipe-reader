@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ANIMATION_CONFIG } from '../utils/animationConfig';
 import OptionsGrid from './OptionsGrid.jsx';
 import Button from './ui/Button.jsx';
@@ -13,6 +14,7 @@ const ExpandableCardGrid = ({
   enableKeyboardSupport = true,
   gridClassName = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-4"
 }) => {
+  const { t } = useTranslation();
   
   const handleBackClick = useCallback(() => {
     try {
@@ -64,7 +66,7 @@ const ExpandableCardGrid = ({
                 }
               }}
               onClick={handleBackClick}
-              aria-label="Go back to options (Press ESC)"
+              aria-label={t('aria.goBack')}
               className="absolute -top-16 sm:-top-12 right-0 z-60 px-2 py-1"
               leftIcon={
                 <svg 

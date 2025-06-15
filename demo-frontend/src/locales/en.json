@@ -198,5 +198,13 @@
   "copyButton": {
     "title": "Copy to clipboard",
     "copied": "✓ Copied!"
+  },
+  "aria": {
+    "goBack": "Go back to options (Press ESC)",
+    "urlInput": "Recipe URL input",
+    "uploadImages": "Upload recipe images",
+    "removeImage": "Remove image {{index}}",
+    "removeAllImages": "Remove all images",
+    "optionCard": "{{title}}: {{description}}"
   }
 }

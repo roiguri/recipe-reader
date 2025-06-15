@@ -31,7 +31,7 @@ const UrlInput = React.forwardRef(({
           className={`w-full p-4 ${isRTL ? 'pl-12 pr-4' : 'pr-12 pl-4'} border border-[#f3e7e8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:border-transparent transition-all duration-200 text-[#1b0e0e] placeholder-[#994d51]/60`}
           style={{ direction: 'ltr' }} // URLs are always LTR
           disabled={disabled}
-          aria-label="Recipe URL input"
+          aria-label={t('aria.urlInput')}
           aria-describedby="url-validation-status"
         />
         

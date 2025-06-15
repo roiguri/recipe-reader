@@ -133,7 +133,7 @@ const ImageFileInput = ({
         onKeyDown={handleKeyDown}
         tabIndex={disabled ? -1 : 0}
         role="button"
-        aria-label="Upload recipe images"
+        aria-label={t('aria.uploadImages')}
         whileHover={disabled ? {} : { scale: 1.01 }}
         whileTap={disabled ? {} : { scale: 0.99 }}
       >
