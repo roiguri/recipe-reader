@@ -7,7 +7,12 @@
     "error": "שגיאה",
     "copy": "העתק",
     "copied": "הועתק!",
-    "startOver": "התחל מחדש"
+    "startOver": "התחל מחדש",
+    "notSpecified": "לא צוין",
+    "processAnother": "עבד מתכון נוסף",
+    "timeMinutes": "{{minutes}} דק'",
+    "timeHours": "{{hours}} שעות",
+    "timeHoursMinutes": "{{hours}} שעות {{minutes}} דק'"
   },
   "header": {
     "title": "הוסף מתכון חדש",
@@ -111,8 +116,8 @@
       "raw": "נתונים גולמיים",
       "export": "יצוא"
     },
-    "confidence": "רמת ביטחון",
-    "processingTime": "זמן עיבוד",
+    "confidence": "ביטחון",
+    "processingTime": "עובד ב-{{time}} שניות",
     "metadata": {
       "servings": "מנות",
       "prepTime": "זמן הכנה",
@@ -134,12 +139,21 @@
       "json": "העתק נתוני JSON"
     },
     "export": {
+      "title": "יצא מתכון",
       "formats": {
         "json": "פורמט JSON",
         "text": "טקסט רגיל",
-        "markdown": "Markdown"
+        "markdown": "Markdown",
+        "pdf": "פורמט PDF"
       },
-      "description": "יצא את המתכון שלך בפורמטים שונים לשיתוף ואחסון קלים."
+      "descriptions": {
+        "json": "יצא כנתוני JSON",
+        "text": "יצא כטקסט רגיל",
+        "markdown": "יצא כמסמך Markdown",
+        "pdf": "יצא כמסמך PDF"
+      },
+      "description": "יצא את המתכון שלך בפורמטים שונים לשיתוף ואחסון קלים.",
+      "notImplemented": "פונקציונליות יצוא בפורמט {{type}} תמומש כאן"
     }
   },
   "errors": {

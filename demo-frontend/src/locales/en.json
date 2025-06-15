@@ -7,7 +7,12 @@
     "error": "Error",
     "copy": "Copy",
     "copied": "Copied!",
-    "startOver": "Start Over"
+    "startOver": "Start Over",
+    "notSpecified": "Not specified",
+    "processAnother": "Process Another Recipe",
+    "timeMinutes": "{{minutes}} min",
+    "timeHours": "{{hours}}h",
+    "timeHoursMinutes": "{{hours}}h {{minutes}}min"
   },
   "header": {
     "title": "Add a new recipe",
@@ -111,8 +116,8 @@
       "raw": "Raw Data", 
       "export": "Export"
     },
-    "confidence": "Confidence",
-    "processingTime": "Processing Time",
+    "confidence": "confidence",
+    "processingTime": "Processed in {{time}}s",
     "metadata": {
       "servings": "Servings",
       "prepTime": "Prep Time",
@@ -134,12 +139,21 @@
       "json": "Copy JSON data"
     },
     "export": {
+      "title": "Export Recipe",
       "formats": {
         "json": "JSON Format",
         "text": "Plain Text",
-        "markdown": "Markdown"
+        "markdown": "Markdown",
+        "pdf": "PDF Format"
       },
-      "description": "Export your recipe in different formats for easy sharing and storage."
+      "descriptions": {
+        "json": "Export as JSON data",
+        "text": "Export as plain text",
+        "markdown": "Export as Markdown document",
+        "pdf": "Export as PDF document"
+      },
+      "description": "Export your recipe in different formats for easy sharing and storage.",
+      "notImplemented": "Export as {{type}} functionality would be implemented here"
     }
   },
   "errors": {

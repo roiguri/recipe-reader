@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from '../ui/Card';
 
 /**
@@ -15,6 +16,7 @@ const RecipeInfoCard = ({
   processingTime, 
   onStartOver 
 }) => {
+  const { t } = useTranslation();
   const isHebrew = text => /[\u0590-\u05FF]/.test(text);
   const hasHebrewContent = isHebrew(recipe.name) || (Array.isArray(recipe.ingredients) && recipe.ingredients.some(ing => isHebrew(ing.item)));
   
@@ -33,16 +35,16 @@ const RecipeInfoCard = ({
           <div className="flex flex-wrap items-center gap-4 text-sm text-[#994d51]">
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              {Math.round(confidenceScore * 100)}% confidence
+              {Math.round(confidenceScore * 100)}% {t('resultDisplay.confidence')}
             </span>
-            <span>Processed in {processingTime.toFixed(2)}s</span>
+            <span>{t('resultDisplay.processingTime', { time: processingTime.toFixed(2) })}</span>
           </div>
         </div>
         <button
           onClick={onStartOver}
           className="px-6 py-2 bg-white border border-[#994d51] text-[#994d51] rounded-md hover:bg-[#fcf8f8] transition-colors focus:outline-none focus:ring-2 focus:ring-[#994d51]"
         >
-          Process Another Recipe
+          {t('common.processAnother')}
         </button>
       </div>
     </Card>
