@@ -222,11 +222,15 @@ const ImageProcessor = () => {
                 <div className={`p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                   <h4 className="font-medium text-blue-900 mb-2">{t('imageProcessor.tips.title')}</h4>
                   <ul className={`text-blue-800 space-y-1 list-disc ${isRTL ? 'list-inside pr-4' : 'list-inside'}`}>
-                    {t('imageProcessor.tips.items', { returnObjects: true }).map((tip, index) => {
-                      // Skip the reorder tip if we don't have multiple files
-                      if (index === 2 && selectedFiles.length <= 1) return null;
-                      return <li key={index}>{tip}</li>;
-                    })}
+                    {(() => {
+                      const tipItems = t('imageProcessor.tips.items', { returnObjects: true });
+                      if (!Array.isArray(tipItems)) return null;
+                      return tipItems.map((tip, index) => {
+                        // Skip the reorder tip if we don't have multiple files
+                        if (index === 2 && selectedFiles.length <= 1) return null;
+                        return <li key={index}>{tip}</li>;
+                      });
+                    })()}
                   </ul>
                 </div>
               </motion.div>
