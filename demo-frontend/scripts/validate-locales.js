@@ -53,25 +53,26 @@ function validateLocales() {
       }
     }
     
-    // Get all unique keys across all locales
-    const allKeys = new Set();
-    Object.values(flattenedData).forEach(data => 
-      Object.keys(data).forEach(key => allKeys.add(key))
-    );
+    // Use English as the baseline locale for comparison
+    const baselineLocale = 'en';
+    if (!localeFiles.includes(baselineLocale)) {
+      console.error(`❌ Baseline locale '${baselineLocale}.json' not found`);
+      process.exit(1);
+    }
     
-    const sortedKeys = Array.from(allKeys).sort();
+    const baselineKeys = Object.keys(flattenedData[baselineLocale]).sort();
     
-    console.log(`📊 Found ${sortedKeys.length} unique translation keys`);
+    console.log(`📊 Using ${baselineLocale}.json as baseline with ${baselineKeys.length} keys`);
     
     let hasErrors = false;
     const missingKeys = {};
     const extraKeys = {};
     
-    // Check each locale for missing/extra keys
+    // Check each locale for missing/extra keys compared to baseline
     for (const locale of localeFiles) {
       const localeKeys = Object.keys(flattenedData[locale]);
-      const missing = sortedKeys.filter(key => !localeKeys.includes(key));
-      const extra = localeKeys.filter(key => !sortedKeys.includes(key));
+      const missing = baselineKeys.filter(key => !localeKeys.includes(key));
+      const extra = localeKeys.filter(key => !baselineKeys.includes(key));
       
       if (missing.length > 0) {
         missingKeys[locale] = missing;
