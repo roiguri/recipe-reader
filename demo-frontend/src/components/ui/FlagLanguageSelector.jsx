@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import ReactCountryFlag from 'react-country-flag';
+import { SUPPORTED_LANGUAGES } from '../../constants/languages';
 
 const FlagLanguageSelector = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,22 +13,7 @@ const FlagLanguageSelector = ({ className = '' }) => {
   const { currentLanguage, changeLanguage, isRTL } = useLanguage();
   const { t } = useTranslation();
 
-  const languages = {
-    en: { 
-      code: 'en', 
-      name: 'English', 
-      countryCode: 'GB',
-      label: 'English'
-    },
-    he: { 
-      code: 'he', 
-      name: 'עברית', 
-      countryCode: 'IL',
-      label: 'עברית'
-    }
-  };
-
-  const currentLang = languages[currentLanguage];
+  const currentLang = SUPPORTED_LANGUAGES[currentLanguage];
 
   // Close dropdown when clicking outside and handle positioning
   useEffect(() => {
@@ -71,7 +57,7 @@ const FlagLanguageSelector = ({ className = '' }) => {
         className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/20 transition-all duration-200"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        title={t('language.switchTo', { language: Object.values(languages).find(lang => lang.code !== currentLanguage)?.name })}
+        title={t('language.switchTo', { language: Object.values(SUPPORTED_LANGUAGES).find(lang => lang.code !== currentLanguage)?.name })}
       >
         <ReactCountryFlag
           countryCode={currentLang.countryCode}
@@ -96,7 +82,7 @@ const FlagLanguageSelector = ({ className = '' }) => {
               dropdownPosition === 'right' ? 'right-0' : 'left-0'
             }`}
           >
-            {Object.values(languages).map((lang) => (
+            {Object.values(SUPPORTED_LANGUAGES).map((lang) => (
               <motion.button
                 key={lang.code}
                 onClick={() => handleLanguageSelect(lang.code)}
