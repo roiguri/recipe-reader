@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Card configuration factory that takes translation function
 export const getCardConfigs = (t) => ({
@@ -52,4 +53,11 @@ export const getCardConfigs = (t) => ({
     isComingSoon: false
   }
 });
+
+// Custom hook that memoizes card configurations based on translation changes
+export const useCardConfigs = () => {
+  const { t } = useTranslation();
+  
+  return useMemo(() => getCardConfigs(t), [t]);
+};
 
