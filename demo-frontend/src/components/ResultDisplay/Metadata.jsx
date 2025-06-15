@@ -14,12 +14,14 @@ const Metadata = ({ recipe }) => {
   
   const formatTime = (minutes) => {
     if (!minutes) return t('common.notSpecified');
-    if (minutes < 60) return t('common.timeMinutes', { minutes });
+    if (minutes < 60) return t('common.timeMinutes', { count: minutes });
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
+    const hoursText = t('common.timeHours', { count: hours });
+    const minutesText = mins > 0 ? t('common.timeMinutes', { count: mins }) : '';
     return mins > 0 
-      ? t('common.timeHoursMinutes', { hours, minutes: mins })
-      : t('common.timeHours', { hours });
+      ? t('common.timeHoursMinutes', { hours: hoursText, minutes: minutesText })
+      : hoursText;
   };
   
   // If there are no metadata items to display, return null

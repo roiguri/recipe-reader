@@ -10,9 +10,11 @@
     "startOver": "Start Over",
     "notSpecified": "Not specified",
     "processAnother": "Process Another Recipe",
-    "timeMinutes": "{{minutes}} min",
-    "timeHours": "{{hours}}h",
-    "timeHoursMinutes": "{{hours}}h {{minutes}}min"
+    "timeMinutes_one": "{{count}} min",
+    "timeMinutes_other": "{{count}} min",
+    "timeHours_one": "{{count}}h",
+    "timeHours_other": "{{count}}h",
+    "timeHoursMinutes": "{{hours}} {{minutes}}"
   },
   "header": {
     "title": "Add a new recipe",

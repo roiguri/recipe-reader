@@ -10,9 +10,11 @@
     "startOver": "התחל מחדש",
     "notSpecified": "לא צוין",
     "processAnother": "עבד מתכון נוסף",
-    "timeMinutes": "{{minutes}} דק'",
-    "timeHours": "{{hours}} שעות",
-    "timeHoursMinutes": "{{hours}} שעות {{minutes}} דק'"
+    "timeMinutes_one": "דקה",
+    "timeMinutes_other": "{{count}} דקות",
+    "timeHours_one": "שעה",
+    "timeHours_other": "{{count}} שעות",
+    "timeHoursMinutes": "{{hours}} {{minutes}}"
   },
   "header": {
     "title": "הוסף מתכון חדש",
