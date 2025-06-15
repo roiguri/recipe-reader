@@ -48,7 +48,8 @@ i18n
 // Function to check if current language is RTL
 export const isRTL = () => {
   const rtlLanguages = ['he', 'ar', 'fa', 'ur'];
-  return rtlLanguages.includes(i18n.language);
+  const baseLanguage = i18n.language.split('-')[0];
+  return rtlLanguages.includes(baseLanguage);
 };
 
 // Function to get text direction
