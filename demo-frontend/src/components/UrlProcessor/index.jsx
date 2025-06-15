@@ -70,7 +70,8 @@ const UrlProcessor = () => {
         } else if (err.details?.networkError) {
           setError(t('errors.networkError'));
         } else {
-          setError(err.message);
+          console.error('URL processing error:', err.message);
+          setError(t('errors.processingFailed'));
         }
       } else {
         setError(t('errors.unexpected'));
