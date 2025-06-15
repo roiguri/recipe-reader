@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import AppHeader from './components/AppHeader.jsx';
 import MainContent from './components/MainContent.jsx';
 import ComingSoonContent from './components/ComingSoonContent.jsx';
@@ -30,7 +30,7 @@ function App() {
     return processors[id] || <ComingSoonContent feature={config.title.toLowerCase()} />;
   };
 
-  const getCardItems = () => {
+  const cardItems = useMemo(() => {
     return Object.entries(cardConfigs).map(([id, config]) => ({
       id,
       preview: {
@@ -40,7 +40,7 @@ function App() {
       },
       expanded: getExpandedContent(id, config)
     }));
-  };
+  }, [cardConfigs]);
 
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-[#fcf8f8]" style={{fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif'}}>
@@ -48,7 +48,7 @@ function App() {
         <ErrorBoundary>
           <AppHeader />
           <MainContent 
-            cardItems={getCardItems()}
+            cardItems={cardItems}
             expandedCard={expandedCard}
             onCardClick={handleCardClick}
             onBackClick={() => setExpandedCard(null)}
