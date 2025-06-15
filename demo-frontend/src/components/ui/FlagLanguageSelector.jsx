@@ -54,7 +54,7 @@ const FlagLanguageSelector = ({ className = '' }) => {
       <motion.button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/20 transition-all duration-200"
+        className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#994d51] focus-visible:ring-offset-2"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         title={t('language.switchTo', { language: Object.values(SUPPORTED_LANGUAGES).find(lang => lang.code !== currentLanguage)?.name })}
@@ -78,7 +78,7 @@ const FlagLanguageSelector = ({ className = '' }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className={`absolute top-full mt-2 w-36 bg-white rounded-lg shadow-lg border border-[#e7d3d4] overflow-hidden z-50 ${
+            className={`absolute top-full mt-2 w-36 bg-white rounded-lg shadow-lg border border-[#e7d3d4] z-50 ${
               dropdownPosition === 'right' ? 'right-0' : 'left-0'
             }`}
           >
@@ -86,7 +86,7 @@ const FlagLanguageSelector = ({ className = '' }) => {
               <motion.button
                 key={lang.code}
                 onClick={() => handleLanguageSelect(lang.code)}
-                className={`w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-[#fcf8f8] transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-[#fcf8f8] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#994d51] focus-visible:ring-offset-2 ${
                   currentLanguage === lang.code ? 'bg-[#f8f0f1] text-[#c8797c]' : 'text-[#1b0e0e]'
                 } ${isRTL ? 'flex-row-reverse text-right' : ''}`}
                 whileHover={{ backgroundColor: '#fcf8f8' }}
