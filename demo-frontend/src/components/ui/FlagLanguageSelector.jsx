@@ -71,7 +71,7 @@ const FlagLanguageSelector = ({ className = '' }) => {
         className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/20 transition-all duration-200"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        title={t('language.switchTo', { language: currentLang.name })}
+        title={t('language.switchTo', { language: Object.values(languages).find(lang => lang.code !== currentLanguage)?.name })}
       >
         <ReactCountryFlag
           countryCode={currentLang.countryCode}
