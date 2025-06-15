@@ -1,7 +1,22 @@
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
+from enum import Enum
 import base64
+
+
+class RecipeCategory(str, Enum):
+    """Allowed recipe categories."""
+    APPETIZERS = "appetizers"
+    MAIN_COURSES = "main-courses"
+    SIDE_DISHES = "side-dishes"
+    SOUPS = "soups"
+    STEWS = "stews"
+    SALADS = "salads"
+    DESSERTS = "desserts"
+    BREAKFAST_BRUNCH = "breakfast&brunch"
+    SNACKS = "snacks"
+    BEVERAGES = "beverages"
 
 
 class Ingredient(BaseModel):
@@ -41,7 +56,7 @@ class RecipeBase(BaseModel):
     """Base model for recipe data."""
     name: str = Field(..., description="Recipe name/title")
     description: Optional[str] = Field(None, description="Recipe description")
-    category: Optional[str] = Field(None, description="Recipe category")
+    category: Optional[RecipeCategory] = Field(None, description="Recipe category")
     difficulty: Optional[str] = Field(None, description="Recipe difficulty level")
     prepTime: Optional[int] = Field(None, description="Preparation time in minutes")
     cookTime: Optional[int] = Field(None, description="Cooking time in minutes")

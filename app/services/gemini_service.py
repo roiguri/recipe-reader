@@ -16,7 +16,7 @@ from google import genai
 from google.genai import types
 
 # Import our existing recipe models (no duplicates!)
-from app.models import Recipe, Ingredient, Stage, RecipeResponse, RecipeBase
+from app.models import Recipe, Ingredient, Stage, RecipeResponse, RecipeBase, RecipeCategory
 
 class GeminiService:
     """Service for recipe extraction using Google's new Gen AI SDK with structured output."""
@@ -194,7 +194,8 @@ CRITICAL RULES:
 - For missing times: use null, do NOT estimate
 - For missing servings: use null, do NOT guess
 - For tags: only use terms that appear in the text or are clearly implied
-- For difficulty/category: only if explicitly mentioned
+- For difficulty: only if explicitly mentioned
+- For category: ONLY use one of these allowed values if clearly identifiable: {', '.join([cat.value for cat in RecipeCategory])}. If unclear, leave null.
 
 EXTRACTION GUIDELINES:
 - Convert time references to minutes only if explicitly stated
@@ -216,11 +217,25 @@ WHAT TO DO WHEN DATA IS MISSING:
 - Missing ingredient amounts → amount: "not specified"
 - Missing description → description: "No description provided"
 - Missing category → category: null
+- Invalid category → category: null (must be one of the allowed values)
 
 STRUCTURE DECISION:
 - Use "instructions" (set "stages" to null) for straightforward recipes
 - Use "stages" (set "instructions" to null) only if recipe has distinct preparation phases
 - Never use both instructions and stages together
+
+CATEGORY CLASSIFICATION EXAMPLES:
+- "Chocolate chip cookies" → "desserts"
+- "Caesar salad" → "salads"
+- "Chicken pasta" → "main-courses"
+- "French onion soup" → "soups"
+- "Beef stew" → "stews"
+- "Hummus" → "appetizers"
+- "Garlic bread" → "side-dishes"
+- "Coffee" → "beverages"
+- "Granola bars" → "snacks"
+- "Pancakes" → "breakfast&brunch"
+- "Eggs benedict" → "breakfast&brunch"
 
 """
 

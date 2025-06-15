@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 from app.models.recipe import (
     Ingredient, Stage, ImageDetails, RecipeBase, 
-    RecipeCreate, Recipe, TextProcessRequest
+    RecipeCreate, Recipe, TextProcessRequest, RecipeCategory
 )
 from datetime import datetime
 
@@ -106,7 +106,7 @@ def test_full_recipe_model():
         id="recipe123",
         name="Full Test Recipe",
         description="A test recipe with all fields",
-        category="desserts",
+        category=RecipeCategory.DESSERTS,
         difficulty="easy",
         prepTime=15,
         cookTime=30,
@@ -150,6 +150,45 @@ def test_full_recipe_model():
     assert recipe.mainIngredient == "Ingredient1"
     assert len(recipe.tags) == 2
     assert recipe.images[0].isPrimary is True
+
+
+def test_recipe_category_validation():
+    """Test that recipe categories are properly validated."""
+    # Valid category should work
+    recipe = RecipeBase(
+        name="Valid Recipe",
+        category=RecipeCategory.DESSERTS,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.category == RecipeCategory.DESSERTS
+    
+    # String value of valid category should work
+    recipe = RecipeBase(
+        name="Valid Recipe",
+        category="main-courses",
+        instructions=["Step 1"],  
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.category == RecipeCategory.MAIN_COURSES
+    
+    # None should work
+    recipe = RecipeBase(
+        name="Valid Recipe",
+        category=None,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.category is None
+    
+    # Invalid category should fail
+    with pytest.raises(ValidationError):
+        RecipeBase(
+            name="Invalid Recipe",
+            category="invalid-category",
+            instructions=["Step 1"],
+            ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+        )
 
 
 def test_text_process_request():
