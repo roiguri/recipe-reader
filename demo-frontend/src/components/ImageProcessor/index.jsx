@@ -245,7 +245,7 @@ const ImageProcessor = () => {
           )}
 
           {/* Action buttons */}
-          <div className={`flex flex-col sm:flex-row gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex flex-col ${isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row'} gap-3`}>
             {!isLoading ? (
               <>
                 <button
