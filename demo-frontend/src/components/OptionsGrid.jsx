@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutGroup, motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import OptionCard from './OptionCard.jsx';
 
 const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
+  const { t } = useTranslation();
   const [showCards, setShowCards] = useState(true);
   const [showExpandedContent, setShowExpandedContent] = useState(false);
 
@@ -73,7 +75,7 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
                   >
                     {item.expanded || (
                       <div className="text-[#994d51] text-center py-8">
-                        No content available
+                        {t('optionsGrid.noContent')}
                       </div>
                     )}
                   </motion.div>

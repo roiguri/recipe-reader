@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import CharacterCounter from './CharacterCounter';
 
 /**
@@ -15,6 +16,7 @@ const RecipeTextarea = React.forwardRef(({
   disabled = false, 
   maxChars = 10000
 }, ref) => {
+  const { t } = useTranslation();
   const isHebrew = text => /[\u0590-\u05FF]/.test(text);
   
   return (
@@ -23,26 +25,7 @@ const RecipeTextarea = React.forwardRef(({
         ref={ref}
         value={value}
         onChange={onChange}
-        placeholder="Paste your recipe text here...
-
-Example:
-Classic Chocolate Chip Cookies
-
-Ingredients:
-- 2 cups all-purpose flour
-- 1 tsp baking soda
-- 1 tsp salt
-- 1 cup butter, softened
-- 3/4 cup brown sugar
-- 1/2 cup granulated sugar
-- 2 large eggs
-- 2 tsp vanilla extract
-- 2 cups chocolate chips
-
-Instructions:
-1. Preheat oven to 375°F...
-2. Mix dry ingredients...
-3. Cream butter and sugars..."
+        placeholder={t('textProcessor.placeholder')}
         className="w-full min-h-[400px] max-h-[600px] p-4 border border-[#f3e7e8] rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:border-transparent transition-all duration-200 text-[#1b0e0e] placeholder-[#994d51]/60"
         style={{
           direction: value && isHebrew(value) ? 'rtl' : 'ltr',

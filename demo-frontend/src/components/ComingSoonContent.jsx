@@ -1,8 +1,13 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const ComingSoonContent = ({ feature = "this feature" }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
+  
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
+    <div className={`flex flex-col items-center justify-center p-8 min-h-[200px] ${isRTL ? 'text-center' : 'text-center'}`}>
       <div className="text-[#994d51] mb-4">
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -16,10 +21,10 @@ const ComingSoonContent = ({ feature = "this feature" }) => {
         </svg>
       </div>
       <h3 className="text-[#1b0e0e] text-lg font-bold leading-tight mb-2">
-        Coming Soon
+        {t('comingSoon.title')}
       </h3>
       <p className="text-[#994d51] text-sm font-normal leading-normal max-w-sm">
-        We're currently working on {feature}. This feature will be available soon!
+        {t('comingSoon.description', { feature })}
       </p>
     </div>
   );

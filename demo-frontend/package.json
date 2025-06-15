@@ -8,16 +8,21 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
     "framer-motion": "^12.16.0",
+    "i18next": "^25.2.1",
+    "i18next-browser-languagedetector": "^8.2.0",
     "react": "^19.1.0",
+    "react-country-flag": "^3.1.0",
     "react-dom": "^19.1.0",
+    "react-i18next": "^15.5.3",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "npm run validate:locales && react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "validate:locales": "node scripts/validate-locales.js"
   },
   "eslintConfig": {
     "extends": [
@@ -40,6 +45,7 @@
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.4",
-    "tailwindcss": "^4.1.8"
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-rtl": "^0.9.0"
   }
 }

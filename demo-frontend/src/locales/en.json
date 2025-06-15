@@ -1,0 +1,172 @@
+{
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "loading": "Loading...",
+    "error": "Error",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "startOver": "Start Over"
+  },
+  "header": {
+    "title": "Add a new recipe",
+    "backToOptions": {
+      "full": "Back to options",
+      "short": "Back"
+    }
+  },
+  "textProcessor": {
+    "title": "Enter text",
+    "description": "Add a recipe by entering text",
+    "placeholder": "Paste your recipe text here...",
+    "charactersRemaining": "{{count}} characters remaining",
+    "charactersOver": "{{count}} characters over limit",
+    "validation": {
+      "tooShort": "Need {{count}} more characters for better recipe extraction",
+      "tooLong": "Text too long by {{count}} characters. Please shorten."
+    },
+    "buttons": {
+      "process": "Process Recipe",
+      "processing": "Processing Recipe...",
+      "cancel": "Cancel",
+      "clear": "Clear Text"
+    },
+    "guidelines": {
+      "title": "For best results:",
+      "items": [
+        "Minimum",
+        "Hebrew",
+        "English supported",
+        "Recommended {{min}}+ characters"
+      ]
+    }
+  },
+  "urlProcessor": {
+    "title": "Provide a URL",
+    "description": "Add a recipe by providing a URL",
+    "placeholder": "https://example.com/recipe-url",
+    "validation": {
+      "invalidUrl": "Please enter a valid URL",
+      "validUrl": "Valid URL format"
+    },
+    "buttons": {
+      "extract": "Extract from URL",
+      "extracting": "Extracting recipe from URL...",
+      "cancel": "Cancel",
+      "clear": "Clear URL"
+    },
+    "tips": {
+      "title": "Tips for best results:",
+      "items": [
+        "Use direct links to recipe pages, not search results or category pages",
+        "Popular recipe websites work best (AllRecipes, Food Network, etc.)",
+        "Processing may take 15-30 seconds depending on the website",
+        "Some websites may require multiple attempts due to rate limiting"
+      ]
+    }
+  },
+  "imageProcessor": {
+    "title": "Upload images",
+    "description": "Add a recipe by uploading images",
+    "buttons": {
+      "selectImages": "Select Images",
+      "process": "Process Images",
+      "processing": "Processing Images...",
+      "cancel": "Cancel",
+      "clear": "Clear Images"
+    },
+    "validation": {
+      "noImages": "Please select at least one image",
+      "invalidFormat": "Invalid image format. Supported: JPEG, PNG, WebP, GIF",
+      "tooLarge": "Image too large. Maximum size is 4MB per image",
+      "tooMany": "Too many images. Maximum is 10 images per request"
+    },
+    "tips": {
+      "title": "Tips for best results:",
+      "items": [
+        "Ensure text is clearly visible and well-lit",
+        "Multiple images can be processed for multi-page recipes",
+        "Supports Hebrew and English text recognition",
+        "Higher resolution images work better"
+      ]
+    }
+  },
+  "resultDisplay": {
+    "tabs": {
+      "recipe": "Recipe",
+      "raw": "Raw Data", 
+      "export": "Export"
+    },
+    "confidence": "Confidence",
+    "processingTime": "Processing Time",
+    "metadata": {
+      "servings": "Servings",
+      "prepTime": "Prep Time",
+      "cookTime": "Cook Time",
+      "totalTime": "Total Time",
+      "difficulty": "Difficulty",
+      "cuisine": "Cuisine",
+      "course": "Course"
+    },
+    "sections": {
+      "ingredients": "Ingredients",
+      "instructions": "Instructions",
+      "tags": "Tags"
+    },
+    "copy": {
+      "ingredients": "Copy Ingredients",
+      "instructions": "Copy Instructions",
+      "recipe": "Copy Recipe",
+      "json": "Copy JSON data"
+    },
+    "export": {
+      "formats": {
+        "json": "JSON Format",
+        "text": "Plain Text",
+        "markdown": "Markdown"
+      },
+      "description": "Export your recipe in different formats for easy sharing and storage."
+    }
+  },
+  "errors": {
+    "networkError": "Cannot connect to the recipe processing service. Please make sure the server is running.",
+    "offline": "No internet connection. Please check your network and try again.",
+    "cancelled": "Request was cancelled",
+    "timeout": "Request timed out. Please try again.",
+    "invalidInput": "Invalid input provided",
+    "processingFailed": "Failed to process recipe. Please try again.",
+    "unexpected": "An unexpected error occurred. Please try again."
+  },
+  "language": {
+    "english": "English",
+    "hebrew": "עברית",
+    "switchTo": "Switch to {{language}}"
+  },
+  "formProcessor": {
+    "title": "Enter recipe form",
+    "description": "Fill out a structured recipe form"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "We encountered an error while processing your request. Please try again or contact support if the problem persists.",
+    "tryAgain": "Try Again",
+    "reloadPage": "Reload Page",
+    "errorDetails": "Error Details"
+  },
+  "optionsGrid": {
+    "noContent": "No content available"
+  },
+  "comingSoon": {
+    "title": "Coming Soon",
+    "description": "We're currently working on {{feature}}. This feature will be available soon!"
+  },
+  "appHeader": {
+    "home": "Home",
+    "myRecipes": "My Recipes"
+  },
+  "copyButton": {
+    "title": "Copy to clipboard",
+    "copied": "✓ Copied!"
+  }
+}

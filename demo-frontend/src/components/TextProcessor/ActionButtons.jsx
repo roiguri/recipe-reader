@@ -1,4 +1,6 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 import Button from '../ui/Button';
 
 /**
@@ -19,20 +21,22 @@ const ActionButtons = ({
   onCancel, 
   onClear 
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3">
+      <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
         <Button
           variant="cancel"
           type="button"
           onClick={onCancel}
           className="flex-1 sm:flex-none"
         >
-          Cancel
+          {t('textProcessor.buttons.cancel')}
         </Button>
-        <div className="flex items-center gap-2 text-[#994d51] text-sm">
+        <div className={`flex items-center gap-2 text-[#994d51] text-sm ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <div className="animate-spin w-5 h-5 border-2 border-[#994d51] border-t-transparent rounded-full"></div>
-          Processing your recipe...
+          {t('textProcessor.buttons.processing')}
         </div>
       </div>
     );
@@ -47,7 +51,7 @@ const ActionButtons = ({
         className="flex-1 sm:flex-none px-8"
         onClick={onSubmit}
       >
-        Extract Recipe
+        {t('textProcessor.buttons.process')}
       </Button>
       {hasText && (
         <Button
@@ -56,7 +60,7 @@ const ActionButtons = ({
           onClick={onClear}
           className="flex-1 sm:flex-none"
         >
-          Clear Text
+          {t('textProcessor.buttons.clear')}
         </Button>
       )}
     </>

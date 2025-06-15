@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppHeader from './components/AppHeader.jsx';
 import MainContent from './components/MainContent.jsx';
 import ComingSoonContent from './components/ComingSoonContent.jsx';
 import TextProcessor from './components/TextProcessor/index';
 import UrlProcessor from './components/UrlProcessor/index';
 import ImageProcessor from './components/ImageProcessor/index';
-import { CARD_CONFIGS } from './config/cardConfigs.jsx';
+import { getCardConfigs } from './config/cardConfigs.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
-
+  const { t } = useTranslation();
   const [expandedCard, setExpandedCard] = useState(null);
 
   const handleCardClick = (cardId) => {
@@ -31,7 +32,8 @@ function App() {
   };
 
   const getCardItems = () => {
-    return Object.entries(CARD_CONFIGS).map(([id, config]) => ({
+    const cardConfigs = getCardConfigs(t);
+    return Object.entries(cardConfigs).map(([id, config]) => ({
       id,
       preview: {
         icon: config.icon,

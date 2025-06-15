@@ -1,4 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700;900&family=Noto+Sans+Hebrew:wght@400;500;700;900&display=swap');
 
 html {
   background-color: #fcf8f8;
@@ -7,11 +11,47 @@ html {
 
 body {
   margin: 0;
-  font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;
+  font-family: "Plus Jakarta Sans", "Noto Sans", "Noto Sans Hebrew", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #fcf8f8;
   min-height: 100vh;
+}
+
+/* RTL support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] body {
+  font-family: "Noto Sans Hebrew", "Plus Jakarta Sans", "Noto Sans", sans-serif;
+}
+
+/* Hebrew text specific styling */
+.hebrew-text {
+  font-family: "Noto Sans Hebrew", sans-serif;
+  direction: rtl;
+  text-align: right;
+}
+
+/* Ensure proper text rendering for mixed content */
+.mixed-content {
+  unicode-bidi: plaintext;
+}
+
+/* RTL-aware list styles */
+[dir="rtl"] ul, [dir="rtl"] ol {
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+[dir="rtl"] .list-disc {
+  list-style-position: inside;
+}
+
+/* Button and form RTL adjustments */
+[dir="rtl"] .flex-row-reverse {
+  flex-direction: row-reverse;
 }
 
 code {
