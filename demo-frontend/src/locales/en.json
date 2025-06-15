@@ -67,29 +67,42 @@
     }
   },
   "imageProcessor": {
-    "title": "Upload images",
+    "title": "Upload Recipe Images",
     "description": "Add a recipe by uploading images",
+    "formatInfo": "Supports {{formats}} • Max {{maxSize}}MB each • Up to {{maxFiles}} images",
     "buttons": {
       "selectImages": "Select Images",
-      "process": "Process Images",
-      "processing": "Processing Images...",
-      "cancel": "Cancel",
-      "clear": "Clear Images"
+      "processImages": "Process Images",
+      "clearAll": "Clear All",
+      "cancel": "Cancel"
     },
+    "processing": "Processing images... This may take a moment.",
     "validation": {
-      "noImages": "Please select at least one image",
-      "invalidFormat": "Invalid image format. Supported: JPEG, PNG, WebP, GIF",
-      "tooLarge": "Image too large. Maximum size is 4MB per image",
-      "tooMany": "Too many images. Maximum is 10 images per request"
+      "noImages": "Please select at least one image to process",
+      "invalidFormat": "Unsupported format. Please use JPEG, PNG, WebP, or GIF.",
+      "tooLarge": "File too large. Maximum size is {{maxSize}}MB.",
+      "tooMany": "Too many files selected. Maximum is {{maxFiles}} images."
     },
     "tips": {
-      "title": "Tips for best results:",
+      "title": "Tips for better results:",
       "items": [
-        "Ensure text is clearly visible and well-lit",
-        "Multiple images can be processed for multi-page recipes",
-        "Supports Hebrew and English text recognition",
-        "Higher resolution images work better"
+        "Ensure images are clear and well-lit",
+        "Make sure all text is readable",
+        "Drag and drop images to reorder pages",
+        "Supports both Hebrew and English text"
       ]
+    },
+    "dragDrop": {
+      "active": "Drop your images here",
+      "inactive": "Upload recipe images",
+      "instruction": "Drag and drop or click to select up to {{maxFiles}} images"
+    },
+    "preview": {
+      "selectedImages": "Selected Images ({{count}})",
+      "clearAll": "Clear All",
+      "dropHere": "Drop here",
+      "multiPageInfo": "Multi-page recipe: These images will be processed together as a single recipe. Drag and drop to reorder pages.",
+      "maxReached": "Maximum reached: You've selected the maximum number of images ({{maxFiles}})."
     }
   },
   "resultDisplay": {
