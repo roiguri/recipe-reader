@@ -37,16 +37,16 @@ const ResultDisplay = ({ result, onStartOver }) => {
   // Initialize edited recipe when edit tab is first accessed
   const handleTabChange = (tabId) => {
     if (tabId === 'edit' && !editedRecipe) {
-      setEditedRecipe(JSON.parse(JSON.stringify(recipe))); // Deep copy
+      setEditedRecipe(structuredClone(recipe)); // Deep copy
     }
     setActiveTab(tabId);
   };
 
   // Update edited recipe and mark as having unsaved changes
-  const updateEditedRecipe = (updates) => {
+  const updateEditedRecipe = useCallback((updates) => {
     setEditedRecipe(prev => ({ ...prev, ...updates }));
     setHasUnsavedChanges(true);
-  };
+  }, []);
 
   // Save changes (apply edited recipe as new recipe)
   const saveChanges = () => {
@@ -57,7 +57,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
 
   // Discard changes (reset to original recipe)
   const discardChanges = () => {
-    setEditedRecipe(JSON.parse(JSON.stringify(recipe)));
+    setEditedRecipe(structuredClone(recipe));
     setHasUnsavedChanges(false);
   };
 

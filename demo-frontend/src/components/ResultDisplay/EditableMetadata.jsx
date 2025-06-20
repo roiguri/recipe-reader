@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '../ui/Card';
+import { isHebrew } from '../../utils/formatters';
 
 /**
  * EditableMetadata component displays and allows editing of recipe metadata
@@ -26,7 +27,6 @@ const EditableMetadata = ({
   const componentName = 'metadata';
   
   const { name, description, servings, prepTime, cookTime, totalTime, difficulty, category } = recipe;
-  const isHebrew = text => /[\u0590-\u05FF]/.test(text);
   
   // Should match tha api modal
   const categoryOptions = [
