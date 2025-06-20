@@ -3,6 +3,7 @@
     "back": "Back",
     "cancel": "Cancel",
     "clear": "Clear",
+    "save": "Save",
     "loading": "Loading...",
     "error": "Error",
     "copy": "Copy",
@@ -116,6 +117,7 @@
   "resultDisplay": {
     "tabs": {
       "recipe": "Recipe",
+      "edit": "Edit",
       "raw": "Raw Data", 
       "export": "Export"
     },
@@ -128,7 +130,19 @@
       "totalTime": "Total Time",
       "difficulty": "Difficulty",
       "cuisine": "Cuisine",
-      "course": "Course"
+      "category": "Category"
+    },
+    "categories": {
+      "appetizers": "Appetizers",
+      "main-courses": "Main Courses",
+      "side-dishes": "Side Dishes",
+      "soups": "Soups",
+      "stews": "Stews",
+      "salads": "Salads",
+      "desserts": "Desserts",
+      "breakfast&brunch": "Breakfast & Brunch",
+      "snacks": "Snacks",
+      "beverages": "Beverages"
     },
     "sections": {
       "ingredients": "Ingredients",
@@ -157,6 +171,52 @@
       },
       "description": "Export your recipe in different formats for easy sharing and storage.",
       "notImplemented": "Export as {{type}} functionality would be implemented here"
+    },
+    "edit": {
+      "unsavedChanges": "You have unsaved changes",
+      "clickToEdit": "Click to edit",
+      "clickToAddIngredient": "Click to add ingredient",
+      "clickToAddInstruction": "Click to add instruction",
+      "clickToAddStageTitle": "Click to add stage title",
+      "addIngredient": "Add Ingredient",
+      "addNewIngredient": "Add new ingredient",
+      "addInstruction": "Add Instruction", 
+      "addNewInstruction": "Add new instruction",
+      "addStage": "Add Stage",
+      "addNewStage": "Add new stage",
+      "addTag": "Add Tag",
+      "addFirstTag": "Add your first tag",
+      "noTags": "No tags yet",
+      "removeTag": "Remove tag",
+      "format": "Format",
+      "simple": "Simple",
+      "structured": "Structured",
+      "toggleFormat": "Toggle between simple and structured formats",
+      "confirmLoseTitles": "Converting to simple format will remove all stage titles. Are you sure you want to continue?",
+      "defaultStageTitle": "Preparation",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteStage": "Delete stage",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "placeholders": {
+        "recipeName": "Enter recipe name",
+        "description": "Enter recipe description",
+        "difficulty": "Easy, Medium, Hard",
+        "category": "Main course, Dessert, etc.",
+        "amount": "2",
+        "unit": "cups",
+        "ingredient": "flour",
+        "instruction": "Mix ingredients...",
+        "stageTitle": "Preparation stage",
+        "newTag": "dietary, quick, etc."
+      },
+      "helper": {
+        "clickToEdit": "Click on any field to edit it",
+        "ingredients": "Click on ingredients to edit, use buttons to add, remove, or reorder",
+        "instructions": "Toggle between simple and structured formats. Click to edit, drag to reorder",
+        "tags": "Click tags to edit or remove them. Add new tags to categorize your recipe"
+      }
     }
   },
   "errors": {

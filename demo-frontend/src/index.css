@@ -54,6 +54,51 @@ body {
   flex-direction: row-reverse;
 }
 
+input, textarea {
+  direction: ltr;
+  text-align: left;
+}
+
+html[dir="rtl"] input, 
+html[dir="rtl"] textarea {
+  direction: rtl;
+  text-align: right;
+}
+
+html[dir="rtl"] input::placeholder, 
+html[dir="rtl"] textarea::placeholder {
+  text-align: right;
+}
+
+input[dir="rtl"], 
+textarea[dir="rtl"],
+input.hebrew-input, 
+textarea.hebrew-input {
+  direction: rtl;
+  text-align: right;
+}
+
+input[dir="auto"], 
+textarea[dir="auto"] {
+  direction: auto;
+}
+
+html[dir="rtl"] input[dir="auto"], 
+html[dir="rtl"] textarea[dir="auto"] {
+  direction: auto;
+  text-align: right;
+}
+
+input[dir="auto"]:dir(ltr), 
+textarea[dir="auto"]:dir(ltr) {
+  text-align: left;
+}
+
+input[dir="auto"]:dir(rtl), 
+textarea[dir="auto"]:dir(rtl) {
+  text-align: right;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;

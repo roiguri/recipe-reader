@@ -3,6 +3,7 @@
     "back": "חזור",
     "cancel": "ביטול",
     "clear": "נקה",
+    "save": "שמור",
     "loading": "טוען...",
     "error": "שגיאה",
     "copy": "העתק",
@@ -116,6 +117,7 @@
   "resultDisplay": {
     "tabs": {
       "recipe": "מתכון",
+      "edit": "עריכה",
       "raw": "נתונים גולמיים",
       "export": "יצוא"
     },
@@ -128,7 +130,19 @@
       "totalTime": "זמן כולל",
       "difficulty": "רמת קושי",
       "cuisine": "סוג מטבח",
-      "course": "מהלך"
+      "category": "קטגוריה"
+    },
+    "categories": {
+      "appetizers": "מנות ראשונות",
+      "main-courses": "מנות עיקריות",
+      "side-dishes": "תוספות",
+      "soups": "מרקים",
+      "stews": "תבשילים",
+      "salads": "סלטים",
+      "desserts": "קינוחים",
+      "breakfast&brunch": "ארוחות בוקר",
+      "snacks": "חטיפים",
+      "beverages": "משקאות"
     },
     "sections": {
       "ingredients": "רכיבים",
@@ -157,6 +171,52 @@
       },
       "description": "יצא את המתכון שלך בפורמטים שונים לשיתוף ואחסון קלים.",
       "notImplemented": "פונקציונליות יצוא בפורמט {{type}} תמומש כאן"
+    },
+    "edit": {
+      "unsavedChanges": "יש לך שינויים שלא נשמרו",
+      "clickToEdit": "לחץ לעריכה",
+      "clickToAddIngredient": "לחץ להוספת רכיב",
+      "clickToAddInstruction": "לחץ להוספת הוראה",
+      "clickToAddStageTitle": "לחץ להוספת כותרת שלב",
+      "addIngredient": "הוסף רכיב",
+      "addNewIngredient": "הוסף רכיב חדש",
+      "addInstruction": "הוסף הוראה",
+      "addNewInstruction": "הוסף הוראה חדשה",
+      "addStage": "הוסף שלב",
+      "addNewStage": "הוסף שלב חדש",
+      "addTag": "הוסף תגית",
+      "addFirstTag": "הוסף את התגית הראשונה שלך",
+      "noTags": "אין תגיות עדיין",
+      "removeTag": "הסר תגית",
+      "format": "פורמט",
+      "simple": "פשוט",
+      "structured": "מובנה",
+      "toggleFormat": "החלף בין פורמטים פשוטים ומובנים",
+      "confirmLoseTitles": "המרה לפורמט פשוט תסיר את כל כותרות השלבים. האם אתה בטוח שברצונך להמשיך?",
+      "defaultStageTitle": "הכנה",
+      "edit": "ערוך",
+      "delete": "מחק",
+      "deleteStage": "מחק שלב",
+      "moveUp": "העבר למעלה",
+      "moveDown": "העבר למטה",
+      "placeholders": {
+        "recipeName": "הכנס שם מתכון",
+        "description": "הכנס תיאור מתכון",
+        "difficulty": "קל, בינוני, קשה",
+        "category": "מנה עיקרית, קינוח, וכו'",
+        "amount": "2",
+        "unit": "כוסות",
+        "ingredient": "קמח",
+        "instruction": "ערבב רכיבים...",
+        "stageTitle": "שלב הכנה",
+        "newTag": "דיאטטי, מהיר, וכו'"
+      },
+      "helper": {
+        "clickToEdit": "לחץ על כל שדה כדי לערוך אותו",
+        "ingredients": "לחץ על רכיבים לעריכה, השתמש בכפתורים להוסיף, להסיר או לסדר מחדש",
+        "instructions": "החלף בין פורמטים פשוטים ומובנים. לחץ לעריכה, גרור לסידור מחדש",
+        "tags": "לחץ על תגיות לעריכה או הסרה. הוסף תגיות חדשות לסיווג המתכון שלך"
+      }
     }
   },
   "errors": {

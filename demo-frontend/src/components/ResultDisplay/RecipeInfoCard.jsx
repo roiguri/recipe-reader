@@ -29,7 +29,7 @@ const RecipeInfoCard = ({
           </h2>
           {recipe.category && (
             <div className="text-sm text-[#994d51] mb-2" style={{ direction: isHebrew(recipe.category) ? 'rtl' : 'ltr' }}>
-              {recipe.category}
+              {t(`resultDisplay.categories.${recipe.category}`, recipe.category)}
             </div>
           )}
           <div className="flex flex-wrap items-center gap-4 text-sm text-[#994d51]">
