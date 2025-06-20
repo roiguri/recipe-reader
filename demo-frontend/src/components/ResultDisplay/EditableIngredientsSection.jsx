@@ -41,6 +41,22 @@ const EditableIngredientsSection = ({
     onStartEdit(componentName, fieldKey, ingredient[field] || '');
   };
 
+  // Helper function to remove empty ingredients synchronously
+  const removeEmptyIngredientIfNeeded = (updatedIngredients, index) => {
+    const ingredient = updatedIngredients[index];
+    if (!ingredient) return updatedIngredients;
+    
+    const isEmpty = !ingredient.item?.trim() && 
+                   !ingredient.amount?.trim() && 
+                   !ingredient.unit?.trim();
+    
+    if (isEmpty) {
+      return updatedIngredients.filter((_, i) => i !== index);
+    }
+    
+    return updatedIngredients;
+  };
+
   // Stop editing (save)
   const stopEditing = () => {
     if (globalEditingState.component === componentName && globalEditingState.field) {
@@ -50,40 +66,34 @@ const EditableIngredientsSection = ({
       const trimmedValue = value?.trim() || '';
       
       // Update the ingredient field
-      updateIngredient(index, field, trimmedValue);
-      
-      // Check if ingredient should be removed (all fields empty)
-      setTimeout(() => {
-        const updatedIngredient = {
-          ...ingredients[index],
-          [field]: trimmedValue
-        };
-        
-        const isEmpty = !updatedIngredient.item?.trim() && 
-                       !updatedIngredient.amount?.trim() && 
-                       !updatedIngredient.unit?.trim();
-        
-        if (isEmpty) {
-          // Remove the entire ingredient if all fields are empty
-          const newIngredients = ingredients.filter((_, i) => i !== index);
-          onUpdate({ ingredients: newIngredients });
-        }
-      }, 0);
+      const newIngredients = [...ingredients];
+      newIngredients[index] = { ...newIngredients[index], [field]: trimmedValue };
+      const finalIngredients = removeEmptyIngredientIfNeeded(newIngredients, index);
+      onUpdate({ ingredients: finalIngredients });
       
       onSaveEdit();
+    }
+  };
+
+  // Handle clicks outside the editing container
+  const handleClickOutside = (e) => {
+    // This will be called when clicking outside the editing container
+    e.stopPropagation();
+    stopEditing();
+  };
+
+  // Handle clicks inside input fields - prevent blur
+  const handleInputClick = (e, index, field) => {
+    e.stopPropagation();
+    if (globalEditingState.component === componentName && globalEditingState.field !== `${index}-${field}`) {
+      // Switch to this field if we're not already editing it
+      startEditing(index, field);
     }
   };
 
   // Cancel editing
   const cancelEditing = () => {
     onCancelEdit();
-  };
-
-  // Update ingredient field directly
-  const updateIngredient = (index, field, value) => {
-    const newIngredients = [...ingredients];
-    newIngredients[index] = { ...newIngredients[index], [field]: value };
-    onUpdate({ ingredients: newIngredients });
   };
 
   // Handle input changes with dynamic direction/alignment
@@ -180,7 +190,7 @@ const EditableIngredientsSection = ({
         </h3>
       </div>
       
-      <div className="grid grid-cols-1 gap-2 overflow-y-auto max-h-80">
+      <div className="grid grid-cols-1 gap-2 overflow-y-auto max-h-80" onClick={handleClickOutside}>
         {ingredientsWithIds.map((ingredient, index) => {
           const isEmpty = !ingredient.item && !ingredient.amount && !ingredient.unit;
           
@@ -193,7 +203,7 @@ const EditableIngredientsSection = ({
           if (isEditing) {
             // Editing mode - inline inputs
             return (
-              <div key={ingredient.id} className="flex items-center gap-2 p-2 border border-[#994d51] rounded bg-[#fcf8f8]">
+              <div key={ingredient.id} className="flex items-center gap-2 p-2 border border-[#994d51] rounded bg-[#fcf8f8]" onClick={(e) => e.stopPropagation()}>
                 <span className={`w-2 h-2 bg-[#994d51] rounded-full flex-shrink-0 ${direction === 'rtl' ? 'ml-3' : 'mr-3'}`}></span>
                 
                 <input
@@ -201,8 +211,7 @@ const EditableIngredientsSection = ({
                   value={isEditingAmount ? (globalEditingState.tempValues[`${index}-amount`] || '') : (ingredient.amount || '')}
                   onChange={isEditingAmount ? (e) => handleInputChange(e, index, 'amount') : undefined}
                   onKeyDown={isEditingAmount ? (e) => handleKeyDown(e, index, 'amount') : undefined}
-                  onBlur={isEditingAmount ? stopEditing : undefined}
-                  onClick={!isEditingAmount ? () => startEditing(index, 'amount') : undefined}
+                  onClick={(e) => handleInputClick(e, index, 'amount')}
                   placeholder={t('resultDisplay.edit.placeholders.amount')}
                   className={`w-20 px-2 py-1 border rounded text-sm focus:outline-none ${
                     isEditingAmount 
@@ -224,8 +233,7 @@ const EditableIngredientsSection = ({
                   value={isEditingUnit ? (globalEditingState.tempValues[`${index}-unit`] || '') : (ingredient.unit || '')}
                   onChange={isEditingUnit ? (e) => handleInputChange(e, index, 'unit') : undefined}
                   onKeyDown={isEditingUnit ? (e) => handleKeyDown(e, index, 'unit') : undefined}
-                  onBlur={isEditingUnit ? stopEditing : undefined}
-                  onClick={!isEditingUnit ? () => startEditing(index, 'unit') : undefined}
+                  onClick={(e) => handleInputClick(e, index, 'unit')}
                   placeholder={t('resultDisplay.edit.placeholders.unit')}
                   className={`w-24 px-2 py-1 border rounded text-sm focus:outline-none ${
                     isEditingUnit 
@@ -247,8 +255,7 @@ const EditableIngredientsSection = ({
                   value={isEditingItem ? (globalEditingState.tempValues[`${index}-item`] || '') : (ingredient.item || '')}
                   onChange={isEditingItem ? (e) => handleInputChange(e, index, 'item') : undefined}
                   onKeyDown={isEditingItem ? (e) => handleKeyDown(e, index, 'item') : undefined}
-                  onBlur={isEditingItem ? stopEditing : undefined}
-                  onClick={!isEditingItem ? () => startEditing(index, 'item') : undefined}
+                  onClick={(e) => handleInputClick(e, index, 'item')}
                   placeholder={t('resultDisplay.edit.placeholders.ingredient')}
                   className={`flex-1 px-2 py-1 border rounded text-sm focus:outline-none ${
                     isEditingItem 
@@ -293,12 +300,12 @@ const EditableIngredientsSection = ({
           } else {
             // Display mode - click to edit
             return (
-              <div key={ingredient.id} className="flex items-center p-2 hover:bg-[#fcf8f8] rounded group">
+              <div key={ingredient.id} className="flex items-center p-2 hover:bg-[#fcf8f8] rounded group" onClick={(e) => e.stopPropagation()}>
                 <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
                 
                 <div 
                   className={`flex-1 text-sm text-[#1b0e0e] cursor-pointer ${isEmpty ? 'text-gray-400 italic' : ''}`}
-                  onClick={() => startEditing(index, 'item')}
+                  onClick={() => startEditing(index, 'amount')}
                   style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}
                 >
                   {isEmpty ? (
@@ -334,7 +341,7 @@ const EditableIngredientsSection = ({
                     
                     {/* Edit button */}
                     <button
-                      onClick={() => startEditing(index, 'item')}
+                      onClick={() => startEditing(index, 'amount')}
                       className="text-blue-600 hover:text-blue-800 text-xs"
                       title={t('resultDisplay.edit.edit')}
                     >
@@ -359,7 +366,7 @@ const EditableIngredientsSection = ({
         {/* Add new ingredient row */}
         <div 
           className="flex items-center p-2 border-2 border-dashed border-gray-300 rounded hover:border-[#994d51] cursor-pointer text-gray-500 hover:text-[#994d51] transition-colors"
-          onClick={addNewIngredient}
+          onClick={(e) => { e.stopPropagation(); addNewIngredient(); }}
         >
           <span className={`w-2 h-2 border-2 border-dashed border-gray-300 rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
           <span className="text-sm italic">
