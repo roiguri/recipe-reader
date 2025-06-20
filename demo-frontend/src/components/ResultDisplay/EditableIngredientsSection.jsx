@@ -186,7 +186,7 @@ const EditableIngredientsSection = ({
     <Card className="flex flex-col">
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h3 className="text-lg font-bold text-[#1b0e0e]">
-          {t('resultDisplay.sections.ingredients')} ({ingredients.length})
+          {t('resultDisplay.sections.ingredients')}
         </h3>
       </div>
       

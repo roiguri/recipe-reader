@@ -97,7 +97,7 @@ const EditableTagList = ({
     <Card className="flex flex-col">
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h3 className="text-lg font-bold text-[#1b0e0e]">
-          {t('resultDisplay.sections.tags')} ({displayTags.length})
+          {t('resultDisplay.sections.tags')}
         </h3>
         {!(globalEditingState.component === componentName && globalEditingState.field === 'new-tag') && (
           <button
