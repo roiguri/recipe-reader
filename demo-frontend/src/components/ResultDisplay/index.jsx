@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
@@ -65,12 +65,18 @@ const ResultDisplay = ({ result, onStartOver }) => {
   const startGlobalEdit = (component, field, currentValue) => {
     // If already editing something else, save it first
     if (globalEditingState.component && globalEditingState.field) {
-      saveGlobalEdit();
+      saveCurrentEdit();
     }
+    
+    // Handle case where currentValue is already a tempValues object (for multi-field editing)
+    const tempValues = typeof currentValue === 'object' && currentValue !== null 
+      ? currentValue 
+      : { [field]: currentValue || '' };
+    
     setGlobalEditingState({ 
       component, 
       field, 
-      tempValues: { [field]: currentValue || '' } 
+      tempValues
     });
   };
 
@@ -81,18 +87,83 @@ const ResultDisplay = ({ result, onStartOver }) => {
     }));
   };
 
-  const saveGlobalEdit = () => {
-    const { component, field, tempValues } = globalEditingState;
-    if (!component || !field) return;
-    
-    // Notify the component to save the current edit
-    // This will be handled by each component's onSave callback
-    setGlobalEditingState({ component: null, field: null, tempValues: {} });
-  };
-
   const cancelGlobalEdit = () => {
     setGlobalEditingState({ component: null, field: null, tempValues: {} });
   };
+
+  // Enhanced save function that actually saves ingredient data
+  const saveCurrentEdit = useCallback(() => {
+    const { component, field, tempValues } = globalEditingState;
+    if (!component || !field) return;
+    
+    if (component === 'ingredients') {
+      const index = parseInt(field);
+      const amount = tempValues[`${index}-amount`]?.trim() || '';
+      const unit = tempValues[`${index}-unit`]?.trim() || '';
+      const item = tempValues[`${index}-item`]?.trim() || '';
+      
+      // Helper function to remove empty ingredients
+      const removeEmptyIngredientIfNeeded = (updatedIngredients, targetIndex) => {
+        const ingredient = updatedIngredients[targetIndex];
+        if (!ingredient) return updatedIngredients;
+        
+        const isEmpty = !ingredient.item?.trim() && 
+                       !ingredient.amount?.trim() && 
+                       !ingredient.unit?.trim();
+        
+        if (isEmpty) {
+          return updatedIngredients.filter((_, i) => i !== targetIndex);
+        }
+        
+        return updatedIngredients;
+      };
+      
+      // Update ingredient and remove if empty
+      const currentIngredients = editedRecipe?.ingredients || [];
+      const newIngredients = [...currentIngredients];
+      // Always update the ingredient, even if it might be empty
+      newIngredients[index] = { ...newIngredients[index], amount, unit, item };
+      const finalIngredients = removeEmptyIngredientIfNeeded(newIngredients, index);
+      updateEditedRecipe({ ingredients: finalIngredients });
+    }
+    
+    // Clear the editing state
+    setGlobalEditingState({ component: null, field: null, tempValues: {} });
+  }, [globalEditingState, editedRecipe, updateEditedRecipe, setGlobalEditingState]);
+
+  useEffect(() => {
+    const handleDocumentClick = (e) => {
+      // Only handle clicks when we're in edit mode and actively editing something
+      if (activeTab !== 'edit' || !globalEditingState.component || !globalEditingState.field) {
+        return;
+      }
+
+      // Special handling for ingredients - allow navigation within same ingredient
+      if (globalEditingState.component === 'ingredients') {
+        const editingIndex = parseInt(globalEditingState.field);
+        
+        // Check if the click is within the currently editing ingredient
+        const clickedIngredientElement = e.target.closest('[data-editing-ingredient]');
+        const clickedIngredientIndex = clickedIngredientElement ? 
+          parseInt(clickedIngredientElement.dataset.editingIngredient) : null;
+        
+        // If clicking within the same ingredient, allow it (don't save)
+        if (clickedIngredientIndex === editingIndex) {
+          return;
+        }
+        
+        saveCurrentEdit();
+      } else {
+        saveCurrentEdit();
+      }
+    };
+
+    document.addEventListener('click', handleDocumentClick, { capture: true });
+    
+    return () => {
+      document.removeEventListener('click', handleDocumentClick, { capture: true });
+    };
+  }, [activeTab, globalEditingState.component, globalEditingState.field, saveCurrentEdit]);
 
   // Define tabs
   const tabs = [
@@ -103,7 +174,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
   ];
 
   // TODO: Implement export functionality
-  const handleExport = (type, recipeData) => {
+  const handleExport = (type) => {
     alert(t('resultDisplay.export.notImplemented', { type }));
   };
 
@@ -192,7 +263,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
                 globalEditingState={globalEditingState}
                 onStartEdit={startGlobalEdit}
                 onUpdateEdit={updateGlobalEditValue}
-                onSaveEdit={saveGlobalEdit}
+                onSaveEdit={saveCurrentEdit}
                 onCancelEdit={cancelGlobalEdit}
               />
               
@@ -203,7 +274,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
                 globalEditingState={globalEditingState}
                 onStartEdit={startGlobalEdit}
                 onUpdateEdit={updateGlobalEditValue}
-                onSaveEdit={saveGlobalEdit}
+                onSaveEdit={saveCurrentEdit}
                 onCancelEdit={cancelGlobalEdit}
               />
               
@@ -215,7 +286,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
                 globalEditingState={globalEditingState}
                 onStartEdit={startGlobalEdit}
                 onUpdateEdit={updateGlobalEditValue}
-                onSaveEdit={saveGlobalEdit}
+                onSaveEdit={saveCurrentEdit}
                 onCancelEdit={cancelGlobalEdit}
               />
 
@@ -226,7 +297,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
                 globalEditingState={globalEditingState}
                 onStartEdit={startGlobalEdit}
                 onUpdateEdit={updateGlobalEditValue}
-                onSaveEdit={saveGlobalEdit}
+                onSaveEdit={saveCurrentEdit}
                 onCancelEdit={cancelGlobalEdit}
               />
             </div>
