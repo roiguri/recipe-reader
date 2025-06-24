@@ -223,7 +223,7 @@ export const detectBrowserPrintCapabilities = () => {
     features: {
       printColorAdjust: isChrome || isEdge || isSafari,
       flexboxPrint: isChrome || isEdge || isFirefox,
-      gridPrint: isChrome || isEdge,
+      gridPrint: isChrome || isEdge || isFirefox || isSafari, // Modern browsers support CSS Grid in print
       customFonts: !isIE,
       backgroundPrint: isChrome || isEdge || isSafari
     }
