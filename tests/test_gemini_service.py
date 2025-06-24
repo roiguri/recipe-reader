@@ -475,3 +475,40 @@ async def test_extract_recipe_with_difficulty_validation():
         # Should have valid difficulty enum
         assert result.recipe.difficulty == RecipeDifficulty.EASY
         assert result.recipe.name == "Easy Cookies"
+
+
+@pytest.mark.asyncio
+async def test_time_field_standardization():
+    """Test that new time handling works correctly - no totalTime extraction, merged waiting time."""
+    service = GeminiService(api_key="test_key")
+    
+    # Test recipe with prep + cook times (should not extract totalTime)
+    mock_response_data = {
+        "name": "Baked Chicken",
+        "description": "Chicken with cooling time",
+        "ingredients": [{"item": "chicken", "amount": "1", "unit": "lb"}],
+        "instructions": ["Bake for 30 minutes", "Cool for 15 minutes", "Serve"],
+        "stages": None,
+        "prepTime": 10,
+        "cookTime": 45  # Should include baking + cooling time (30 + 15)
+    }
+    
+    with patch.object(service.client.models, 'generate_content') as mock_generate:
+        mock_generate.return_value = MockGeminiResponse(json.dumps(mock_response_data))
+        
+        result = await service.extract_recipe("Prep chicken for 10 minutes, bake for 30 minutes, cool for 15 minutes")
+        
+        # Should have computed totalTime (not extracted)
+        assert result.recipe.prepTime == 10
+        assert result.recipe.cookTime == 45  # Includes cooling time
+        assert result.recipe.totalTime == 55  # 10 + 45 (computed)
+        assert not hasattr(result.recipe, 'waitTime')  # waitTime field removed
+        
+        # Verify confidence calculation doesn't reference totalTime
+        confidence = service._calculate_confidence(mock_response_data)
+        assert confidence > 0.8  # Should be high confidence
+        
+        # Verify fallback result doesn't include totalTime
+        fallback = service._create_fallback_result("test text")
+        assert "totalTime" not in fallback
+        assert "waitTime" not in fallback

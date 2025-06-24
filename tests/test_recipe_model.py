@@ -110,8 +110,6 @@ def test_full_recipe_model():
         difficulty=RecipeDifficulty.EASY,
         prepTime=15,
         cookTime=30,
-        waitTime=0,
-        totalTime=45,
         servings=4,
         stages=[
             Stage(
@@ -144,7 +142,7 @@ def test_full_recipe_model():
     assert recipe.id == "recipe123"
     assert recipe.name == "Full Test Recipe"
     assert recipe.prepTime == 15
-    assert recipe.totalTime == 45
+    assert recipe.totalTime == 45  # 15 + 30
     assert len(recipe.stages) == 1
     assert len(recipe.ingredients) == 2
     assert recipe.mainIngredient == "Ingredient1"
@@ -295,3 +293,111 @@ def test_recipe_difficulty_serialization():
     
     reconstructed_from_json = RecipeBase.model_validate_json(recipe_json)
     assert reconstructed_from_json.difficulty == RecipeDifficulty.MEDIUM
+
+
+def test_total_time_computed_field():
+    """Test the totalTime computed field behavior."""
+    # Test with both prep and cook times
+    recipe = RecipeBase(
+        name="Test Recipe",
+        prepTime=15,
+        cookTime=30,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.totalTime == 45  # 15 + 30
+    
+    # Test with only prep time
+    recipe = RecipeBase(
+        name="Test Recipe",
+        prepTime=20,
+        cookTime=None,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.totalTime == 20  # 20 + 0
+    
+    # Test with only cook time
+    recipe = RecipeBase(
+        name="Test Recipe",
+        prepTime=None,
+        cookTime=25,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.totalTime == 25  # 0 + 25
+    
+    # Test with both times as None
+    recipe = RecipeBase(
+        name="Test Recipe",
+        prepTime=None,
+        cookTime=None,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.totalTime is None
+    
+    # Test with zero values
+    recipe = RecipeBase(
+        name="Test Recipe",
+        prepTime=0,
+        cookTime=30,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.totalTime == 30  # 0 + 30
+
+
+def test_total_time_not_settable():
+    """Test that totalTime cannot be set directly and is always computed."""
+    # totalTime input is ignored, computed value is used instead
+    recipe = RecipeBase(
+        name="Test Recipe",
+        prepTime=15,
+        cookTime=30,
+        totalTime=50,  # This will be ignored
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    # Should compute 15 + 30 = 45, ignoring the passed value of 50
+    assert recipe.totalTime == 45
+
+
+def test_wait_time_field_removed():
+    """Test that waitTime field no longer exists."""
+    # waitTime input is ignored (field removed from model)
+    recipe = RecipeBase(
+        name="Test Recipe",
+        prepTime=15,
+        cookTime=30,
+        waitTime=10,  # This will be ignored
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    # waitTime should not exist as an attribute
+    assert not hasattr(recipe, 'waitTime')
+    # Should not appear in serialized output
+    recipe_dict = recipe.model_dump()
+    assert "waitTime" not in recipe_dict
+
+
+def test_total_time_serialization():
+    """Test that totalTime appears in serialized output."""
+    recipe = RecipeBase(
+        name="Test Recipe",
+        prepTime=15,
+        cookTime=30,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    
+    # Test model to dict serialization
+    recipe_dict = recipe.model_dump()
+    assert "totalTime" in recipe_dict
+    assert recipe_dict["totalTime"] == 45
+    assert "waitTime" not in recipe_dict
+    
+    # Test JSON serialization
+    recipe_json = recipe.model_dump_json()
+    assert '"totalTime":45' in recipe_json
+    assert "waitTime" not in recipe_json

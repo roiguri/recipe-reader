@@ -118,11 +118,11 @@ const ExportOptions = ({ recipe }) => {
               color-adjust: exact;
             }
             
-            /* Base print styles */
+            /* Base print styles with web-safe fonts */
             html, body {
               margin: 0;
               padding: 0;
-              font-family: "Times New Roman", "Noto Sans Hebrew", serif;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
               line-height: 1.4;
               background: white !important;
               color: black;
@@ -136,7 +136,117 @@ const ExportOptions = ({ recipe }) => {
               padding: 20px;
             }
             
-            /* Include all existing styles */
+            /* Critical Tailwind CSS Grid and Layout Utilities */
+            .grid { display: grid; }
+            .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+            .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .gap-4 { gap: 1rem; }
+            .gap-2 { gap: 0.5rem; }
+            
+            /* Responsive grid for print media */
+            @media print {
+              .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+              .md\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+              .md\\:col-span-2 { grid-column: span 2 / span 2; }
+              .md\\:col-span-3 { grid-column: span 3 / span 3; }
+            }
+            
+            /* Essential Tailwind utilities */
+            .flex { display: flex; }
+            .items-center { align-items: center; }
+            .items-start { align-items: flex-start; }
+            .justify-center { justify-content: center; }
+            .justify-between { justify-content: space-between; }
+            .text-center { text-align: center; }
+            .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+            .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem; }
+            .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+            
+            /* Typography */
+            .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+            .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+            .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+            .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+            .text-xs { font-size: 0.75rem; line-height: 1rem; }
+            .font-bold { font-weight: 700; }
+            .font-semibold { font-weight: 600; }
+            .font-medium { font-weight: 500; }
+            .leading-relaxed { line-height: 1.625; }
+            
+            /* Spacing */
+            .mb-8 { margin-bottom: 2rem; }
+            .mb-4 { margin-bottom: 1rem; }
+            .mb-3 { margin-bottom: 0.75rem; }
+            .mb-2 { margin-bottom: 0.5rem; }
+            .mb-1 { margin-bottom: 0.25rem; }
+            .pb-6 { padding-bottom: 1.5rem; }
+            .pb-2 { padding-bottom: 0.5rem; }
+            .pt-6 { padding-top: 1.5rem; }
+            .pt-4 { padding-top: 1rem; }
+            .p-2 { padding: 0.5rem; }
+            .p-3 { padding: 0.75rem; }
+            .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+            .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+            
+            /* Layout */
+            .max-w-4xl { max-width: 56rem; }
+            .mx-auto { margin-left: auto; margin-right: auto; }
+            .w-8 { width: 2rem; }
+            .h-8 { height: 2rem; }
+            .w-6 { width: 1.5rem; }
+            .h-6 { height: 1.5rem; }
+            .w-2 { width: 0.5rem; }
+            .h-2 { height: 0.5rem; }
+            .flex-shrink-0 { flex-shrink: 0; }
+            
+            /* Borders and background */
+            .border-b { border-bottom-width: 1px; }
+            .border-t { border-top-width: 1px; }
+            .border-gray-200 { border-color: #e5e7eb; }
+            .rounded-full { border-radius: 9999px; }
+            .rounded-lg { border-radius: 0.5rem; }
+            .bg-white { background-color: #fff; }
+            
+            /* Colors - using safe color values */
+            .text-gray-600 { color: #4b5563; }
+            .text-gray-500 { color: #6b7280; }
+            .bg-\\[\\#994d51\\] { background-color: #994d51; }
+            .text-\\[\\#994d51\\] { color: #994d51; }
+            .text-\\[\\#1b0e0e\\] { color: #1b0e0e; }
+            .bg-\\[\\#fcf8f8\\] { background-color: #fcf8f8; }
+            .text-white { color: #fff; }
+            
+            /* Instruction numbering circles - matching InstructionsSection.jsx size */
+            .w-8.h-8.bg-\\[\\#994d51\\].text-white.rounded-full.flex.items-center.justify-center,
+            .w-8.h-8.bg-\\[\\#994d51\\],
+            .w-6.h-6.bg-\\[\\#994d51\\].text-white.rounded-full.flex.items-center.justify-center,
+            .w-6.h-6.bg-\\[\\#994d51\\] {
+              width: 1.5rem !important;  /* w-6 size */
+              height: 1.5rem !important; /* h-6 size */
+              background-color: #994d51 !important;
+              color: #fff !important;
+              border-radius: 9999px !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              font-weight: 600 !important;
+              font-size: 0.75rem !important; /* text-xs size */
+              flex-shrink: 0 !important;
+              text-align: center !important;
+              line-height: 1 !important;
+            }
+            
+            /* Ingredient bullet points */
+            .w-2.h-2.bg-\\[\\#994d51\\].rounded-full {
+              width: 0.5rem !important;
+              height: 0.5rem !important;
+              background-color: #994d51 !important;
+              border-radius: 9999px !important;
+              flex-shrink: 0 !important;
+            }
+            
+            /* Include minimal existing styles (fallback) */
             ${styles}
             
             /* Cross-browser print color preservation */
@@ -215,22 +325,29 @@ const ExportOptions = ({ recipe }) => {
             }
             ` : ''}
             
-            /* Cross-browser grid fallbacks */
-            ${!browserInfo.features.gridPrint ? `
+            /* Improved grid fallbacks - only for very old browsers */
+            ${browserInfo.browser.isIE ? `
+            /* IE-specific grid fallbacks */
             .grid {
-              display: block !important;
-            }
-            .grid-cols-1,
-            .grid-cols-2,
-            .grid-cols-3,
-            .grid-cols-4 {
               display: block !important;
             }
             .grid > * {
               display: block;
               margin-bottom: 0.5rem;
             }
-            ` : ''}
+            ` : `
+            /* Modern browsers - ensure grid works in print */
+            @media print {
+              .grid {
+                display: grid !important;
+              }
+              .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+              .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+              .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+              .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+              .md\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+            }
+            `}
             
             /* Force font loading for older browsers */
             ${!browserInfo.features.customFonts ? `
@@ -338,32 +455,67 @@ const ExportOptions = ({ recipe }) => {
             </div>
 
             {/* Recipe Metadata */}
-            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-center ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-              {recipe.difficulty && (
-                <div className="border border-gray-200 rounded-lg p-3">
-                  <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.difficulty')}</div>
-                  <div className="font-semibold text-[#1b0e0e]">{t(`resultDisplay.difficulties.${recipe.difficulty}`, recipe.difficulty)}</div>
-                </div>
-              )}
-              {recipe.servings && (
-                <div className="border border-gray-200 rounded-lg p-3">
-                  <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.servings')}</div>
-                  <div className="font-semibold text-[#1b0e0e]">{recipe.servings}</div>
-                </div>
-              )}
-              {recipe.prepTime && (
-                <div className="border border-gray-200 rounded-lg p-3">
-                  <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.prepTime')}</div>
-                  <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.prepTime, t)}</div>
-                </div>
-              )}
-              {recipe.cookTime && (
-                <div className="border border-gray-200 rounded-lg p-3">
-                  <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.cookTime')}</div>
-                  <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.cookTime, t)}</div>
-                </div>
-              )}
-            </div>
+            {(recipe.difficulty || recipe.servings || recipe.prepTime || recipe.cookTime || recipe.totalTime) && (
+              <div className={`mb-8 text-center ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                {/* First row: difficulty and servings */}
+                {(recipe.difficulty || recipe.servings) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {recipe.difficulty && (
+                      <div className={`border border-gray-200 rounded-lg p-3 ${!recipe.servings ? 'md:col-span-2' : ''}`}>
+                        <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.difficulty')}</div>
+                        <div className="font-semibold text-[#1b0e0e]">{t(`resultDisplay.difficulties.${recipe.difficulty}`, recipe.difficulty)}</div>
+                      </div>
+                    )}
+                    {recipe.servings && (
+                      <div className={`border border-gray-200 rounded-lg p-3 ${!recipe.difficulty ? 'md:col-span-2' : ''}`}>
+                        <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.servings')}</div>
+                        <div className="font-semibold text-[#1b0e0e]">{recipe.servings}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Second row: all time fields */}
+                {(recipe.prepTime || recipe.cookTime || recipe.totalTime) && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {recipe.prepTime && (
+                      <div className={`border border-gray-200 rounded-lg p-3 ${(() => {
+                        const timeFieldsCount = [recipe.prepTime, recipe.cookTime, recipe.totalTime].filter(Boolean).length;
+                        if (timeFieldsCount === 1) return 'md:col-span-3';
+                        if (timeFieldsCount === 2) return 'md:col-span-1';
+                        return '';
+                      })()}`}>
+                        <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.prepTime')}</div>
+                        <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.prepTime, t)}</div>
+                      </div>
+                    )}
+                    {recipe.cookTime && (
+                      <div className={`border border-gray-200 rounded-lg p-3 ${(() => {
+                        const timeFieldsCount = [recipe.prepTime, recipe.cookTime, recipe.totalTime].filter(Boolean).length;
+                        if (timeFieldsCount === 1) return 'md:col-span-3';
+                        if (timeFieldsCount === 2 && !recipe.prepTime) return 'md:col-span-2';
+                        if (timeFieldsCount === 2 && !recipe.totalTime) return 'md:col-span-2';
+                        return '';
+                      })()}`}>
+                        <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.cookTime')}</div>
+                        <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.cookTime, t)}</div>
+                      </div>
+                    )}
+                    {recipe.totalTime && (
+                      <div className={`border border-gray-200 rounded-lg p-3 ${(() => {
+                        const timeFieldsCount = [recipe.prepTime, recipe.cookTime, recipe.totalTime].filter(Boolean).length;
+                        if (timeFieldsCount === 1) return 'md:col-span-3';
+                        if (timeFieldsCount === 2) return 'md:col-span-2';
+                        return '';
+                      })()}`}>
+                        <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.totalTime')}</div>
+                        <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.totalTime, t)}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Ingredients Section */}
             {recipe.ingredients && recipe.ingredients.length > 0 && (
@@ -400,7 +552,7 @@ const ExportOptions = ({ recipe }) => {
                         <div className="space-y-3">
                           {(stage.instructions || []).map((instruction, instIdx) => (
                             <div key={instIdx} className="flex items-start gap-4">
-                              <div className="w-8 h-8 bg-[#994d51] text-white rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                              <div className="w-6 h-6 bg-[#994d51] text-white rounded-full flex items-center justify-center font-semibold text-xs flex-shrink-0">
                                 {instIdx + 1}
                               </div>
                               <p className="text-[#1b0e0e] leading-relaxed" style={{ direction: isHebrew(instruction) ? 'rtl' : 'ltr' }}>
@@ -416,7 +568,7 @@ const ExportOptions = ({ recipe }) => {
                   <div className="space-y-4">
                     {recipe.instructions.map((instruction, idx) => (
                       <div key={idx} className="flex items-start gap-4">
-                        <div className="w-8 h-8 bg-[#994d51] text-white rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                        <div className="w-6 h-6 bg-[#994d51] text-white rounded-full flex items-center justify-center font-semibold text-xs flex-shrink-0">
                           {idx + 1}
                         </div>
                         <p className="text-[#1b0e0e] leading-relaxed" style={{ direction: isHebrew(instruction) ? 'rtl' : 'ltr' }}>

@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any, Union
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, computed_field
 from datetime import datetime
 from enum import Enum
 import base64
@@ -67,9 +67,15 @@ class RecipeBase(BaseModel):
     difficulty: Optional[RecipeDifficulty] = Field(None, description="Recipe difficulty level")
     prepTime: Optional[int] = Field(None, description="Preparation time in minutes")
     cookTime: Optional[int] = Field(None, description="Cooking time in minutes")
-    waitTime: Optional[int] = Field(None, description="Waiting time in minutes")
-    totalTime: Optional[int] = Field(None, description="Total time in minutes")
     servings: Optional[int] = Field(None, description="Number of servings")
+    
+    @computed_field
+    @property
+    def totalTime(self) -> Optional[int]:
+        """Calculate total time from prep and cook times."""
+        if self.prepTime is None and self.cookTime is None:
+            return None
+        return (self.prepTime or 0) + (self.cookTime or 0)
     
     # Either a list of stages or a flat list of instructions
     stages: Optional[List[Stage]] = Field(None, description="List of preparation stages")

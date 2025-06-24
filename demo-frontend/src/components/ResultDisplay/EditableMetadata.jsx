@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '../ui/Card';
-import { isHebrew } from '../../utils/formatters';
+import { isHebrew, formatTime } from '../../utils/formatters';
 
 /**
  * EditableMetadata component displays and allows editing of recipe metadata
@@ -26,7 +26,7 @@ const EditableMetadata = ({
   const { t } = useTranslation();
   const componentName = 'metadata';
   
-  const { name, description, servings, prepTime, cookTime, totalTime, difficulty, category } = recipe;
+  const { name, description, servings, prepTime, cookTime, difficulty, category } = recipe;
   
   // Should match tha api modal
   const categoryOptions = [
@@ -47,30 +47,52 @@ const EditableMetadata = ({
     'medium',
     'hard'
   ];
-  
-  const formatTime = (minutes) => {
-    if (!minutes) return '';
-    if (minutes < 60) return minutes.toString();
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}:${mins.toString().padStart(2, '0')}` : hours.toString();
+
+  // Calculate total time from current prepTime and cookTime
+  const calculateTotalTime = () => {
+    const prep = prepTime || 0;
+    const cook = cookTime || 0;
+    return prep + cook;
   };
 
-  const parseTime = (timeStr) => {
-    if (!timeStr) return null;
-    const colonIndex = timeStr.indexOf(':');
-    if (colonIndex > 0) {
-      const hours = parseInt(timeStr.substring(0, colonIndex));
-      const minutes = parseInt(timeStr.substring(colonIndex + 1));
-      return (hours * 60) + (minutes || 0);
+  // Custom TimeField component that shows numbers when editing, formatted when not
+  const TimeField = ({ field, value, placeholder }) => {
+    const isEditing = globalEditingState.component === componentName && globalEditingState.field === field;
+    
+    if (isEditing) {
+      // When editing, show just the number
+      return (
+        <input
+          type="number"
+          value={globalEditingState.tempValues[field] || ''}
+          onChange={(e) => onUpdateEdit(field, e.target.value)}
+          onBlur={() => saveField(field)}
+          onKeyDown={(e) => handleKeyDown(e, field)}
+          className="w-full text-center bg-transparent border border-[#994d51] rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#994d51]"
+          placeholder={placeholder}
+          autoFocus
+        />
+      );
     }
-    return parseInt(timeStr) || null;
+    
+    // When not editing, show formatted time or clickable placeholder
+    return (
+      <div
+        onClick={() => startEditing(field, value)}
+        className="cursor-pointer hover:bg-[#f3e7e8] rounded px-2 py-1 transition-colors"
+      >
+        {value ? formatTime(value, t) : (
+          <span className="text-gray-400 italic">{placeholder} min</span>
+        )}
+      </div>
+    );
   };
 
   const startEditing = (field, currentValue) => {
     let displayValue = currentValue;
+    // For time fields, show only the number when editing
     if (field.includes('Time') && currentValue) {
-      displayValue = formatTime(currentValue);
+      displayValue = currentValue.toString();
     }
     onStartEdit(componentName, field, displayValue);
   };
@@ -82,16 +104,11 @@ const EditableMetadata = ({
   const saveField = (field) => {
     let value = globalEditingState.tempValues[field];
     
-    // Parse time fields
     if (field.includes('Time')) {
-      value = parseTime(value);
-    }
-    // Parse numeric fields
-    else if (field === 'servings') {
       value = parseInt(value) || null;
-    }
-    // Empty strings become null
-    else if (value === '') {
+    } else if (field === 'servings') {
+      value = parseInt(value) || null;
+    } else if (value === '') {
       value = null;
     }
 
@@ -242,64 +259,21 @@ const EditableMetadata = ({
         )}
       </div>
       
-      {/* Metadata Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* First Row: Category, Difficulty, Servings */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="text-center">
           <div className="text-sm font-medium text-[#994d51] mb-1">
-            {t('resultDisplay.metadata.servings')}
+            {t('resultDisplay.metadata.category')}
           </div>
           <div className="text-sm text-[#1b0e0e]">
             <EditableField
-              field="servings"
-              value={servings}
-              placeholder="4"
-              type="number"
+              field="category"
+              value={category}
+              placeholder={t('resultDisplay.edit.placeholders.category')}
             />
           </div>
         </div>
 
-        <div className="text-center">
-          <div className="text-sm font-medium text-[#994d51] mb-1">
-            {t('resultDisplay.metadata.prepTime')}
-          </div>
-          <div className="text-sm text-[#1b0e0e]">
-            <EditableField
-              field="prepTime"
-              value={prepTime}
-              placeholder="30"
-            />
-          </div>
-        </div>
-
-        <div className="text-center">
-          <div className="text-sm font-medium text-[#994d51] mb-1">
-            {t('resultDisplay.metadata.cookTime')}
-          </div>
-          <div className="text-sm text-[#1b0e0e]">
-            <EditableField
-              field="cookTime"
-              value={cookTime}
-              placeholder="45"
-            />
-          </div>
-        </div>
-
-        <div className="text-center">
-          <div className="text-sm font-medium text-[#994d51] mb-1">
-            {t('resultDisplay.metadata.totalTime')}
-          </div>
-          <div className="text-sm text-[#1b0e0e]">
-            <EditableField
-              field="totalTime"
-              value={totalTime}
-              placeholder="75"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#f3e7e8]">
         <div className="text-center">
           <div className="text-sm font-medium text-[#994d51] mb-1">
             {t('resultDisplay.metadata.difficulty')}
@@ -315,14 +289,55 @@ const EditableMetadata = ({
 
         <div className="text-center">
           <div className="text-sm font-medium text-[#994d51] mb-1">
-            {t('resultDisplay.metadata.category')}
+            {t('resultDisplay.metadata.servings')}
           </div>
           <div className="text-sm text-[#1b0e0e]">
             <EditableField
-              field="category"
-              value={category}
-              placeholder={t('resultDisplay.edit.placeholders.category')}
+              field="servings"
+              value={servings}
+              placeholder="4"
+              type="number"
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Second Row: All Time Fields */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-[#f3e7e8]">
+        <div className="text-center">
+          <div className="text-sm font-medium text-[#994d51] mb-1">
+            {t('resultDisplay.metadata.prepTime')}
+          </div>
+          <div className="text-sm text-[#1b0e0e]">
+            <TimeField
+              field="prepTime"
+              value={prepTime}
+              placeholder="30"
+            />
+          </div>
+        </div>
+
+        <div className="text-center">
+          <div className="text-sm font-medium text-[#994d51] mb-1">
+            {t('resultDisplay.metadata.cookTime')}
+          </div>
+          <div className="text-sm text-[#1b0e0e]">
+            <TimeField
+              field="cookTime"
+              value={cookTime}
+              placeholder="45"
+            />
+          </div>
+        </div>
+
+        <div className="text-center">
+          <div className="text-sm font-medium text-[#994d51] mb-1">
+            {t('resultDisplay.metadata.totalTime')}
+          </div>
+          <div className="text-sm text-[#1b0e0e]">
+            {(prepTime || cookTime) ? formatTime(calculateTotalTime(), t) : (
+              <span className="text-gray-400 italic">{t('common.notSpecified')}</span>
+            )}
           </div>
         </div>
       </div>

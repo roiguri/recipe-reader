@@ -201,6 +201,10 @@ EXTRACTION GUIDELINES:
 - Convert time references to minutes only if explicitly stated
 - Extract ingredients exactly as written - don't add units that aren't there
 - Don't assume cooking methods not mentioned in the text
+- prepTime: Time for preparation, mixing, chopping before cooking
+- cookTime: Total cooking time including baking, frying, waiting, resting, cooling
+- DO NOT extract totalTime - it will be calculated automatically
+- Include waiting/resting periods in cookTime, not as separate field
 
 INGREDIENT EXTRACTION RULES:
 - "1 ק\"ג פרגיות" → item: "פרגיות", amount: "1", unit: "ק\"ג"
@@ -275,14 +279,23 @@ HEBREW TEXT HANDLING:
         base_prompt += """
 GOOD EXAMPLES:
 Input: "Boil pasta for 10 minutes"
-Output: prepTime: null, cookTime: 10, totalTime: null
+Output: prepTime: null, cookTime: 10
+
+Input: "Mix ingredients and bake for 30 minutes, then let cool for 15 minutes"
+Output: prepTime: null, cookTime: 45 (30 baking + 15 cooling)
+
+Input: "Prep vegetables for 15 minutes, cook for 20 minutes"
+Output: prepTime: 15, cookTime: 20
 
 Input: "Mix ingredients and bake"  
-Output: prepTime: null, cookTime: null, totalTime: null
+Output: prepTime: null, cookTime: null
 
 BAD EXAMPLES (DON'T DO THIS):
 Input: "Mix ingredients and bake"
 Output: prepTime: 15, cookTime: 30 (WRONG - these weren't specified!)
+
+Input: "Bake for 20 minutes, cool for 10 minutes"
+Output: prepTime: null, cookTime: 20, waitTime: 10 (WRONG - include cooling in cookTime!)
 """
         
         # Add format-specific guidance
@@ -395,9 +408,9 @@ Extract the recipe information as a valid JSON object that matches the required 
             confidence += 0.1  # Stages indicate more complex, complete recipes
             
         # Having time information increases confidence
-        time_fields = [result.get("prepTime"), result.get("cookTime"), result.get("totalTime")]
+        time_fields = [result.get("prepTime"), result.get("cookTime")]
         time_count = sum(1 for t in time_fields if t is not None)
-        confidence += time_count * 0.02
+        confidence += time_count * 0.03
             
         # Having servings increases confidence
         if result.get("servings") is not None:
@@ -435,7 +448,6 @@ Extract the recipe information as a valid JSON object that matches the required 
             "stages": None,
             "prepTime": None,
             "cookTime": None,
-            "totalTime": None,
             "servings": None,
             "tags": ["extraction-failed"],
             "mainIngredient": None
