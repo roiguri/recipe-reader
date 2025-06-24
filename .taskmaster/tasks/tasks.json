@@ -247,5 +247,123 @@
       "updated": "2025-06-24T09:37:28.067Z",
       "description": "Completed tasks archive"
     }
+  },
+  "time-fields-standardization": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Update Backend Recipe Models",
+        "description": "Remove waitTime field and convert totalTime to a calculated property in the RecipeBase model",
+        "details": "In app/models/recipe.py, remove the waitTime field from RecipeBase model. Convert totalTime from Optional[int] to a @property decorator that returns (self.prepTime or 0) + (self.cookTime or 0). Ensure the property returns None if both prepTime and cookTime are None. Update any Pydantic model configurations to exclude totalTime from input validation while including it in serialization. Use Pydantic v2.x computed_field decorator if available, otherwise use @property with proper model configuration.",
+        "testStrategy": "Create unit tests to verify: 1) waitTime field is no longer accepted in model instantiation, 2) totalTime is correctly calculated for various combinations of prepTime and cookTime including None values, 3) totalTime appears in serialized output but cannot be set directly, 4) Existing API endpoints still function with the updated model structure",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Update Recipe Extraction Service",
+        "description": "Modify GeminiService to remove totalTime extraction and merge waiting time into cookTime",
+        "details": "In the recipe extraction service (likely in app/services/), update the Gemini API prompts to specify: 'prepTime: Time for preparation, mixing, chopping before cooking' and 'cookTime: Total cooking time including baking, frying, waiting, resting, cooling'. Remove any totalTime extraction logic. Update the prompt to explicitly state 'Do NOT extract totalTime - it will be calculated automatically' and 'Include waiting/resting periods in cookTime, not as separate field'. Ensure the service converts all time references to integer minutes. Consider using regex patterns like r'(\\d+)\\s*(?:hours?|hrs?|h)' and r'(\\d+)\\s*(?:minutes?|mins?|m)' for robust time parsing.",
+        "testStrategy": "Test extraction with various recipe formats including: 1) Recipes with explicit waiting/resting times to ensure they're merged into cookTime, 2) Recipes with time in different formats (1h 30m, 90 minutes, etc.), 3) Verify totalTime is not extracted from AI response, 4) Test edge cases like recipes with only prep or only cook time",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Add Time Field Validation",
+        "description": "Implement validation for prepTime and cookTime to ensure reasonable ranges",
+        "details": "Create a validation function that ensures time values are between 0 and 1440 minutes (24 hours). In the RecipeBase model, add Pydantic validators using @field_validator for prepTime and cookTime. The validator should accept None values but validate that non-None values are within the acceptable range. Consider using Pydantic's Field with ge=0 and le=1440 constraints. Add clear error messages like 'Cooking time must be between 0 and 24 hours (1440 minutes)'.",
+        "testStrategy": "Test validation with: 1) Valid times within range (0, 60, 1440), 2) Invalid times outside range (-1, 1441, 10000), 3) None values should pass validation, 4) Verify appropriate error messages are returned for invalid inputs",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Update Frontend Components to Remove waitTime",
+        "description": "Remove all waitTime references from frontend components and update totalTime displays",
+        "details": "In demo-frontend/src/components/: 1) EditableMetadata.jsx - Remove waitTime input field and any totalTime editing capability, 2) Metadata.jsx - Update to display calculated totalTime from API response, remove waitTime display, 3) ExportOptions.jsx - Ensure PDF export uses the calculated totalTime value. Search for all occurrences of 'waitTime' in the frontend codebase and remove them. Update any destructuring that includes waitTime. Ensure totalTime is treated as read-only throughout the application.",
+        "testStrategy": "Verify: 1) waitTime field no longer appears in any UI component, 2) totalTime displays correctly as calculated value, 3) Recipe editing forms only show prepTime and cookTime inputs, 4) No console errors related to missing waitTime property",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Standardize Time Input Format",
+        "description": "Implement consistent H:MM format for time inputs with proper validation and hints",
+        "details": "Update time input fields in EditableMetadata.jsx to use consistent H:MM format. Add input pattern=\"[0-9]+:[0-5][0-9]\" for basic HTML5 validation. Update parseTime function to handle H:MM format robustly - split by ':', convert hours to minutes and add to minute portion. Update formatTime to convert minutes to H:MM format (e.g., 90 becomes '1:30'). Add placeholder text like '1:30' and title attribute 'Enter time in H:MM format (e.g., 1:30 for 90 minutes)'. Consider using a more robust time parsing library like dayjs or date-fns if complex parsing is needed.",
+        "testStrategy": "Test time input with: 1) Valid H:MM formats (0:30, 1:00, 10:45), 2) Invalid formats to ensure proper error handling, 3) Edge cases like 0:00, 24:00, 4) Verify conversion between minutes and H:MM format works bidirectionally",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Update Internationalization Files",
+        "description": "Remove waitTime translations and update time-related locale strings",
+        "details": "In demo-frontend/src/locales/: 1) Remove all 'waitTime' translation keys from en.json and he.json, 2) Update any time format examples to show H:MM format, 3) Add new keys for time input hints like 'timeFormatHint': 'Format: H:MM (e.g., 1:30 for 90 minutes)', 4) Update cookTime descriptions to clarify it includes waiting time: 'cookTime': 'Cooking time (including waiting/resting)'. Run the validate-locales.js script after changes to ensure consistency between locale files.",
+        "testStrategy": "Run demo-frontend/scripts/validate-locales.js to ensure: 1) No missing keys between locales, 2) waitTime keys are removed from all locale files, 3) New time format hint keys are present in all locales, 4) Manual testing of both English and Hebrew interfaces",
+        "priority": "low",
+        "dependencies": [
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Comprehensive Time Validation",
+        "description": "Add frontend validation with user-friendly error messages for time inputs",
+        "details": "In the time input handler functions, implement validation that: 1) Checks H:MM format using regex /^[0-9]+:[0-5][0-9]$/, 2) Validates parsed time is within 0-1440 minute range, 3) Shows inline error messages for invalid format ('Please use H:MM format') or out of range values ('Time cannot exceed 24 hours'), 4) Consider adding a custom React hook useTimeInput that encapsulates parsing, formatting, and validation logic. Use the existing form validation pattern in the app, likely with state management for error messages.",
+        "testStrategy": "Test validation with: 1) Invalid formats (1.30, 1h30m, abc), 2) Out of range values (25:00, -1:00), 3) Valid edge cases (0:00, 24:00, 0:01), 4) Verify error messages appear/disappear appropriately, 5) Test that valid inputs can still be submitted",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Integration Testing and Edge Case Handling",
+        "description": "Comprehensive testing of the time field standardization across all components",
+        "details": "Create integration tests that verify: 1) Recipe extraction correctly handles various time formats and puts waiting time in cookTime, 2) API responses include calculated totalTime but don't accept it in requests, 3) Frontend displays times correctly with new format, 4) PDF export shows accurate calculated totalTime, 5) Test edge cases: recipes with no times, only prep time, only cook time, maximum time values. Add E2E tests using the existing test framework (likely Jest + React Testing Library) to verify the complete workflow from recipe input to display. Ensure backward compatibility by testing that existing recipes in the database still display correctly.",
+        "testStrategy": "Execute comprehensive test suite: 1) API integration tests for recipe creation/update with new time structure, 2) Frontend component tests for time display and input, 3) E2E tests for complete recipe workflows, 4) Manual testing of PDF exports, 5) Performance testing to ensure totalTime calculation doesn't impact response times",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-24T12:55:31.599Z",
+      "updated": "2025-06-24T12:59:15.628Z",
+      "description": "Tasks for time-fields-standardization context"
+    }
   }
 }

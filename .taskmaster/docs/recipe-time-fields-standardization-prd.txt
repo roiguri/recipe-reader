@@ -1,0 +1,251 @@
+<context>
+# Overview
+The Recipe Reader application currently has inconsistent time field handling across frontend and backend components. The system defines four time fields (`prepTime`, `cookTime`, `waitTime`, `totalTime`) but has incomplete frontend support, inconsistent validation, and unreliable AI-generated total times that don't match actual prep + cook calculations.
+
+This feature standardizes recipe time fields to use only two input fields (`prepTime`, `cookTime`) with automatic total time calculation, ensuring data consistency, improved user experience, and more reliable time tracking across the application.
+
+The solution addresses pain points for both API consumers (inconsistent time calculations) and demo frontend users (missing fields, unclear formats), while creating a cleaner, more maintainable time system.
+
+# Core Features
+## Simplified Time Field Structure
+- Reduce time fields from 4 to 2 input fields: `prepTime` and `cookTime` (in minutes)
+- Remove `waitTime` field - merge waiting/resting time into `cookTime` 
+- Convert `totalTime` to calculated property (`prepTime + cookTime`)
+- Eliminate AI-generated total times that often don't match actual calculations
+
+## Enhanced Time Input Experience
+- Standardize time input format across edit interfaces (H:MM format)
+- Add clear format hints and validation for time entry
+- Improve time display formatting with proper localization
+- Add reasonable time range validation (0-1440 minutes)
+
+## Consistent Frontend Time Handling
+- Complete frontend support for all time fields
+- Standardized time formatting across components
+- Proper internationalization for English and Hebrew time display
+- Automatic total time calculation and display
+
+## Reliable Time Calculations
+- Server-side calculated total time eliminates AI inconsistencies
+- Clear semantic meaning: cookTime includes all cooking-related time
+- Simplified data model reduces complexity and potential errors
+</context>
+
+<PRD>
+# Technical Architecture
+
+## Backend Components
+### Data Model Updates
+- Remove `waitTime` field from `RecipeBase` model in `app/models/recipe.py`
+- Convert `totalTime` from `Optional[int]` to calculated property
+- Add `@property` method for totalTime calculation: `(self.prepTime or 0) + (self.cookTime or 0)`
+- Maintain existing `prepTime` and `cookTime` as `Optional[int]` (minutes)
+
+### API Layer Updates
+- Remove `waitTime` from all API request/response models
+- API responses include calculated `totalTime` value
+- Recipe extraction services (Gemini) updated to merge waiting time into cookTime
+- Validation ensures prepTime and cookTime are within reasonable ranges (0-1440 minutes)
+
+### Service Layer Updates
+- Update `GeminiService` prompts to specify: "Include any waiting, resting, or cooling time in cookTime"
+- Remove totalTime from AI extraction - will be calculated automatically
+- Update recipe extraction to focus on clear prep vs cook time distinction
+- Ensure time extraction converts text references to integer minutes
+
+## Frontend Components
+### Component Updates
+- `EditableMetadata.jsx`: Remove waitTime editing, remove totalTime editing (auto-calculated)
+- `Metadata.jsx`: Display calculated totalTime, remove any waitTime references
+- `ExportOptions.jsx`: Ensure PDF export uses calculated totalTime
+- Standardize time input format hints across all edit interfaces
+
+### Time Input Standardization
+- All time edit fields use consistent H:MM format ("1:30" for 90 minutes)
+- Add format hints: "Format: H:MM (e.g., 1:30 for 90 minutes)"
+- Improve parseTime and formatTime utility functions
+- Add input validation for time format and reasonable ranges
+
+### Display Formatting
+- Consistent time display using `formatters.js` across all components
+- Proper handling of zero times and null values
+- Localized time formatting for English and Hebrew
+- Clear distinction between prep, cook, and total time in displays
+
+## Database Considerations
+- No schema migration required (removing fields is non-breaking)
+- Existing waitTime data in database becomes unused but preserved
+- TotalTime calculations happen at application layer
+- Backward compatibility maintained for existing API consumers
+
+# Development Roadmap
+
+## Phase 1: Backend Simplification (MVP)
+### Core Model Updates
+- Remove `waitTime` from RecipeBase model
+- Convert `totalTime` to calculated property
+- Add comprehensive test coverage for time calculations
+- Update existing tests to match new time structure
+
+### Service Integration
+- Update `GeminiService` prompts to merge waiting time into cookTime
+- Remove totalTime from AI extraction logic
+- Add validation for reasonable time ranges (0-1440 minutes)
+- Test extraction with various time combinations
+
+## Phase 2: Frontend Implementation
+### Component Cleanup
+- Remove waitTime references from all components
+- Update totalTime display to use calculated value
+- Remove totalTime from edit interfaces (now read-only)
+- Standardize time input format hints
+
+### Input Validation and UX
+- Add format validation for H:MM time input
+- Improve error messages for invalid time formats
+- Add reasonable range validation with user-friendly messages
+- Ensure consistent placeholder text across time fields
+
+### Internationalization Updates
+- Remove waitTime translations from locale files
+- Ensure totalTime displays properly in both English and Hebrew
+- Update time format examples in locale files
+- Validate all time-related UI text
+
+## Phase 3: Integration and Polish
+### Cross-Component Testing
+- Verify calculated totalTime in PDF exports
+- Test recipe creation/editing workflows with new time structure
+- Validate time display consistency across all views
+- Ensure proper null/zero time handling
+
+### Data Quality Improvements
+- Add warnings for unusual time combinations
+- Consider validation that cookTime > 0 for recipes with cooking steps
+- Improve time parsing from text descriptions
+- Test edge cases with very short or very long times
+
+# Logical Dependency Chain
+
+## Foundation Layer (Build First)
+1. **Backend Model Updates**: Remove waitTime, convert totalTime to calculated property
+2. **Test Infrastructure**: Update all time-related tests for new structure
+3. **Service Integration**: Update Gemini extraction to merge waiting time into cookTime
+
+## Interface Layer (Quick MVP)
+4. **Component Cleanup**: Remove waitTime from all frontend components
+5. **Calculation Display**: Update totalTime to show calculated value
+6. **Input Standardization**: Standardize time input format and validation
+
+## Polish Layer (Iterative Improvements)
+7. **Validation Enhancement**: Add comprehensive time validation and error messages
+8. **UX Improvements**: Add format hints, better placeholders, input guidance
+9. **Localization**: Ensure proper time formatting for Hebrew and English
+
+## Validation Layer (Completion)
+10. **Cross-Platform Testing**: Verify functionality across all time-related components
+11. **Edge Case Handling**: Test unusual time values, null handling, zero times
+12. **Performance**: Ensure calculated totalTime doesn't impact performance
+
+# Risks and Mitigations
+
+## Technical Challenges
+### Data Model Breaking Changes Risk
+**Risk**: Removing waitTime field breaks existing API consumers
+**Mitigation**: Gradual deprecation - keep field in responses but don't use in logic; document migration path
+
+### Calculated Property Performance Risk
+**Risk**: Calculating totalTime on every access impacts performance
+**Mitigation**: Simple addition operation has negligible performance impact; consider caching if needed
+
+### Time Format Parsing Risk
+**Risk**: H:MM format parsing fails with edge cases
+**Mitigation**: Robust parsing with clear error messages; fallback to minute input for invalid formats
+
+## User Experience Challenges
+### Lost Granularity Risk
+**Risk**: Combining waiting time into cookTime loses semantic meaning
+**Mitigation**: Update UI labels to clarify cookTime includes all cooking-related time
+
+### Input Format Confusion Risk
+**Risk**: Users confused by H:MM format requirement
+**Mitigation**: Clear format hints, examples, and forgiving parsing that accepts multiple formats
+
+## MVP Definition and Scope
+### Minimum Viable Product
+- Backend: Remove waitTime, calculated totalTime
+- Frontend: Remove waitTime components, display calculated totalTime
+- Service: Updated AI extraction prompts
+- Basic input validation and format hints
+
+### Non-MVP (Future Enhancements)
+- Advanced time parsing (natural language like "1 hour 30 minutes")
+- Time estimation based on recipe complexity
+- Time tracking for actual cooking vs estimated times
+- Integration with cooking timers or external time tracking
+
+# Appendix
+
+## Research Findings
+### Current Time Field Usage Analysis
+Existing time fields and their inconsistencies:
+- **prepTime**: Used consistently, integer minutes
+- **cookTime**: Used consistently, integer minutes  
+- **waitTime**: Defined but not displayed/editable in frontend
+- **totalTime**: AI-generated, often doesn't match prepTime + cookTime
+
+### Format Analysis
+- **Backend**: Integer minutes (consistent)
+- **Display**: Formatted strings like "1h 30min" (good)
+- **Edit**: H:MM format like "1:30" (needs better documentation)
+- **Placeholders**: Just numbers, unclear format
+
+## Technical Specifications
+### Updated Model Definition
+```python
+class RecipeBase(BaseModel):
+    """Recipe model with simplified time fields."""
+    prepTime: Optional[int] = Field(None, description="Preparation time in minutes")
+    cookTime: Optional[int] = Field(None, description="Cooking time including waiting/resting in minutes")
+    
+    @property
+    def totalTime(self) -> Optional[int]:
+        """Calculate total time from prep + cook time."""
+        if self.prepTime is None and self.cookTime is None:
+            return None
+        return (self.prepTime or 0) + (self.cookTime or 0)
+```
+
+### Frontend Time Input Pattern
+```jsx
+<input
+  type="text"
+  placeholder="1:30 (H:MM format)"
+  value={formatTime(cookTime)}
+  onChange={handleTimeChange}
+  pattern="[0-9]+:[0-5][0-9]"
+  title="Enter time in H:MM format (e.g., 1:30 for 90 minutes)"
+/>
+```
+
+### Time Validation Logic
+```python
+def validate_time_field(minutes: Optional[int]) -> Optional[int]:
+    """Validate time field is within reasonable range."""
+    if minutes is None:
+        return None
+    if not (0 <= minutes <= 1440):  # 0 to 24 hours
+        raise ValueError("Time must be between 0 and 1440 minutes (24 hours)")
+    return minutes
+```
+
+### Updated Gemini Extraction Prompt
+```
+Time Extraction Guidelines:
+- prepTime: Time for preparation, mixing, chopping before cooking
+- cookTime: Total cooking time including baking, frying, waiting, resting, cooling
+- Do NOT extract totalTime - it will be calculated automatically
+- Convert all time references to integer minutes
+- Include waiting/resting periods in cookTime, not as separate field
+```
+</PRD>
