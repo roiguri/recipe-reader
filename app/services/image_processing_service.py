@@ -759,9 +759,9 @@ Provide the extracted text in a clean, readable format that preserves the origin
             confidence += 0.15
             
         # Time information from images is valuable
-        time_fields = [result.get("prepTime"), result.get("cookTime"), result.get("totalTime")]
+        time_fields = [result.get("prepTime"), result.get("cookTime")]
         time_count = sum(1 for t in time_fields if t is not None)
-        confidence += time_count * 0.03
+        confidence += time_count * 0.04
         
         # Cap at 0.9 (images are inherently less reliable than clean text)
         return min(0.9, max(0.1, confidence))
@@ -782,7 +782,6 @@ Provide the extracted text in a clean, readable format that preserves the origin
             "stages": None,
             "prepTime": None,
             "cookTime": None,
-            "totalTime": None,
             "servings": None,
             "tags": ["image-extraction-failed"],
             "mainIngredient": None

@@ -289,14 +289,17 @@ class UrlProcessor:
         cook_time = self._parse_duration(data.get('cookTime'))
         total_time = self._parse_duration(data.get('totalTime'))
         
-        if prep_time or cook_time or total_time:
+        if total_time and not cook_time and prep_time:
+            cook_time = max(0, total_time - prep_time)
+        elif total_time and not cook_time and not prep_time:
+            cook_time = total_time
+        
+        if prep_time or cook_time:
             lines.append("Times:")
             if prep_time:
                 lines.append(f"- Prep time: {prep_time} minutes")
             if cook_time:
-                lines.append(f"- Cook time: {cook_time} minutes")
-            if total_time:
-                lines.append(f"- Total time: {total_time} minutes")
+                lines.append(f"- Cook time: {cook_time} minutes (includes all cooking, waiting, and cooling)")
             lines.append("")
         
         # Servings
