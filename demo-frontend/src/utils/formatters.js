@@ -159,4 +159,73 @@ export const generatePdfFilename = (recipeName, includeTimestamp = false) => {
   }
   
   return filename;
+};
+
+/**
+ * Detect browser and print capabilities for cross-browser compatibility
+ * @returns {Object} Browser information and print capabilities
+ */
+export const detectBrowserPrintCapabilities = () => {
+  const userAgent = navigator.userAgent;
+  // Use userAgent for platform detection to avoid deprecation warning
+  const platformInfo = userAgent;
+  
+  // Detect browser type
+  const isChrome = /Chrome/.test(userAgent) && !/Edge/.test(userAgent);
+  const isFirefox = /Firefox/.test(userAgent);
+  const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+  const isEdge = /Edge/.test(userAgent) || /Edg\//.test(userAgent);
+  const isIE = /MSIE|Trident/.test(userAgent);
+  
+  // Detect operating system from userAgent
+  const isWindows = /Win/.test(platformInfo);
+  const isMac = /Mac/.test(platformInfo);
+  const isLinux = /Linux/.test(platformInfo);
+  
+  // Determine print-to-PDF capability level
+  let printCapability = 'unknown';
+  let printDialogSupport = 'basic';
+  
+  if (isChrome) {
+    printCapability = 'excellent'; // Native print-to-PDF, full styling support
+    printDialogSupport = 'advanced';
+  } else if (isEdge) {
+    printCapability = 'excellent'; // Similar to Chrome, full support
+    printDialogSupport = 'advanced';
+  } else if (isFirefox) {
+    printCapability = 'good'; // Good print support, some CSS limitations
+    printDialogSupport = 'good';
+  } else if (isSafari) {
+    printCapability = 'native'; // Native macOS print, good quality
+    printDialogSupport = 'native';
+  } else if (isIE) {
+    printCapability = 'limited'; // Limited CSS support
+    printDialogSupport = 'basic';
+  }
+  
+  return {
+    browser: {
+      isChrome,
+      isFirefox,
+      isSafari,
+      isEdge,
+      isIE,
+      name: isChrome ? 'Chrome' : isFirefox ? 'Firefox' : isSafari ? 'Safari' : isEdge ? 'Edge' : isIE ? 'IE' : 'Unknown'
+    },
+    os: {
+      isWindows,
+      isMac,
+      isLinux,
+      name: isWindows ? 'Windows' : isMac ? 'macOS' : isLinux ? 'Linux' : 'Unknown'
+    },
+    printCapability,
+    printDialogSupport,
+    features: {
+      printColorAdjust: isChrome || isEdge || isSafari,
+      flexboxPrint: isChrome || isEdge || isFirefox,
+      gridPrint: isChrome || isEdge,
+      customFonts: !isIE,
+      backgroundPrint: isChrome || isEdge || isSafari
+    }
+  };
 }; 

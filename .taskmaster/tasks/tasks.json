@@ -112,7 +112,7 @@
           4,
           5
         ],
-        "status": "pending",
+        "status": "cancelled",
         "subtasks": []
       },
       {
@@ -139,7 +139,7 @@
           2,
           3
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -166,13 +166,13 @@
           3,
           6
         ],
-        "status": "pending",
+        "status": "cancelled",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-24T05:57:38.780Z",
-      "updated": "2025-06-24T08:41:15.879Z",
+      "updated": "2025-06-24T09:07:58.332Z",
       "description": "PDF export functionality with HTML templates"
     }
   },

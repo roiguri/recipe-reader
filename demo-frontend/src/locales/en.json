@@ -161,7 +161,16 @@
         "description": "Preview and export your recipe as a PDF document",
         "button": "Export PDF",
         "exporting": "Exporting...",
-        "format": "PDF Format"
+        "format": "PDF Format",
+        "browserSupport": "Browser Support",
+        "guidance": {
+          "chrome": "In the print dialog, select \"Save as PDF\" as destination for best results.",
+          "firefox": "Use \"Print to File\" and select PDF format. Some background colors may not print.",
+          "safari_mac": "Click \"PDF\" in the print dialog and select \"Save as PDF\".",
+          "safari_other": "Print dialog options may vary. Look for \"Save as PDF\" option.",
+          "ie": "Limited print support. Consider using a modern browser like Chrome or Edge for better results.",
+          "unknown": "Look for \"Save as PDF\" or \"Print to PDF\" option in your browser's print dialog."
+        }
       }
     },
     "edit": {
