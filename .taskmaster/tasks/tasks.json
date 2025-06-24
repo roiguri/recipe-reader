@@ -7,26 +7,6 @@
       "description": "Tasks for master context"
     }
   },
-  "bugs": {
-    "tasks": [
-      {
-        "id": 1,
-        "title": "Replace Recipe Difficulty with Hardcoded Options",
-        "description": "Update recipe difficulty from free-text field to predefined enum options in both API models and demo frontend endpoints",
-        "details": "Modify the Recipe model in the API (likely in app/models/recipe.py or similar) to replace the current difficulty field with an enum containing predefined options like 'Easy', 'Medium', 'Hard', or 'Beginner', 'Intermediate', 'Advanced'. Update the Pydantic model validation to only accept these specific values. Modify all API endpoints that handle recipe creation, updates, and responses to use the new enum values. Update the demo frontend components to display difficulty as dropdown/select input instead of text field, using the same predefined options. Ensure proper validation on both frontend and backend to reject invalid difficulty values. Update any existing recipes in the database to map current difficulty values to the new enum options. Add proper internationalization support for difficulty options in both English and Hebrew locales.",
-        "testStrategy": "API endpoint testing to ensure only valid difficulty enum values are accepted and invalid values are rejected with proper error messages. Database migration testing to verify existing difficulty values are properly converted to new enum options. Frontend form validation testing for difficulty selection. Integration testing between frontend and backend to ensure difficulty values are properly transmitted and displayed. Internationalization testing to verify difficulty options display correctly in both English and Hebrew languages.",
-        "status": "done",
-        "dependencies": [],
-        "priority": "high",
-        "subtasks": []
-      }
-    ],
-    "metadata": {
-      "created": "2025-06-24T07:11:24.355Z",
-      "updated": "2025-06-24T12:25:53.752Z",
-      "description": "Tag created on 6/24/2025"
-    }
-  },
   "features": {
     "tasks": [
       {
@@ -63,190 +43,57 @@
         "testStrategy": "1. **Backend Image Processing Tests**:\n   - Test image scraping from various recipe websites\n   - Verify image download and validation functionality\n   - Test image optimization and resizing algorithms\n   - Validate image upload API with different file formats and sizes\n   - Test error handling for corrupted or invalid images\n\n2. **Frontend Integration Tests**:\n   - Test image upload component in edit mode\n   - Verify image preview and crop functionality\n   - Test drag-and-drop upload behavior\n   - Validate image display in recipe view components\n   - Test image removal and replacement workflows\n\n3. **PDF Export Tests**:\n   - Verify images appear correctly in PDF exports\n   - Test image quality and sizing in PDF output\n   - Validate RTL layout with images\n   - Test PDF generation with multiple images per recipe\n   - Verify image embedding doesn't break PDF structure\n\n4. **Performance Tests**:\n   - Test large image upload handling\n   - Verify image processing doesn't block API responses\n   - Test PDF generation time with image-heavy recipes\n   - Validate storage space management for images",
         "status": "pending",
         "dependencies": [],
-        "priority": "medium",
+        "priority": "high",
         "subtasks": []
       },
       {
         "id": 4,
-        "title": "Add comments attribute to recipe data models and API endpoints",
-        "description": "Add a comments field to recipe data models and implement full CRUD support across all API endpoints to allow users to add, view, edit, and delete comments on recipes.",
-        "details": "Implementation involves:\n\n1. **Backend Data Model Updates**:\n   - Add comments field to Recipe model in app/models/recipe.py\n   - Define Comment model with fields: id, recipe_id, user_id (optional), content, timestamp, author_name (optional)\n   - Update database schema with migration for comments table\n   - Add foreign key relationship between Recipe and Comment models\n   - Implement comment validation (length limits, content filtering)\n\n2. **API Endpoint Enhancements**:\n   - Update GET /recipe/{id} to include comments in response\n   - Add POST /recipe/{id}/comments endpoint for adding new comments\n   - Add GET /recipe/{id}/comments endpoint for retrieving all comments\n   - Add PUT /recipe/{id}/comments/{comment_id} for editing comments\n   - Add DELETE /recipe/{id}/comments/{comment_id} for removing comments\n   - Update recipe creation/update endpoints to handle comments if provided\n\n3. **Request/Response Models**:\n   - Create CommentRequest and CommentResponse Pydantic models\n   - Update RecipeResponse to include comments array\n   - Add pagination support for comments endpoint\n   - Implement comment sorting (newest/oldest first)\n\n4. **Database Layer**:\n   - Add comment CRUD operations in repository layer\n   - Implement cascading delete for comments when recipe is deleted\n   - Add indexing on recipe_id for efficient comment queries\n   - Add comment count aggregation for recipe listings",
-        "testStrategy": "1. **Unit Tests**:\n   - Test Comment model validation with various input scenarios\n   - Verify comment CRUD operations in repository layer\n   - Test comment-recipe relationship constraints\n   - Validate request/response model serialization\n\n2. **Integration Tests**:\n   - Test complete comment workflow: create, read, update, delete\n   - Verify comments inclusion in recipe retrieval endpoints\n   - Test comment pagination and sorting functionality\n   - Validate error handling for invalid comment operations\n\n3. **API Tests**:\n   - Test all comment endpoints with various payloads\n   - Verify proper HTTP status codes and error messages\n   - Test comment permissions and authorization\n   - Validate comment data persistence across requests\n\n4. **Database Tests**:\n   - Test database migrations for comments table\n   - Verify foreign key constraints and cascading deletes\n   - Test comment indexing and query performance\n   - Validate data integrity with concurrent comment operations",
-        "status": "in-progress",
+        "title": "Replace form processing with video processing",
+        "description": "Replace the form processing with video processing place holfer - opens unimplemented component.",
+        "details":"",
+        "testStrategy":"manual",
+        "status": "pending",
         "dependencies": [],
-        "priority": "medium",
+        "priority": "high",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-24T07:14:50.441Z",
-      "updated": "2025-06-24T18:58:30.903Z",
+      "updated": "2025-06-24T21:21:53.906Z",
       "description": "Tag created on 6/24/2025"
     }
   },
   "completed": {
     "tasks": [
       {
-        "id": 13,
+        "id": 1,
         "title": "Complete PDF Export Feature Implementation",
         "description": "Integrate all PDF export components into a cohesive system with comprehensive testing, documentation, and deployment preparation for production use.",
         "details": "Conduct comprehensive integration testing of all PDF export components to ensure seamless functionality across the entire user workflow. Perform thorough cross-browser validation on Chrome, Firefox, Safari, and Edge across Windows, macOS, and Linux platforms. Validate complete user journey from recipe display through print preview to PDF generation with proper error handling and user feedback. Update project documentation with PDF export feature capabilities, browser compatibility notes, and troubleshooting guide. Implement final performance optimizations for print CSS rendering and modal interactions. Add comprehensive unit and integration test coverage for the entire PDF export workflow. Prepare deployment checklist and validate feature readiness for production release. Conduct accessibility audit to ensure compliance with WCAG guidelines for print functionality. Review and optimize bundle size impact of new PDF export features. Create user guide documentation for optimal print-to-PDF usage across different browsers.",
         "testStrategy": "Full end-to-end testing of PDF export workflow across all supported browsers and operating systems. Automated test suite covering component integration, user interactions, and error scenarios. Performance testing for print CSS rendering speed and modal responsiveness. Accessibility testing with screen readers and keyboard navigation. Load testing with various recipe content sizes and complexity. User acceptance testing with real users to validate intuitive workflow. Cross-device testing including desktop, tablet, and mobile browsers. Print quality validation across different PDF viewers and printers.",
         "status": "done",
-        "dependencies": [
-          1,
-          3,
-          7,
-          9,
-          10,
-          11
-        ],
+        "dependencies": [],
         "priority": "medium",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Update ExportOptions Component Structure",
-            "description": "Replace the current multi-format export grid with a single PDF export interface featuring live print preview",
-            "status": "done",
-            "dependencies": [],
-            "details": "Completely rewrite demo-frontend/src/components/ResultDisplay/ExportOptions.jsx to remove JSON/Markdown/Text export options and replace with a single PDF export button and print preview area. Component should display the recipe content in print-optimized layout using existing Recipe data structure. Use React functional component with hooks for state management. Implement conditional rendering to show preview alongside export button. Ensure component maintains existing prop interfaces to avoid breaking parent components.",
-            "testStrategy": "Unit tests for component rendering, prop handling, and state management. Visual regression tests for preview layout. Integration tests with parent ResultDisplay component to ensure proper data flow."
-          },
-          {
-            "id": 2,
-            "title": "Create Print-Optimized CSS Styles",
-            "description": "Implement comprehensive @media print CSS rules for clean, printable recipe layout with Hebrew RTL support",
-            "status": "done",
-            "dependencies": [
-              1
-            ],
-            "details": "Add print styles to demo-frontend/src/index.css using @media print queries. Hide navigation elements (.tab-navigation, .export-button, .back-button). Optimize typography with 12pt body font, 18pt h1, 14pt h2. Set page margins to 0.5in using @page rule. Implement page-break-before: always for .page-break class. Add RTL support with direction: rtl and text-align: right for Hebrew content. Use CSS Grid or Flexbox for ingredient lists and instruction formatting. Ensure consistent rendering across Chrome, Firefox, Safari, and Edge browsers.",
-            "testStrategy": "Cross-browser print preview testing on Chrome, Firefox, Safari, Edge. Hebrew RTL text rendering validation. Multi-page recipe pagination testing. Print CSS validation tools and manual print testing."
-          },
-          {
-            "id": 3,
-            "title": "Implement Browser Print API Integration",
-            "description": "Add window.print() functionality with proper event handling and user feedback for PDF export",
-            "status": "done",
-            "dependencies": [
-              1,
-              2
-            ],
-            "details": "Create handleExportPDF function in ExportOptions.jsx that calls window.print() with proper error handling. Add loading state management during print dialog interaction. Implement beforeprint and afterprint event listeners to provide user feedback. Add keyboard shortcut support (Ctrl+P) for quick export. Include fallback error handling for browsers that don't support print-to-PDF. Ensure function works correctly with existing recipe data structure and maintains component state.",
-            "testStrategy": "Manual testing across different browsers and operating systems. Keyboard shortcut functionality testing. Error handling validation for unsupported browsers. User experience testing for print dialog interaction."
-          },
-          {
-            "id": 4,
-            "title": "Optimize Recipe Content Layout for Print",
-            "description": "Structure recipe display components for optimal print rendering with proper content hierarchy",
-            "status": "done",
-            "dependencies": [
-              2
-            ],
-            "details": "Modify recipe content structure to use semantic HTML elements (article, section, header) for better print rendering. Implement proper heading hierarchy (h1 for recipe name, h2 for sections like ingredients/instructions). Create ingredient list with proper ol/ul elements and CSS counters for numbering. Format instruction steps with clear visual separation and numbering. Add recipe metadata display (prep time, cook time, servings) formatted for print. Ensure Hebrew content uses proper HTML dir='rtl' attributes alongside CSS direction property.",
-            "testStrategy": "Print layout validation across different recipe types and lengths. Hebrew content rendering verification. Semantic HTML structure validation. Multi-page recipe flow testing."
-          },
-          {
-            "id": 5,
-            "title": "Handle Multi-Page Recipe Pagination",
-            "description": "Implement proper page breaks and content flow for recipes that span multiple pages",
-            "status": "done",
-            "dependencies": [
-              2,
-              4
-            ],
-            "details": "Add CSS page-break rules to prevent awkward content splitting. Use page-break-inside: avoid for ingredient items and instruction steps. Implement page-break-after: auto for major sections (ingredients to instructions transition). Add page-break-before: always for new recipe sections if multiple recipes. Use orphans and widows CSS properties to control text flow (orphans: 3, widows: 3). Implement table-layout: fixed for ingredient tables to prevent column breaking across pages.",
-            "testStrategy": "Long recipe pagination testing with various content lengths. Page break behavior validation across different browsers. Print preview testing for content flow and readability."
-          },
-          {
-            "id": 6,
-            "title": "Update ResultDisplay Parent Component",
-            "description": "Modify the parent ResultDisplay component to integrate with the new PDF-only export system",
-            "status": "done",
-            "dependencies": [
-              1,
-              3
-            ],
-            "details": "Update demo-frontend/src/components/ResultDisplay/index.jsx to remove references to multiple export formats. Modify handleExport function to only handle PDF export functionality. Update state management to remove format selection logic. Ensure proper props are passed to updated ExportOptions component. Update any export-related conditional rendering to accommodate single PDF format. Maintain existing component interfaces to avoid breaking changes in parent components.",
-            "testStrategy": "Integration testing between ResultDisplay and ExportOptions components. Prop passing validation. State management testing for export functionality. Regression testing to ensure no breaking changes to parent components."
-          },
-          {
-            "id": 7,
-            "title": "Generate Dynamic PDF Filenames",
-            "description": "Implement automatic filename generation based on recipe name for better file organization",
-            "status": "done",
-            "dependencies": [
-              3
-            ],
-            "details": "Create utility function to generate PDF filenames from recipe names. Sanitize recipe names by removing special characters, replacing spaces with underscores, and limiting length to 50 characters. Add fallback filename 'recipe' for unnamed recipes. Handle Hebrew characters by transliterating or keeping Unicode. Implement filename suggestion through document.title property before calling window.print(). Consider adding timestamp suffix for duplicate recipe names. Store filename generation logic in separate utility file for reusability.",
-            "testStrategy": "Filename generation testing with various recipe name formats including Hebrew, special characters, and long names. PDF save dialog verification to ensure suggested filenames appear correctly. Edge case testing for empty or invalid recipe names."
-          },
-          {
-            "id": 8,
-            "title": "Add Print Preview Modal Enhancement",
-            "description": "Create an optional modal preview system for better user control over print settings",
-            "status": "done",
-            "dependencies": [
-              4,
-              5
-            ],
-            "details": "Implement modal component using React Portal API for print preview functionality. Create modal with recipe preview, print settings recommendations (landscape vs portrait), and export button. Use CSS transforms to scale recipe content for modal preview. Add modal state management with open/close functionality. Implement escape key and overlay click to close modal. Add print settings guidance text and tips for optimal results. Ensure modal is accessible with proper ARIA labels and focus management.",
-            "testStrategy": "Modal functionality testing including open/close behavior. Keyboard navigation and accessibility testing. Print preview accuracy validation compared to actual print output. Mobile responsiveness testing for modal display."
-          },
-          {
-            "id": 9,
-            "title": "Implement Recipe Metadata Print Display",
-            "description": "Add formatted recipe metadata (prep time, cook time, servings) optimized for print layout",
-            "status": "done",
-            "dependencies": [
-              4
-            ],
-            "details": "Create metadata display component for print view showing prep time, cook time, total time, servings, difficulty level, and recipe source. Format metadata using CSS Grid or Flexbox for clean print layout. Add icons or visual indicators for each metadata type using CSS pseudo-elements or print-safe symbols. Implement conditional rendering to hide empty metadata fields. Style metadata section to appear prominently at top of recipe but blend well with overall design. Ensure Hebrew metadata labels are properly translated and RTL-aligned.",
-            "testStrategy": "Metadata display testing with various recipe types and metadata completeness. Print layout validation for metadata section positioning and formatting. Hebrew translation and RTL layout testing for metadata labels."
-          },
-          {
-            "id": 10,
-            "title": "Add Cross-Browser Print Compatibility",
-            "description": "Ensure consistent print behavior and fallbacks across different browsers and operating systems",
-            "status": "done",
-            "dependencies": [
-              2,
-              3
-            ],
-            "details": "Implement browser detection using navigator.userAgent or feature detection for print capabilities. Add CSS vendor prefixes for print-specific properties (-webkit-print-color-adjust, print-color-adjust). Create browser-specific CSS overrides for inconsistent print behavior. Implement progressive enhancement for unsupported browsers with graceful degradation. Add user agent specific print dialog guidance text. Test and document print-to-PDF support levels across Chrome (excellent), Firefox (good), Safari (native), and Edge (full support).",
-            "testStrategy": "Comprehensive cross-browser testing on Windows, macOS, and Linux. Print-to-PDF functionality validation across different browser versions. Fallback behavior testing for older browsers. Documentation of browser-specific print behavior and limitations."
-          },
-          {
-            "id": 11,
-            "title": "Update Internationalization for Export Interface",
-            "description": "Add proper Hebrew and English translations for the new PDF export interface elements",
-            "status": "done",
-            "dependencies": [
-              1
-            ],
-            "details": "Update demo-frontend/src/locales/en.json and he.json with new translation keys for PDF export interface. Add translations for 'Export as PDF', 'Print Preview', 'Print Recipe', loading states, and error messages. Ensure Hebrew translations are culturally appropriate and use proper RTL formatting. Update any hardcoded English text in components to use translation functions. Add translation keys for print guidance text and modal content. Implement proper text direction handling for mixed language content in print view.",
-            "testStrategy": "Translation completeness validation for both English and Hebrew. RTL text rendering testing in both preview and print modes. Language switching functionality testing. Cultural appropriateness review for Hebrew translations."
-          },
-          {
-            "id": 12,
-            "title": "Implement Error Handling and User Feedback",
-            "description": "Add comprehensive error handling, loading states, and user guidance for the PDF export process",
-            "status": "done",
-            "dependencies": [
-              3,
-              6
-            ],
-            "details": "Implement try-catch error handling around window.print() calls with user-friendly error messages. Add loading spinner or progress indicator during print dialog interaction. Create user guidance tooltips or help text explaining print-to-PDF process. Implement error state management with retry functionality. Add success feedback when print dialog completes successfully. Create fallback messaging for browsers without print-to-PDF support. Include accessibility-compliant error messages with proper ARIA attributes and screen reader support.",
-            "testStrategy": "Error handling testing by simulating print failures and browser limitations. Loading state validation during print dialog interaction. User experience testing for error messages and guidance text. Accessibility testing for error states and user feedback with screen readers."
-          }
-        ]
+        "subtasks": []
       },
       {
-        "id": 14,
+        "id": 2,
         "title": "Time Fields Standardization Feature Summary and Documentation",
         "description": "Create comprehensive documentation and summary of the completed Time Fields Standardization feature that removed waitTime field and converted totalTime to computed property across backend models, service extraction, and frontend components.",
         "details": "Document the complete implementation of the time fields standardization feature including: (1) Backend model changes that removed the waitTime field and converted totalTime to a computed property based on prepTime and cookTime; (2) Service extraction updates that modified recipe parsing logic to handle the new time field structure; (3) Frontend component updates that adjusted time display and input handling; (4) Database migration scripts and data transformation procedures; (5) API endpoint modifications to support the new time field schema; (6) Impact analysis on existing recipes and user data; (7) Performance improvements gained from simplified time calculations; (8) Create comprehensive documentation covering the technical implementation, migration process, and user-facing changes; (9) Update relevant code comments and inline documentation; (10) Generate changelog entries highlighting the feature completion and benefits.",
         "testStrategy": "Verify all documentation accurately reflects the implemented changes by cross-referencing with actual code modifications. Test that all time-related functionality works correctly with the new computed totalTime property. Validate that no waitTime references remain in the codebase. Confirm that existing recipes display correct time values after the standardization. Test recipe creation and editing forms to ensure proper time field handling. Verify API responses contain correct time field structure. Review migration scripts for data integrity. Validate that PDF export and other features correctly handle the new time field format.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Add comments attribute to recipe data models and API endpoints",
+        "description": "Add a comments field to recipe data models and implement full CRUD support across all API endpoints to allow users to add, view, edit, and delete comments on recipes.",
+        "details": "Implementation involves:\n\n1. **Backend Data Model Updates**:\n   - Add comments field to Recipe model in app/models/recipe.py\n   - Define Comment model with fields: id, recipe_id, user_id (optional), content, timestamp, author_name (optional)\n   - Update database schema with migration for comments table\n   - Add foreign key relationship between Recipe and Comment models\n   - Implement comment validation (length limits, content filtering)\n\n2. **API Endpoint Enhancements**:\n   - Update GET /recipe/{id} to include comments in response\n   - Add POST /recipe/{id}/comments endpoint for adding new comments\n   - Add GET /recipe/{id}/comments endpoint for retrieving all comments\n   - Add PUT /recipe/{id}/comments/{comment_id} for editing comments\n   - Add DELETE /recipe/{id}/comments/{comment_id} for removing comments\n   - Update recipe creation/update endpoints to handle comments if provided\n\n3. **Request/Response Models**:\n   - Create CommentRequest and CommentResponse Pydantic models\n   - Update RecipeResponse to include comments array\n   - Add pagination support for comments endpoint\n   - Implement comment sorting (newest/oldest first)\n\n4. **Database Layer**:\n   - Add comment CRUD operations in repository layer\n   - Implement cascading delete for comments when recipe is deleted\n   - Add indexing on recipe_id for efficient comment queries\n   - Add comment count aggregation for recipe listings",
+        "testStrategy": "1. **Unit Tests**:\n   - Test Comment model validation with various input scenarios\n   - Verify comment CRUD operations in repository layer\n   - Test comment-recipe relationship constraints\n   - Validate request/response model serialization\n\n2. **Integration Tests**:\n   - Test complete comment workflow: create, read, update, delete\n   - Verify comments inclusion in recipe retrieval endpoints\n   - Test comment pagination and sorting functionality\n   - Validate error handling for invalid comment operations\n\n3. **API Tests**:\n   - Test all comment endpoints with various payloads\n   - Verify proper HTTP status codes and error messages\n   - Test comment permissions and authorization\n   - Validate comment data persistence across requests\n\n4. **Database Tests**:\n   - Test database migrations for comments table\n   - Verify foreign key constraints and cascading deletes\n   - Test comment indexing and query performance\n   - Validate data integrity with concurrent comment operations",
         "status": "done",
         "dependencies": [],
         "priority": "medium",
