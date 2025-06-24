@@ -144,6 +144,11 @@
       "snacks": "Snacks",
       "beverages": "Beverages"
     },
+    "difficulties": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
     "sections": {
       "ingredients": "Ingredients",
       "instructions": "Instructions",

@@ -1,0 +1,216 @@
+<context>
+# Overview
+The Recipe Reader application currently accepts recipe difficulty as free-text input, leading to inconsistent data entry and poor user experience. Users can enter values like "easy", "Easy", "beginner", "simple", "challenging", etc., making it impossible to filter, sort, or meaningfully categorize recipes by difficulty level.
+
+This feature standardizes recipe difficulty to use predefined enum values (Easy, Medium, Hard) across both backend API models and frontend user interface, ensuring data consistency and enabling better recipe organization features.
+
+The solution addresses pain points for both API consumers (inconsistent data structure) and demo frontend users (unclear difficulty input expectations), while laying groundwork for future features like difficulty-based filtering and recipe recommendations.
+
+# Core Features
+## Standardized Difficulty Enum
+- Replace free-text difficulty field with predefined enum values: "easy", "medium", "hard"
+- Maintain backward compatibility by accepting string values that map to enum options
+- Provide clear validation with helpful error messages for invalid difficulty values
+
+## Updated Backend API Models
+- Replace `Optional[str]` difficulty field with `Optional[RecipeDifficulty]` enum in RecipeBase model
+- Ensure all API endpoints validate difficulty values against enum options
+- Update recipe extraction services (Gemini) to use standardized difficulty values
+
+## Improved Frontend User Interface  
+- Convert difficulty text input to dropdown/select component with predefined options
+- Display difficulty consistently across all recipe display components
+- Add proper internationalization for difficulty options in English and Hebrew
+
+## Enhanced User Experience
+- Clear visual indication of available difficulty levels
+- Consistent difficulty display in recipe cards, detailed views, and PDF exports
+- Improved data quality leading to better recipe organization and future filtering capabilities
+</context>
+
+<PRD>
+# Technical Architecture
+
+## Backend Components
+### Data Model Updates
+- Add `RecipeDifficulty(str, Enum)` class in `app/models/recipe.py`
+- Enum values: `EASY = "easy"`, `MEDIUM = "medium"`, `HARD = "hard"`
+- Update `RecipeBase.difficulty` field type from `Optional[str]` to `Optional[RecipeDifficulty]`
+- Maintain Pydantic validation for enum values
+
+### API Layer Updates
+- All recipe creation/update endpoints automatically validate difficulty against enum
+- API responses include standardized difficulty values
+- Recipe extraction services (Gemini) updated to use enum values in prompts
+
+### Service Layer Updates  
+- Update `GeminiService` prompts to specify allowed difficulty values
+- Ensure recipe extraction maps text difficulty descriptions to enum values
+- Update any existing difficulty processing logic to handle enum values
+
+## Frontend Components
+### Component Updates
+- `EditableMetadata.jsx`: Replace text input with dropdown select component
+- `Metadata.jsx`: Add difficulty display to main metadata component (currently missing)
+- `ExportOptions.jsx`: Ensure PDF export properly displays standardized difficulty
+
+### UI/UX Components
+- Dropdown component with three options: Easy, Medium, Hard
+- Visual styling consistent with existing form elements
+- Clear placeholder text and labels
+
+### Internationalization Updates
+- Update English locale with standardized difficulty options
+- Update Hebrew locale with appropriate translations for difficulty levels
+- Maintain existing placeholder patterns but with standardized options
+
+## Database Considerations
+- No schema changes required (difficulty remains optional string field)
+- Enum validation happens at application layer
+- Existing recipes with non-standard difficulty values remain valid but display as-is
+
+# Development Roadmap
+
+## Phase 1: Backend Foundation (MVP)
+### Core Model Updates
+- Add `RecipeDifficulty` enum to recipe models
+- Update `RecipeBase` to use enum type
+- Add comprehensive test coverage for difficulty validation
+- Update existing tests to use enum values
+
+### Service Integration
+- Update `GeminiService` to use standardized difficulty values in extraction prompts
+- Ensure recipe extraction properly maps difficulty descriptions to enum values
+- Test extraction with various difficulty descriptions
+
+## Phase 2: Frontend Implementation  
+### Component Development
+- Replace difficulty text input with dropdown in `EditableMetadata.jsx`
+- Add difficulty display to `Metadata.jsx` component
+- Ensure consistent styling with existing form elements
+
+### Internationalization
+- Update locale files with standardized difficulty translations
+- Add proper Hebrew translations for difficulty levels
+- Update placeholder text to reflect dropdown options
+
+### User Experience Polish
+- Add visual indicators for difficulty levels (consider icons or styling)
+- Ensure accessibility compliance for dropdown component
+- Test user flows for difficulty selection and editing
+
+## Phase 3: Integration and Validation
+### Cross-Component Testing
+- Verify difficulty display in PDF exports
+- Test recipe creation/editing workflows
+- Validate internationalization across language switching
+
+### Data Quality Improvements
+- Optional: Add migration suggestions for existing non-standard difficulty values
+- Consider analytics for most common difficulty selections
+- Prepare for future filtering/search features
+
+# Logical Dependency Chain
+
+## Foundation Layer (Build First)
+1. **Backend Enum Definition**: Core `RecipeDifficulty` enum and model updates
+2. **Test Infrastructure**: Comprehensive test coverage for enum validation
+3. **Service Integration**: Update Gemini extraction to use standardized values
+
+## Interface Layer (Quick MVP)
+4. **Dropdown Component**: Replace text input with select dropdown in editing interface
+5. **Internationalization**: Add translations for standardized difficulty options
+6. **Display Integration**: Add difficulty to main metadata display component
+
+## Polish Layer (Iterative Improvements)
+7. **Visual Enhancement**: Add styling, icons, or visual indicators for difficulty levels
+8. **User Experience**: Improve accessibility, error handling, and user guidance
+9. **Export Integration**: Ensure PDF exports properly display standardized difficulty
+
+## Validation Layer (Completion)
+10. **Cross-Platform Testing**: Verify functionality across all components and views
+11. **Data Migration**: Optional tooling for upgrading existing non-standard values
+12. **Future Preparation**: Foundation for difficulty-based filtering and recommendations
+
+# Risks and Mitigations
+
+## Technical Challenges
+### Backward Compatibility Risk
+**Risk**: Existing recipes with non-standard difficulty values break application
+**Mitigation**: Enum validation only applies to new/updated recipes; existing data remains valid
+
+### Frontend State Management Risk  
+**Risk**: Dropdown state conflicts with existing editing system
+**Mitigation**: Leverage existing `EditableField` pattern; maintain same state management approach
+
+### Internationalization Complexity Risk
+**Risk**: Difficulty translations don't align with enum values
+**Mitigation**: Use enum values as keys; maintain separate display translations
+
+## User Experience Challenges
+### Migration UX Risk
+**Risk**: Users confused by change from text input to dropdown
+**Mitigation**: Clear visual design; maintain same editing interaction patterns
+
+### Limited Options Risk  
+**Risk**: Three difficulty levels insufficient for complex recipes
+**Mitigation**: Start with proven three-tier system; evaluate expansion based on user feedback
+
+## MVP Definition and Scope
+### Minimum Viable Product
+- Backend enum validation for new recipes
+- Frontend dropdown for difficulty selection
+- Basic internationalization support
+- Existing recipe compatibility maintained
+
+### Non-MVP (Future Enhancements)
+- Visual difficulty indicators (stars, bars, etc.)
+- Difficulty-based filtering and search
+- Migration tools for existing recipe difficulty values
+- Advanced difficulty categorization (e.g., technique-based vs. time-based difficulty)
+
+# Appendix
+
+## Research Findings
+### Current Difficulty Value Analysis
+Common difficulty values found in existing data:
+- "easy", "Easy", "simple", "beginner"
+- "medium", "Medium", "intermediate", "moderate"  
+- "hard", "Hard", "difficult", "advanced", "challenging"
+
+### Industry Standards
+Most recipe platforms use 3-5 difficulty levels:
+- **3-tier**: Easy/Medium/Hard (proposed solution)
+- **5-tier**: Beginner/Easy/Medium/Hard/Expert (potential future expansion)
+
+## Technical Specifications
+### Enum Definition
+```python
+class RecipeDifficulty(str, Enum):
+    """Allowed recipe difficulty levels."""
+    EASY = "easy"
+    MEDIUM = "medium" 
+    HARD = "hard"
+```
+
+### Frontend Component Pattern
+```jsx
+<select value={difficulty} onChange={handleDifficultyChange}>
+  <option value="">{t('select_difficulty')}</option>
+  <option value="easy">{t('difficulty.easy')}</option>
+  <option value="medium">{t('difficulty.medium')}</option>
+  <option value="hard">{t('difficulty.hard')}</option>
+</select>
+```
+
+### Internationalization Keys
+```json
+{
+  "difficulty": {
+    "easy": "Easy / קל",
+    "medium": "Medium / בינוני", 
+    "hard": "Hard / קשה"
+  }
+}
+```
+</PRD>

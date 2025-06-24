@@ -42,6 +42,12 @@ const EditableMetadata = ({
     'beverages'
   ];
   
+  const difficultyOptions = [
+    'easy',
+    'medium',
+    'hard'
+  ];
+  
   const formatTime = (minutes) => {
     if (!minutes) return '';
     if (minutes < 60) return minutes.toString();
@@ -103,16 +109,21 @@ const EditableMetadata = ({
 
   const EditableField = ({ field, value, placeholder, type = 'text', multiline = false }) => {
     const isEditing = globalEditingState.component === componentName && globalEditingState.field === field;
-    const displayValue = field === 'category' && value 
-      ? t(`resultDisplay.categories.${value}`, value) 
-      : value || t('common.notSpecified');
+    let displayValue;
+    if (field === 'category' && value) {
+      displayValue = t(`resultDisplay.categories.${value}`, value);
+    } else if (field === 'difficulty' && value) {
+      displayValue = t(`resultDisplay.difficulties.${value}`, value);
+    } else {
+      displayValue = value || t('common.notSpecified');
+    }
     const isEmpty = !value;
 
     if (isEditing) {
       // Special handling for category field - use select dropdown
       if (field === 'category') {
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-dropdown-container>
             <select
               value={globalEditingState.tempValues[field] || ''}
               onChange={(e) => onUpdateEdit(field, e.target.value)}
@@ -125,6 +136,37 @@ const EditableMetadata = ({
               {categoryOptions.map(option => (
                 <option key={option} value={option}>
                   {t(`resultDisplay.categories.${option}`, option)}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={cancelEditing}
+              className="text-gray-400 hover:text-gray-600"
+              title={t('common.cancel')}
+            >
+              ✕
+            </button>
+          </div>
+        );
+      }
+      
+      // Special handling for difficulty field - use select dropdown
+      if (field === 'difficulty') {
+        return (
+          <div className="flex items-center gap-2" data-dropdown-container>
+            <select
+              value={globalEditingState.tempValues[field] || ''}
+              onChange={(e) => onUpdateEdit(field, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(e, field)}
+              onBlur={() => saveField(field)}
+              className="flex-1 px-2 py-1 border border-[#994d51] rounded text-sm focus:outline-none focus:border-[#7a3c40]"
+              autoFocus
+              aria-label={t('resultDisplay.metadata.difficulty')}
+            >
+              <option value="">{t('common.notSpecified')}</option>
+              {difficultyOptions.map(option => (
+                <option key={option} value={option}>
+                  {t(`resultDisplay.difficulties.${option}`, option)}
                 </option>
               ))}
             </select>

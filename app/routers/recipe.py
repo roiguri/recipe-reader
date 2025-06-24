@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import ValidationError
 from ..models.recipe import TextProcessRequest, UrlProcessRequest, ImageProcessRequest, RecipeResponse
 from ..services.text_processor import TextProcessor
 from ..services.url_processor import UrlProcessor
@@ -63,10 +64,23 @@ async def process_recipe_text(
     
     - **text**: Recipe text to process
     - **options**: Optional processing parameters
+    
+    **Note**: The extracted recipe's difficulty field will be validated against 
+    standard values: 'easy', 'medium', 'hard'. Invalid difficulty values will 
+    result in validation errors.
     """
     try:
         result = await text_processor.process_text(request.text, request.options)
         return result
+    except ValidationError as e:
+        # Handle Pydantic validation errors with clear messages
+        error_details = []
+        for error in e.errors():
+            if error['loc'] == ('difficulty',):
+                error_details.append(f"Invalid difficulty value: {error['input']}. Must be one of: easy, medium, hard")
+            else:
+                error_details.append(f"Validation error in {'.'.join(map(str, error['loc']))}: {error['msg']}")
+        raise HTTPException(status_code=422, detail={"validation_errors": error_details})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing recipe text: {str(e)}")
 
@@ -82,6 +96,10 @@ async def process_recipe_url(
     
     - **url**: Recipe URL to process
     - **options**: Optional processing parameters
+    
+    **Note**: The extracted recipe's difficulty field will be validated against 
+    standard values: 'easy', 'medium', 'hard'. Invalid difficulty values will 
+    result in validation errors.
     """
     try:
         # Process URL to extract content
@@ -117,6 +135,15 @@ async def process_recipe_url(
         
     except HTTPException:
         raise
+    except ValidationError as e:
+        # Handle Pydantic validation errors with clear messages
+        error_details = []
+        for error in e.errors():
+            if error['loc'] == ('difficulty',):
+                error_details.append(f"Invalid difficulty value: {error['input']}. Must be one of: easy, medium, hard")
+            else:
+                error_details.append(f"Validation error in {'.'.join(map(str, error['loc']))}: {error['msg']}")
+        raise HTTPException(status_code=422, detail={"validation_errors": error_details})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing recipe URL: {str(e)}")
 
@@ -134,9 +161,22 @@ async def process_recipe_image(
     
     For multiple images: provide a list of base64 strings representing pages of the same recipe.
     The service will extract text from each image and consolidate them into a single recipe.
+    
+    **Note**: The extracted recipe's difficulty field will be validated against 
+    standard values: 'easy', 'medium', 'hard'. Invalid difficulty values will 
+    result in validation errors.
     """
     try:
         result = await image_processor.extract_recipe_from_image(request.image_data, request.options)
         return result
+    except ValidationError as e:
+        # Handle Pydantic validation errors with clear messages
+        error_details = []
+        for error in e.errors():
+            if error['loc'] == ('difficulty',):
+                error_details.append(f"Invalid difficulty value: {error['input']}. Must be one of: easy, medium, hard")
+            else:
+                error_details.append(f"Validation error in {'.'.join(map(str, error['loc']))}: {error['msg']}")
+        raise HTTPException(status_code=422, detail={"validation_errors": error_details})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing recipe image(s): {str(e)}")

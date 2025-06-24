@@ -144,6 +144,11 @@
       "snacks": "חטיפים",
       "beverages": "משקאות"
     },
+    "difficulties": {
+      "easy": "קל",
+      "medium": "בינוני",
+      "hard": "קשה"
+    },
     "sections": {
       "ingredients": "רכיבים",
       "instructions": "הוראות",

@@ -342,7 +342,7 @@ const ExportOptions = ({ recipe }) => {
               {recipe.difficulty && (
                 <div className="border border-gray-200 rounded-lg p-3">
                   <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.difficulty')}</div>
-                  <div className="font-semibold text-[#1b0e0e]">{recipe.difficulty}</div>
+                  <div className="font-semibold text-[#1b0e0e]">{t(`resultDisplay.difficulties.${recipe.difficulty}`, recipe.difficulty)}</div>
                 </div>
               )}
               {recipe.servings && (

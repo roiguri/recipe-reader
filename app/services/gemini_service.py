@@ -16,7 +16,7 @@ from google import genai
 from google.genai import types
 
 # Import our existing recipe models (no duplicates!)
-from app.models import Recipe, Ingredient, Stage, RecipeResponse, RecipeBase, RecipeCategory
+from app.models import Recipe, RecipeResponse, RecipeBase, RecipeCategory
 
 class GeminiService:
     """Service for recipe extraction using Google's new Gen AI SDK with structured output."""
@@ -194,7 +194,7 @@ CRITICAL RULES:
 - For missing times: use null, do NOT estimate
 - For missing servings: use null, do NOT guess
 - For tags: only use terms that appear in the text or are clearly implied
-- For difficulty: only if explicitly mentioned
+- For difficulty: ONLY use one of these exact values: "easy", "medium", "hard". Convert natural language descriptions to these standard values.
 - For category: ONLY use one of these allowed values if clearly identifiable: {', '.join([cat.value for cat in RecipeCategory])}. If unclear, leave null.
 
 EXTRACTION GUIDELINES:
@@ -223,6 +223,29 @@ STRUCTURE DECISION:
 - Use "instructions" (set "stages" to null) for straightforward recipes
 - Use "stages" (set "instructions" to null) only if recipe has distinct preparation phases
 - Never use both instructions and stages together
+
+DIFFICULTY CLASSIFICATION GUIDELINES:
+Map natural language difficulty descriptions to standard values:
+
+EASY ("easy"):
+- "simple", "quick", "basic", "beginner", "easy", "effortless"
+- "5 minutes", "no cooking", "no-bake", "microwave"
+- "one bowl", "mix and serve", "no special skills"
+- Hebrew: "פשוט", "קל", "בסיסי", "למתחילים", "ללא בישול"
+
+MEDIUM ("medium"):
+- "moderate", "intermediate", "average", "standard cooking"
+- "some cooking experience", "requires attention", "multiple steps"
+- "20-45 minutes", "stovetop cooking", "basic techniques"
+- Hebrew: "בינוני", "רגיל", "דורש ניסיון", "כמה שלבים"
+
+HARD ("hard"):
+- "difficult", "challenging", "advanced", "complex", "professional"
+- "special techniques", "multiple stages", "precise timing", "expert level"
+- "over 1 hour", "advanced skills", "special equipment"
+- Hebrew: "קשה", "מתקדם", "מורכב", "דורש מיומנות", "רמה גבוהה"
+
+IF AMBIGUOUS OR NOT MENTIONED: use null
 
 CATEGORY CLASSIFICATION EXAMPLES:
 - "Chocolate chip cookies" → "desserts"

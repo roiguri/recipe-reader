@@ -19,6 +19,13 @@ class RecipeCategory(str, Enum):
     BEVERAGES = "beverages"
 
 
+class RecipeDifficulty(str, Enum):
+    """Standardized recipe difficulty levels."""
+    EASY = "easy"
+    MEDIUM = "medium"
+    HARD = "hard"
+
+
 class Ingredient(BaseModel):
     """
     Recipe ingredient with separate amount and unit fields.
@@ -57,7 +64,7 @@ class RecipeBase(BaseModel):
     name: str = Field(..., description="Recipe name/title")
     description: Optional[str] = Field(None, description="Recipe description")
     category: Optional[RecipeCategory] = Field(None, description="Recipe category")
-    difficulty: Optional[str] = Field(None, description="Recipe difficulty level")
+    difficulty: Optional[RecipeDifficulty] = Field(None, description="Recipe difficulty level")
     prepTime: Optional[int] = Field(None, description="Preparation time in minutes")
     cookTime: Optional[int] = Field(None, description="Cooking time in minutes")
     waitTime: Optional[int] = Field(None, description="Waiting time in minutes")

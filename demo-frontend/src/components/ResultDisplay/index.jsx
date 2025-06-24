@@ -138,6 +138,13 @@ const ResultDisplay = ({ result, onStartOver }) => {
         return;
       }
 
+      // Check if the click is within a dropdown container or select element
+      const isDropdownClick = e.target.closest('select') || e.target.closest('[data-dropdown-container]');
+      if (isDropdownClick) {
+        // Allow dropdown interactions without saving
+        return;
+      }
+      
       // Special handling for ingredients - allow navigation within same ingredient
       if (globalEditingState.component === 'ingredients') {
         const editingIndex = parseInt(globalEditingState.field);

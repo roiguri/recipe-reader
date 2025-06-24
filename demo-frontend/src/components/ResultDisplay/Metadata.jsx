@@ -9,16 +9,16 @@ import Card from '../ui/Card';
  * @param {Object} props.recipe - Recipe data object
  */
 const Metadata = ({ recipe }) => {
-  const { t } = useTranslation();
-  const { description, servings, prepTime, cookTime, totalTime } = recipe;
+  const { t, i18n } = useTranslation();
+  const { description, servings, prepTime, cookTime, totalTime, difficulty } = recipe;
   
   // If there are no metadata items to display, return null
-  if (!description && !servings && !prepTime && !cookTime && !totalTime) {
+  if (!description && !servings && !prepTime && !cookTime && !totalTime && !difficulty) {
     return null;
   }
   
   // Count metadata items to determine grid layout
-  const metadataItems = [servings, prepTime, cookTime, totalTime].filter(Boolean);
+  const metadataItems = [servings, prepTime, cookTime, totalTime, difficulty].filter(Boolean);
   const getGridCols = () => {
     const count = metadataItems.length;
     if (count === 1) return 'grid-cols-1';
@@ -37,8 +37,14 @@ const Metadata = ({ recipe }) => {
         </div>
       )}
       
-      {(servings || prepTime || cookTime || totalTime) && (
-        <div className={`grid ${getGridCols()} gap-4`}>
+      {(servings || prepTime || cookTime || totalTime || difficulty) && (
+        <div className={`grid ${getGridCols()} gap-4`} dir={i18n.language === 'he' ? 'rtl' : 'ltr'}>
+          {difficulty && (
+            <div className="text-center">
+              <div className="text-sm font-medium text-[#994d51] mb-1">{t('resultDisplay.metadata.difficulty')}</div>
+              <div className="text-sm text-[#1b0e0e]">{t(`resultDisplay.difficulties.${difficulty}`, difficulty)}</div>
+            </div>
+          )}
           {servings && (
             <div className="text-center">
               <div className="text-sm font-medium text-[#994d51] mb-1">{t('resultDisplay.metadata.servings')}</div>

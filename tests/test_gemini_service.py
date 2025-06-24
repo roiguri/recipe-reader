@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 # Import modules
 from app.services.gemini_service import GeminiService
-from app.models.recipe import RecipeResponse, RecipeBase
+from app.models.recipe import RecipeResponse, RecipeBase, RecipeDifficulty
 
 class MockGeminiResponse:
     """Mock response object for new Gemini API"""
@@ -451,3 +451,27 @@ def gemini_hebrew_complex_response():
         "tags": ["חומוס", "מזרח תיכוני"],
         "mainIngredient": "חומוס יבש"
     }
+
+
+@pytest.mark.asyncio
+async def test_extract_recipe_with_difficulty_validation():
+    """Test full recipe extraction with difficulty enum validation."""
+    service = GeminiService(api_key="test_key")
+    
+    mock_response_data = {
+        "name": "Easy Cookies", 
+        "description": "Simple cookies to make",
+        "difficulty": "easy",  # Valid enum value
+        "ingredients": [{"item": "flour", "amount": "1", "unit": "cup"}],
+        "instructions": ["Mix and bake"],
+        "stages": None
+    }
+    
+    with patch.object(service.client.models, 'generate_content') as mock_generate:
+        mock_generate.return_value = MockGeminiResponse(json.dumps(mock_response_data))
+        
+        result = await service.extract_recipe("Simple cookie recipe")
+        
+        # Should have valid difficulty enum
+        assert result.recipe.difficulty == RecipeDifficulty.EASY
+        assert result.recipe.name == "Easy Cookies"

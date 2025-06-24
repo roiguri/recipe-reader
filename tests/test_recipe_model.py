@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 from app.models.recipe import (
     Ingredient, Stage, ImageDetails, RecipeBase, 
-    RecipeCreate, Recipe, TextProcessRequest, RecipeCategory
+    RecipeCreate, Recipe, TextProcessRequest, RecipeCategory, RecipeDifficulty
 )
 from datetime import datetime
 
@@ -107,7 +107,7 @@ def test_full_recipe_model():
         name="Full Test Recipe",
         description="A test recipe with all fields",
         category=RecipeCategory.DESSERTS,
-        difficulty="easy",
+        difficulty=RecipeDifficulty.EASY,
         prepTime=15,
         cookTime=30,
         waitTime=0,
@@ -202,3 +202,96 @@ def test_text_process_request():
         options={"extract_timing": True}
     )
     assert request.options["extract_timing"] is True
+
+
+def test_recipe_difficulty_enum():
+    """Test the RecipeDifficulty enum values and behavior."""
+    # Test enum values
+    assert RecipeDifficulty.EASY == "easy"
+    assert RecipeDifficulty.MEDIUM == "medium"
+    assert RecipeDifficulty.HARD == "hard"
+    
+    # Test value access
+    assert RecipeDifficulty.EASY.value == "easy"
+    assert RecipeDifficulty.MEDIUM.value == "medium"
+    assert RecipeDifficulty.HARD.value == "hard"
+
+
+def test_recipe_difficulty_validation():
+    """Test that recipe difficulty is properly validated."""
+    # Valid difficulty enum should work
+    recipe = RecipeBase(
+        name="Easy Recipe",
+        difficulty=RecipeDifficulty.EASY,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.difficulty == RecipeDifficulty.EASY
+    
+    # String value of valid difficulty should work
+    recipe = RecipeBase(
+        name="Medium Recipe",
+        difficulty="medium",
+        instructions=["Step 1"],  
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.difficulty == RecipeDifficulty.MEDIUM
+    
+    # Hard difficulty should work
+    recipe = RecipeBase(
+        name="Hard Recipe",
+        difficulty="hard",
+        instructions=["Step 1"],  
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.difficulty == RecipeDifficulty.HARD
+    
+    # None should work
+    recipe = RecipeBase(
+        name="No Difficulty Recipe",
+        difficulty=None,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.difficulty is None
+    
+    # Invalid difficulty should fail
+    with pytest.raises(ValidationError):
+        RecipeBase(
+            name="Invalid Recipe",
+            difficulty="impossible",
+            instructions=["Step 1"],
+            ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+        )
+
+
+def test_recipe_difficulty_serialization():
+    """Test Pydantic serialization and deserialization with difficulty enum."""
+    # Test model to dict serialization
+    recipe = RecipeBase(
+        name="Test Recipe",
+        difficulty=RecipeDifficulty.MEDIUM,
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    
+    recipe_dict = recipe.model_dump()
+    assert recipe_dict["difficulty"] == "medium"
+    
+    # Test dict to model deserialization
+    recipe_data = {
+        "name": "Reconstructed Recipe",
+        "difficulty": "hard",
+        "instructions": ["Step 1"],
+        "ingredients": [{"item": "Sugar", "amount": "1", "unit": "cup"}]
+    }
+    
+    reconstructed_recipe = RecipeBase(**recipe_data)
+    assert reconstructed_recipe.difficulty == RecipeDifficulty.HARD
+    
+    # Test JSON serialization/deserialization
+    recipe_json = recipe.model_dump_json()
+    assert '"difficulty":"medium"' in recipe_json
+    
+    reconstructed_from_json = RecipeBase.model_validate_json(recipe_json)
+    assert reconstructed_from_json.difficulty == RecipeDifficulty.MEDIUM

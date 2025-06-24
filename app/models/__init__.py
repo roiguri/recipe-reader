@@ -10,7 +10,8 @@ from .recipe import (
     ImageDetails,
     TextProcessRequest,
     RecipeResponse,
-    RecipeCategory
+    RecipeCategory,
+    RecipeDifficulty
 )
 
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     "ImageDetails",
     "TextProcessRequest",
     "RecipeResponse",
-    "RecipeCategory"
+    "RecipeCategory",
+    "RecipeDifficulty"
 ]
