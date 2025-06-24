@@ -16,10 +16,127 @@ const ExportOptions = ({ recipe, onExport }) => {
   const [showPreview, setShowPreview] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExportPDF = async () => {
+  const extractStylesheets = () => {
+    // Extract all CSS from the current page
+    let styles = '';
+    
+    // Get all stylesheets
+    for (let i = 0; i < document.styleSheets.length; i++) {
+      try {
+        const styleSheet = document.styleSheets[i];
+        if (styleSheet.cssRules) {
+          for (let j = 0; j < styleSheet.cssRules.length; j++) {
+            styles += styleSheet.cssRules[j].cssText + '\n';
+          }
+        }
+      } catch (e) {
+        // Skip external stylesheets that can't be accessed
+      }
+    }
+    
+    return styles;
+  };
+
+  const handlePrint = () => {
     setIsExporting(true);
+    
     try {
-      await onExport('pdf', recipe);
+      // Find the preview content
+      const previewElement = document.querySelector('.max-w-4xl.mx-auto.bg-white');
+      if (!previewElement) {
+        console.error('Preview element not found');
+        return;
+      }
+
+      // Clone the preview content
+      const clonedContent = previewElement.cloneNode(true);
+      
+      // Remove any no-print elements from cloned content
+      const noPrintElements = clonedContent.querySelectorAll('.no-print');
+      noPrintElements.forEach(el => el.remove());
+
+      // Get all styles from the current page
+      const styles = extractStylesheets();
+
+      // Create print HTML with recipe title from props
+      const printHTML = `
+        <!DOCTYPE html>
+        <html lang="${direction === 'rtl' ? 'he' : 'en'}" dir="${direction}">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${t('resultDisplay.export.pdf.title')} - ${recipe.name}</title>
+          <style>
+            @page {
+              margin: 0.5in;
+              size: A4;
+            }
+            
+            html, body {
+              margin: 0;
+              padding: 0;
+              font-family: "Times New Roman", "Noto Sans Hebrew", serif;
+              line-height: 1.4;
+              background: white !important;
+              color: black;
+            }
+            
+            body {
+              padding: 20px;
+            }
+            
+            /* Include all existing styles */
+            ${styles}
+            
+            /* Print-specific overrides */
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            /* Ensure white background everywhere */
+            html, body, div, section, article {
+              background: white !important;
+            }
+            
+            .max-w-4xl {
+              max-width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: white !important;
+            }
+            
+            /* Override any existing background colors */
+            .bg-\\[\\#fcf8f8\\], 
+            .bg-gray-50,
+            .bg-gray-100 {
+              background: white !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${clonedContent.outerHTML}
+        </body>
+        </html>
+      `;
+
+      // Create print window
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      printWindow.document.open();
+      printWindow.document.write(printHTML);
+      printWindow.document.close();
+
+      // Wait for content to load, then print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 250);
+      };
+
+    } catch (error) {
+      console.error('Print failed:', error);
+      alert(t('errors.unexpected'));
     } finally {
       setIsExporting(false);
     }
@@ -41,9 +158,9 @@ const ExportOptions = ({ recipe, onExport }) => {
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex gap-4 items-center">
-            {/* Export Button */}
+            {/* Print Button */}
             <button
-              onClick={handleExportPDF}
+              onClick={handlePrint}
               disabled={isExporting}
               className="bg-[#994d51] text-white px-6 py-2 rounded-lg hover:bg-[#7a3c40] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
@@ -54,7 +171,7 @@ const ExportOptions = ({ recipe, onExport }) => {
                 </>
               ) : (
                 <>
-                  📑 {t('resultDisplay.export.pdf.button')}
+                  🖨️ {t('resultDisplay.export.pdf.button')}
                 </>
               )}
             </button>
