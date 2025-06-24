@@ -11,6 +11,7 @@ import TabNavigation from './TabNavigation';
 import RecipeInfoCard from './RecipeInfoCard';
 import IngredientsSection from './IngredientsSection';
 import InstructionsSection from './InstructionsSection';
+import CommentsSection from './CommentsSection';
 import Metadata from './Metadata';
 import TagList from './TagList';
 import ExportOptions from './ExportOptions';
@@ -19,6 +20,7 @@ import ExportOptions from './ExportOptions';
 import EditableMetadata from './EditableMetadata';
 import EditableIngredientsSection from './EditableIngredientsSection';
 import EditableInstructionsSection from './EditableInstructionsSection';
+import EditableCommentsSection from './EditableCommentsSection';
 import EditableTagList from './EditableTagList';
 
 const ResultDisplay = ({ result, onStartOver }) => {
@@ -230,6 +232,13 @@ const ResultDisplay = ({ result, onStartOver }) => {
                 copiedSection={copiedSection}
               />
 
+              {/* Comments section */}
+              <CommentsSection 
+                comments={displayRecipe.comments}
+                onCopyToClipboard={copyToClipboard}
+                copiedSection={copiedSection}
+              />
+
               {/* Tags section */}
               <TagList tags={displayRecipe.tags} />
             </div>
@@ -284,6 +293,17 @@ const ResultDisplay = ({ result, onStartOver }) => {
               <EditableInstructionsSection 
                 instructions={editedRecipe?.instructions}
                 stages={editedRecipe?.stages}
+                onUpdate={updateEditedRecipe}
+                globalEditingState={globalEditingState}
+                onStartEdit={startGlobalEdit}
+                onUpdateEdit={updateGlobalEditValue}
+                onSaveEdit={saveCurrentEdit}
+                onCancelEdit={cancelGlobalEdit}
+              />
+
+              {/* Editable Comments section */}
+              <EditableCommentsSection 
+                comments={editedRecipe?.comments}
                 onUpdate={updateEditedRecipe}
                 globalEditingState={globalEditingState}
                 onStartEdit={startGlobalEdit}

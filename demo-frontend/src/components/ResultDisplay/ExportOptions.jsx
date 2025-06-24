@@ -314,6 +314,35 @@ const ExportOptions = ({ recipe }) => {
               background-color: white !important;
             }
             
+            /* Comments section specific styles */
+            .comments-section {
+              margin-bottom: 2rem;
+              page-break-inside: avoid;
+            }
+            
+            .comments-section h2 {
+              font-size: 1.5rem;
+              font-weight: 700;
+              color: #1b0e0e;
+              margin-bottom: 1rem;
+              padding-bottom: 0.5rem;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            
+            .comments-content {
+              color: #1b0e0e;
+              line-height: 1.625;
+              word-wrap: break-word;
+            }
+            
+            .comments-content p {
+              margin: 0;
+            }
+            
+            .comments-content p + p {
+              margin-top: 0.5rem;
+            }
+            
             /* Cross-browser flexbox fallbacks */
             ${!browserInfo.features.flexboxPrint ? `
             .flex {
@@ -578,6 +607,22 @@ const ExportOptions = ({ recipe }) => {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Comments Section */}
+            {recipe.comments && recipe.comments.trim() !== '' && (
+              <div className="mb-8 comments-section">
+                <h2 className="text-2xl font-bold text-[#1b0e0e] mb-4 pb-2 border-b border-gray-200">
+                  {t('resultDisplay.metadata.comments')}
+                </h2>
+                <div className="text-[#1b0e0e] leading-relaxed comments-content" style={{ direction: isHebrew(recipe.comments) ? 'rtl' : 'ltr' }}>
+                  {recipe.comments.split('\n').map((line, index) => (
+                    <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
               </div>
             )}
 

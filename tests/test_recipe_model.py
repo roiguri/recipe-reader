@@ -189,6 +189,35 @@ def test_recipe_category_validation():
         )
 
 
+def test_recipe_comments_field():
+    """Test that comments field works properly in recipe models."""
+    # Test recipe without comments
+    recipe = RecipeBase(
+        name="Test Recipe",
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
+    )
+    assert recipe.comments is None
+    
+    # Test recipe with comments
+    recipe_with_comments = RecipeBase(
+        name="Test Recipe",
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")],
+        comments="This is a family favorite recipe. Use organic flour for best results."
+    )
+    assert recipe_with_comments.comments == "This is a family favorite recipe. Use organic flour for best results."
+    
+    # Test empty comments string
+    recipe_empty_comments = RecipeBase(
+        name="Test Recipe",
+        instructions=["Step 1"],
+        ingredients=[Ingredient(item="Flour", amount="1", unit="cup")],
+        comments=""
+    )
+    assert recipe_empty_comments.comments == ""
+
+
 def test_text_process_request():
     """Test the TextProcessRequest model."""
     request = TextProcessRequest(text="Recipe for chocolate cake...")

@@ -205,6 +205,7 @@ EXTRACTION GUIDELINES:
 - cookTime: Total cooking time including baking, frying, waiting, resting, cooling
 - DO NOT extract totalTime - it will be calculated automatically
 - Include waiting/resting periods in cookTime, not as separate field
+- comments: Extract any notes, tips, or personal comments about the recipe
 
 INGREDIENT EXTRACTION RULES:
 - "1 ק\"ג פרגיות" → item: "פרגיות", amount: "1", unit: "ק\"ג"
@@ -222,6 +223,14 @@ WHAT TO DO WHEN DATA IS MISSING:
 - Missing description → description: "No description provided"
 - Missing category → category: null
 - Invalid category → category: null (must be one of the allowed values)
+- Missing comments/notes → comments: null
+
+COMMENTS EXTRACTION GUIDANCE:
+- Extract cooking tips, personal notes, or advice mentioned in the text
+- Include storage instructions, serving suggestions, or variations
+- Don't extract author personal comments like "this is my grandmother's recipe"
+- Include warnings or special notes about ingredients or techniques
+- Examples: "Best served hot", "Can be frozen for up to 3 months"
 
 STRUCTURE DECISION:
 - Use "instructions" (set "stages" to null) for straightforward recipes

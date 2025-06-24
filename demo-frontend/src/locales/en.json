@@ -130,7 +130,8 @@
       "totalTime": "Total Time",
       "difficulty": "Difficulty",
       "cuisine": "Cuisine",
-      "category": "Category"
+      "category": "Category",
+      "comments": "Notes"
     },
     "categories": {
       "appetizers": "Appetizers",
@@ -157,6 +158,7 @@
     "copy": {
       "ingredients": "Copy Ingredients",
       "instructions": "Copy Instructions",
+      "comments": "Copy Notes",
       "recipe": "Copy Recipe",
       "json": "Copy JSON data"
     },
@@ -215,7 +217,8 @@
         "ingredient": "flour",
         "instruction": "Mix ingredients...",
         "stageTitle": "Preparation stage",
-        "newTag": "dietary, quick, etc."
+        "newTag": "dietary, quick, etc.",
+        "comments": "Add your notes about this recipe..."
       },
       "helper": {
         "clickToEdit": "Click on any field to edit it",

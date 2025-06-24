@@ -72,7 +72,7 @@
         "description": "Add a comments field to recipe data models and implement full CRUD support across all API endpoints to allow users to add, view, edit, and delete comments on recipes.",
         "details": "Implementation involves:\n\n1. **Backend Data Model Updates**:\n   - Add comments field to Recipe model in app/models/recipe.py\n   - Define Comment model with fields: id, recipe_id, user_id (optional), content, timestamp, author_name (optional)\n   - Update database schema with migration for comments table\n   - Add foreign key relationship between Recipe and Comment models\n   - Implement comment validation (length limits, content filtering)\n\n2. **API Endpoint Enhancements**:\n   - Update GET /recipe/{id} to include comments in response\n   - Add POST /recipe/{id}/comments endpoint for adding new comments\n   - Add GET /recipe/{id}/comments endpoint for retrieving all comments\n   - Add PUT /recipe/{id}/comments/{comment_id} for editing comments\n   - Add DELETE /recipe/{id}/comments/{comment_id} for removing comments\n   - Update recipe creation/update endpoints to handle comments if provided\n\n3. **Request/Response Models**:\n   - Create CommentRequest and CommentResponse Pydantic models\n   - Update RecipeResponse to include comments array\n   - Add pagination support for comments endpoint\n   - Implement comment sorting (newest/oldest first)\n\n4. **Database Layer**:\n   - Add comment CRUD operations in repository layer\n   - Implement cascading delete for comments when recipe is deleted\n   - Add indexing on recipe_id for efficient comment queries\n   - Add comment count aggregation for recipe listings",
         "testStrategy": "1. **Unit Tests**:\n   - Test Comment model validation with various input scenarios\n   - Verify comment CRUD operations in repository layer\n   - Test comment-recipe relationship constraints\n   - Validate request/response model serialization\n\n2. **Integration Tests**:\n   - Test complete comment workflow: create, read, update, delete\n   - Verify comments inclusion in recipe retrieval endpoints\n   - Test comment pagination and sorting functionality\n   - Validate error handling for invalid comment operations\n\n3. **API Tests**:\n   - Test all comment endpoints with various payloads\n   - Verify proper HTTP status codes and error messages\n   - Test comment permissions and authorization\n   - Validate comment data persistence across requests\n\n4. **Database Tests**:\n   - Test database migrations for comments table\n   - Verify foreign key constraints and cascading deletes\n   - Test comment indexing and query performance\n   - Validate data integrity with concurrent comment operations",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
@@ -80,7 +80,7 @@
     ],
     "metadata": {
       "created": "2025-06-24T07:14:50.441Z",
-      "updated": "2025-06-24T07:29:41.166Z",
+      "updated": "2025-06-24T18:58:30.903Z",
       "description": "Tag created on 6/24/2025"
     }
   },

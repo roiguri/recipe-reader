@@ -88,6 +88,7 @@ class RecipeBase(BaseModel):
     images: Optional[List[ImageDetails]] = Field(None, description="Detailed image information")
     
     source_url: Optional[str] = Field(None, description="Original source URL")
+    comments: Optional[str] = Field(None, description="User comments about the recipe")
     
     @model_validator(mode='after')
     def check_instructions_format(self) -> 'RecipeBase':

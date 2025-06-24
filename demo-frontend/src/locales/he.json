@@ -130,7 +130,8 @@
       "totalTime": "זמן כולל",
       "difficulty": "רמת קושי",
       "cuisine": "סוג מטבח",
-      "category": "קטגוריה"
+      "category": "קטגוריה",
+      "comments": "הערות"
     },
     "categories": {
       "appetizers": "מנות ראשונות",
@@ -157,6 +158,7 @@
     "copy": {
       "ingredients": "העתק רכיבים",
       "instructions": "העתק הוראות",
+      "comments": "העתק הערות",
       "recipe": "העתק מתכון",
       "json": "העתק נתוני JSON"
     },
@@ -215,7 +217,8 @@
         "ingredient": "קמח",
         "instruction": "ערבב רכיבים...",
         "stageTitle": "שלב הכנה",
-        "newTag": "דיאטטי, מהיר, וכו'"
+        "newTag": "דיאטטי, מהיר, וכו'",
+        "comments": "הוסף הערות שלך על המתכון..."
       },
       "helper": {
         "clickToEdit": "לחץ על כל שדה כדי לערוך אותו",
