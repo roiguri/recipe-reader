@@ -1,14 +1,31 @@
 /**
  * Format minutes into human-readable time format
  * @param {number} minutes - Minutes to format
+ * @param {Function} t - Translation function (optional, for localization)
  * @returns {string} - Formatted time string
  */
-export const formatTime = (minutes) => {
-  if (minutes == null) return 'Not specified';
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+export const formatTime = (minutes, t = null) => {
+  if (minutes == null) {
+    return t ? t('common.notSpecified') : 'Not specified';
+  }
+  
+  if (t) {
+    // Localized version
+    if (minutes < 60) return t('common.timeMinutes', { count: minutes });
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    const hoursText = t('common.timeHours', { count: hours });
+    const minutesText = mins > 0 ? t('common.timeMinutes', { count: mins }) : '';
+    return mins > 0 
+      ? t('common.timeHoursMinutes', { hours: hoursText, minutes: minutesText })
+      : hoursText;
+  } else {
+    // Original English-only version (fallback)
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  }
 };
 
 /**

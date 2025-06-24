@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { isHebrew, formatTime } from '../../utils/formatters';
 import Card from '../ui/Card';
 
 /**
- * ExportOptions component displays export options for recipes
+ * ExportOptions component displays PDF export interface with preview
  * @param {Object} props - Component props
  * @param {Object} props.recipe - Recipe data object
  * @param {Function} props.onExport - Export function
@@ -12,50 +13,199 @@ import Card from '../ui/Card';
 const ExportOptions = ({ recipe, onExport }) => {
   const { t } = useTranslation();
   const { direction } = useLanguage();
-  
-  const exportFormats = [
-    { id: 'json', icon: '📄' },
-    { id: 'markdown', icon: '📝' },
-    { id: 'pdf', icon: '📑' },
-    { id: 'text', icon: '📋' }
-  ];
+  const [showPreview, setShowPreview] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      await onExport('pdf', recipe);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-[#1b0e0e] mb-2">{t('resultDisplay.export.title')}</h2>
-        <p className="text-gray-600">{t('resultDisplay.export.description')}</p>
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-[#1b0e0e] mb-2">
+          {t('resultDisplay.export.pdf.title')}
+        </h2>
+        <p className="text-gray-600">
+          {t('resultDisplay.export.pdf.description')}
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {exportFormats.map((format) => {
-          const handleKeyDown = (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              onExport(format.id, recipe);
-            }
-          };
-
-          return (
-            <Card 
-              key={format.id}
-              className="p-6 hover:shadow-lg transition-shadow"
-              onClick={() => onExport(format.id, recipe)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={handleKeyDown}
+      {/* Export Controls */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-4 items-center">
+            {/* Export Button */}
+            <button
+              onClick={handleExportPDF}
+              disabled={isExporting}
+              className="bg-[#994d51] text-white px-6 py-2 rounded-lg hover:bg-[#7a3c40] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-            <div className={`flex items-center ${direction === 'rtl' ? 'space-x-reverse' : ''} space-x-4`}>
-              <div className="text-3xl">{format.icon}</div>
-              <div>
-                <h3 className="text-lg font-semibold text-[#1b0e0e]">{t(`resultDisplay.export.formats.${format.id}`)}</h3>
-                <p className="text-sm text-gray-600">{t(`resultDisplay.export.descriptions.${format.id}`)}</p>
-              </div>
+              {isExporting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  {t('resultDisplay.export.pdf.exporting')}
+                </>
+              ) : (
+                <>
+                  📑 {t('resultDisplay.export.pdf.button')}
+                </>
+              )}
+            </button>
+
+            {/* Preview Toggle */}
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              {showPreview 
+                ? t('resultDisplay.export.pdf.hidePreview')
+                : t('resultDisplay.export.pdf.showPreview')
+              }
+            </button>
+          </div>
+
+          <div className="text-sm text-gray-500">
+            {t('resultDisplay.export.pdf.format')}
+          </div>
+        </div>
+      </Card>
+
+      {/* PDF Preview */}
+      {showPreview && (
+        <Card className="p-6 bg-white" style={{ minHeight: '600px' }}>
+          <div className="max-w-4xl mx-auto bg-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+            {/* Recipe Header */}
+            <div className="mb-8 text-center border-b border-gray-200 pb-6">
+              <h1 className="text-3xl font-bold text-[#1b0e0e] mb-2" style={{ direction: isHebrew(recipe.name) ? 'rtl' : 'ltr' }}>
+                {recipe.name}
+              </h1>
+              {recipe.category && (
+                <p className="text-[#994d51] text-lg font-medium mb-2">
+                  {t(`resultDisplay.categories.${recipe.category}`, recipe.category)}
+                </p>
+              )}
+              {recipe.description && (
+                <p className="text-gray-600 text-lg" style={{ direction: isHebrew(recipe.description) ? 'rtl' : 'ltr' }}>
+                  {recipe.description}
+                </p>
+              )}
             </div>
-          </Card>
-          );
-        })}
-      </div>
+
+            {/* Recipe Metadata */}
+            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-center ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+              {recipe.difficulty && (
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.difficulty')}</div>
+                  <div className="font-semibold text-[#1b0e0e]">{recipe.difficulty}</div>
+                </div>
+              )}
+              {recipe.servings && (
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.servings')}</div>
+                  <div className="font-semibold text-[#1b0e0e]">{recipe.servings}</div>
+                </div>
+              )}
+              {recipe.prepTime && (
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.prepTime')}</div>
+                  <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.prepTime, t)}</div>
+                </div>
+              )}
+              {recipe.cookTime && (
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.cookTime')}</div>
+                  <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.cookTime, t)}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Ingredients Section */}
+            {recipe.ingredients && recipe.ingredients.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-[#1b0e0e] mb-4 pb-2 border-b border-gray-200">
+                  {t('resultDisplay.sections.ingredients')}
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {recipe.ingredients.map((ingredient, idx) => (
+                    <div key={idx} className="flex items-center p-2">
+                      <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
+                      <span className="text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
+                        <span className="font-medium">{ingredient.amount} {ingredient.unit}</span> {ingredient.item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Instructions Section */}
+            {((recipe.instructions && recipe.instructions.length > 0) || (recipe.stages && recipe.stages.length > 0)) && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-[#1b0e0e] mb-4 pb-2 border-b border-gray-200">
+                  {t('resultDisplay.sections.instructions')}
+                </h2>
+                {recipe.stages ? (
+                  <div className="space-y-6">
+                    {recipe.stages.map((stage, stageIdx) => (
+                      <div key={stageIdx}>
+                        <h3 className="text-lg font-semibold text-[#994d51] mb-3" style={{ direction: isHebrew(stage.title) ? 'rtl' : 'ltr' }}>
+                          {stage.title}
+                        </h3>
+                        <div className="space-y-3">
+                          {(stage.instructions || []).map((instruction, instIdx) => (
+                            <div key={instIdx} className="flex items-start gap-4">
+                              <div className="w-8 h-8 bg-[#994d51] text-white rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                                {instIdx + 1}
+                              </div>
+                              <p className="text-[#1b0e0e] leading-relaxed" style={{ direction: isHebrew(instruction) ? 'rtl' : 'ltr' }}>
+                                {instruction}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {recipe.instructions.map((instruction, idx) => (
+                      <div key={idx} className="flex items-start gap-4">
+                        <div className="w-8 h-8 bg-[#994d51] text-white rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                          {idx + 1}
+                        </div>
+                        <p className="text-[#1b0e0e] leading-relaxed" style={{ direction: isHebrew(instruction) ? 'rtl' : 'ltr' }}>
+                          {instruction}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tags Section */}
+            {recipe.tags && recipe.tags.length > 0 && (
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-[#1b0e0e] mb-3">{t('resultDisplay.sections.tags')}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {recipe.tags.map((tag, idx) => (
+                    <span key={idx} className="bg-[#fcf8f8] text-[#994d51] px-3 py-1 rounded-full text-sm font-medium">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

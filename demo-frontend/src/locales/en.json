@@ -170,7 +170,16 @@
         "pdf": "Export as PDF document"
       },
       "description": "Export your recipe in different formats for easy sharing and storage.",
-      "notImplemented": "Export as {{type}} functionality would be implemented here"
+      "notImplemented": "Export as {{type}} functionality would be implemented here",
+      "pdf": {
+        "title": "Export Recipe as PDF",
+        "description": "Preview and export your recipe as a PDF document",
+        "button": "Export PDF",
+        "exporting": "Exporting...",
+        "showPreview": "Show Preview",
+        "hidePreview": "Hide Preview",
+        "format": "PDF Format"
+      }
     },
     "edit": {
       "unsavedChanges": "You have unsaved changes",

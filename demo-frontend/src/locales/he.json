@@ -170,7 +170,16 @@
         "pdf": "יצא כמסמך PDF"
       },
       "description": "יצא את המתכון שלך בפורמטים שונים לשיתוף ואחסון קלים.",
-      "notImplemented": "פונקציונליות יצוא בפורמט {{type}} תמומש כאן"
+      "notImplemented": "פונקציונליות יצוא בפורמט {{type}} תמומש כאן",
+      "pdf": {
+        "title": "יצא מתכון כ-PDF",
+        "description": "צפה ויצא את המתכון שלך כמסמך PDF",
+        "button": "יצא PDF",
+        "exporting": "מייצא...",
+        "showPreview": "הצג תצוגה מקדימה",
+        "hidePreview": "הסתר תצוגה מקדימה",
+        "format": "פורמט PDF"
+      }
     },
     "edit": {
       "unsavedChanges": "יש לך שינויים שלא נשמרו",
