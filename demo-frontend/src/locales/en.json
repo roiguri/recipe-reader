@@ -156,28 +156,11 @@
       "json": "Copy JSON data"
     },
     "export": {
-      "title": "Export Recipe",
-      "formats": {
-        "json": "JSON Format",
-        "text": "Plain Text",
-        "markdown": "Markdown",
-        "pdf": "PDF Format"
-      },
-      "descriptions": {
-        "json": "Export as JSON data",
-        "text": "Export as plain text",
-        "markdown": "Export as Markdown document",
-        "pdf": "Export as PDF document"
-      },
-      "description": "Export your recipe in different formats for easy sharing and storage.",
-      "notImplemented": "Export as {{type}} functionality would be implemented here",
       "pdf": {
         "title": "Export Recipe as PDF",
         "description": "Preview and export your recipe as a PDF document",
         "button": "Export PDF",
         "exporting": "Exporting...",
-        "showPreview": "Show Preview",
-        "hidePreview": "Hide Preview",
         "format": "PDF Format"
       }
     },

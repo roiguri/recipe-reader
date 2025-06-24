@@ -173,11 +173,6 @@ const ResultDisplay = ({ result, onStartOver }) => {
     { id: 'export', icon: '📤' }
   ];
 
-  // TODO: Implement export functionality
-  const handleExport = (type) => {
-    alert(t('resultDisplay.export.notImplemented', { type }));
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -329,8 +324,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
           {activeTab === 'export' && (
             <div className="space-y-6 h-full overflow-y-auto">
               <ExportOptions 
-                recipe={displayRecipe} 
-                onExport={handleExport}
+                recipe={displayRecipe}
               />
             </div>
           )}

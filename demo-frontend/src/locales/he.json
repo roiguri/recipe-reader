@@ -156,28 +156,11 @@
       "json": "העתק נתוני JSON"
     },
     "export": {
-      "title": "יצא מתכון",
-      "formats": {
-        "json": "פורמט JSON",
-        "text": "טקסט רגיל",
-        "markdown": "Markdown",
-        "pdf": "פורמט PDF"
-      },
-      "descriptions": {
-        "json": "יצא כנתוני JSON",
-        "text": "יצא כטקסט רגיל",
-        "markdown": "יצא כמסמך Markdown",
-        "pdf": "יצא כמסמך PDF"
-      },
-      "description": "יצא את המתכון שלך בפורמטים שונים לשיתוף ואחסון קלים.",
-      "notImplemented": "פונקציונליות יצוא בפורמט {{type}} תמומש כאן",
       "pdf": {
         "title": "יצא מתכון כ-PDF",
         "description": "צפה ויצא את המתכון שלך כמסמך PDF",
         "button": "יצא PDF",
         "exporting": "מייצא...",
-        "showPreview": "הצג תצוגה מקדימה",
-        "hidePreview": "הסתר תצוגה מקדימה",
         "format": "פורמט PDF"
       }
     },

@@ -8,12 +8,10 @@ import Card from '../ui/Card';
  * ExportOptions component displays PDF export interface with preview
  * @param {Object} props - Component props
  * @param {Object} props.recipe - Recipe data object
- * @param {Function} props.onExport - Export function
  */
-const ExportOptions = ({ recipe, onExport }) => {
+const ExportOptions = ({ recipe }) => {
   const { t } = useTranslation();
   const { direction } = useLanguage();
-  const [showPreview, setShowPreview] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
 
   const extractStylesheets = () => {
@@ -176,16 +174,6 @@ const ExportOptions = ({ recipe, onExport }) => {
               )}
             </button>
 
-            {/* Preview Toggle */}
-            <button
-              onClick={() => setShowPreview(!showPreview)}
-              className="border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              {showPreview 
-                ? t('resultDisplay.export.pdf.hidePreview')
-                : t('resultDisplay.export.pdf.showPreview')
-              }
-            </button>
           </div>
 
           <div className="text-sm text-gray-500">
@@ -195,9 +183,8 @@ const ExportOptions = ({ recipe, onExport }) => {
       </Card>
 
       {/* PDF Preview */}
-      {showPreview && (
-        <Card className="p-6 bg-white" style={{ minHeight: '600px' }}>
-          <div className="max-w-4xl mx-auto bg-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <Card className="p-6 bg-white" style={{ minHeight: '600px' }}>
+        <div className="max-w-4xl mx-auto bg-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
             {/* Recipe Header */}
             <div className="mb-8 text-center border-b border-gray-200 pb-6">
               <h1 className="text-3xl font-bold text-[#1b0e0e] mb-2" style={{ direction: isHebrew(recipe.name) ? 'rtl' : 'ltr' }}>
@@ -320,9 +307,8 @@ const ExportOptions = ({ recipe, onExport }) => {
                 </div>
               </div>
             )}
-          </div>
-        </Card>
-      )}
+        </div>
+      </Card>
     </div>
   );
 };
