@@ -103,4 +103,60 @@ export const validateText = (text, minChars, maxChars) => {
   }
   
   return { isValid: true, error: null };
+};
+
+/**
+ * Generate a sanitized filename for PDF export from recipe name
+ * @param {string} recipeName - Recipe name to generate filename from
+ * @param {boolean} includeTimestamp - Whether to include timestamp suffix
+ * @returns {string} - Sanitized filename suitable for PDF export
+ */
+export const generatePdfFilename = (recipeName, includeTimestamp = false) => {
+  // Fallback for empty or undefined recipe names
+  if (!recipeName || !recipeName.trim()) {
+    const baseFilename = 'recipe';
+    return includeTimestamp 
+      ? `${baseFilename}_${Date.now()}`
+      : baseFilename;
+  }
+
+  // Start with trimmed recipe name
+  let filename = recipeName.trim();
+  
+  // Remove or replace special characters while preserving Hebrew
+  filename = filename
+    // Remove characters that are problematic in filenames
+    .replace(/[<>:"|?*]/g, '')
+    // Replace forward/back slashes with dashes
+    .replace(/[/\\]/g, '-')
+    // Replace multiple spaces with single space
+    .replace(/\s+/g, ' ')
+    // Replace spaces with underscores
+    .replace(/\s/g, '_')
+    // Remove other special punctuation but keep Hebrew, letters, numbers, underscores, dashes
+    .replace(/[^\u0590-\u05FF\w\-_]/g, '')
+    // Remove multiple consecutive underscores/dashes
+    .replace(/[_-]+/g, '_')
+    // Remove leading/trailing underscores or dashes
+    .replace(/^[_-]+|[_-]+$/g, '');
+
+  // Limit length to 50 characters
+  if (filename.length > 50) {
+    filename = filename.substring(0, 50);
+    // Remove trailing underscore if it was cut off mid-word
+    filename = filename.replace(/[_-]+$/, '');
+  }
+  
+  // Final fallback if sanitization resulted in empty string
+  if (!filename) {
+    filename = 'recipe';
+  }
+  
+  // Add timestamp if requested
+  if (includeTimestamp) {
+    const timestamp = Date.now();
+    filename = `${filename}_${timestamp}`;
+  }
+  
+  return filename;
 }; 

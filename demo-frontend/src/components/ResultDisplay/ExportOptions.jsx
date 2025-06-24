@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { isHebrew, formatTime } from '../../utils/formatters';
+import { isHebrew, formatTime, generatePdfFilename } from '../../utils/formatters';
 import Card from '../ui/Card';
 
 /**
@@ -39,6 +39,9 @@ const ExportOptions = ({ recipe }) => {
     setIsExporting(true);
     
     try {
+      // Generate PDF filename from recipe name
+      const pdfFilename = generatePdfFilename(recipe.name);
+      
       // Find the preview content
       const previewElement = document.querySelector('.max-w-4xl.mx-auto.bg-white');
       if (!previewElement) {
@@ -56,14 +59,14 @@ const ExportOptions = ({ recipe }) => {
       // Get all styles from the current page
       const styles = extractStylesheets();
 
-      // Create print HTML with recipe title from props
+      // Create print HTML with generated filename as title for PDF suggestion
       const printHTML = `
         <!DOCTYPE html>
         <html lang="${direction === 'rtl' ? 'he' : 'en'}" dir="${direction}">
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${t('resultDisplay.export.pdf.title')} - ${recipe.name}</title>
+          <title>${pdfFilename}</title>
           <style>
             @page {
               margin: 0.5in;
