@@ -156,21 +156,22 @@
       "json": "Copy JSON data"
     },
     "export": {
-      "title": "Export Recipe",
-      "formats": {
-        "json": "JSON Format",
-        "text": "Plain Text",
-        "markdown": "Markdown",
-        "pdf": "PDF Format"
-      },
-      "descriptions": {
-        "json": "Export as JSON data",
-        "text": "Export as plain text",
-        "markdown": "Export as Markdown document",
-        "pdf": "Export as PDF document"
-      },
-      "description": "Export your recipe in different formats for easy sharing and storage.",
-      "notImplemented": "Export as {{type}} functionality would be implemented here"
+      "pdf": {
+        "title": "Export Recipe as PDF",
+        "description": "Preview and export your recipe as a PDF document",
+        "button": "Export PDF",
+        "exporting": "Exporting...",
+        "format": "PDF Format",
+        "browserSupport": "Browser Support",
+        "guidance": {
+          "chrome": "In the print dialog, select \"Save as PDF\" as destination for best results.",
+          "firefox": "Use \"Print to File\" and select PDF format. Some background colors may not print.",
+          "safari_mac": "Click \"PDF\" in the print dialog and select \"Save as PDF\".",
+          "safari_other": "Print dialog options may vary. Look for \"Save as PDF\" option.",
+          "ie": "Limited print support. Consider using a modern browser like Chrome or Edge for better results.",
+          "unknown": "Look for \"Save as PDF\" or \"Print to PDF\" option in your browser's print dialog."
+        }
+      }
     },
     "edit": {
       "unsavedChanges": "You have unsaved changes",

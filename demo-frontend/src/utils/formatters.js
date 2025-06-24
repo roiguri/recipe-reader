@@ -1,14 +1,31 @@
 /**
  * Format minutes into human-readable time format
  * @param {number} minutes - Minutes to format
+ * @param {Function} t - Translation function (optional, for localization)
  * @returns {string} - Formatted time string
  */
-export const formatTime = (minutes) => {
-  if (minutes == null) return 'Not specified';
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+export const formatTime = (minutes, t = null) => {
+  if (minutes == null) {
+    return t ? t('common.notSpecified') : 'Not specified';
+  }
+  
+  if (t) {
+    // Localized version
+    if (minutes < 60) return t('common.timeMinutes', { count: minutes });
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    const hoursText = t('common.timeHours', { count: hours });
+    const minutesText = mins > 0 ? t('common.timeMinutes', { count: mins }) : '';
+    return mins > 0 
+      ? t('common.timeHoursMinutes', { hours: hoursText, minutes: minutesText })
+      : hoursText;
+  } else {
+    // Original English-only version (fallback)
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  }
 };
 
 /**
@@ -86,4 +103,129 @@ export const validateText = (text, minChars, maxChars) => {
   }
   
   return { isValid: true, error: null };
+};
+
+/**
+ * Generate a sanitized filename for PDF export from recipe name
+ * @param {string} recipeName - Recipe name to generate filename from
+ * @param {boolean} includeTimestamp - Whether to include timestamp suffix
+ * @returns {string} - Sanitized filename suitable for PDF export
+ */
+export const generatePdfFilename = (recipeName, includeTimestamp = false) => {
+  // Fallback for empty or undefined recipe names
+  if (!recipeName || !recipeName.trim()) {
+    const baseFilename = 'recipe';
+    return includeTimestamp 
+      ? `${baseFilename}_${Date.now()}`
+      : baseFilename;
+  }
+
+  // Start with trimmed recipe name
+  let filename = recipeName.trim();
+  
+  // Remove or replace special characters while preserving Hebrew
+  filename = filename
+    // Remove characters that are problematic in filenames
+    .replace(/[<>:"|?*]/g, '')
+    // Replace forward/back slashes with dashes
+    .replace(/[/\\]/g, '-')
+    // Replace multiple spaces with single space
+    .replace(/\s+/g, ' ')
+    // Replace spaces with underscores
+    .replace(/\s/g, '_')
+    // Remove other special punctuation but keep Hebrew, letters, numbers, underscores, dashes
+    .replace(/[^\u0590-\u05FF\w\-_]/g, '')
+    // Remove multiple consecutive underscores/dashes
+    .replace(/[_-]+/g, '_')
+    // Remove leading/trailing underscores or dashes
+    .replace(/^[_-]+|[_-]+$/g, '');
+
+  // Limit length to 50 characters
+  if (filename.length > 50) {
+    filename = filename.substring(0, 50);
+    // Remove trailing underscore if it was cut off mid-word
+    filename = filename.replace(/[_-]+$/, '');
+  }
+  
+  // Final fallback if sanitization resulted in empty string
+  if (!filename) {
+    filename = 'recipe';
+  }
+  
+  // Add timestamp if requested
+  if (includeTimestamp) {
+    const timestamp = Date.now();
+    filename = `${filename}_${timestamp}`;
+  }
+  
+  return filename;
+};
+
+/**
+ * Detect browser and print capabilities for cross-browser compatibility
+ * @returns {Object} Browser information and print capabilities
+ */
+export const detectBrowserPrintCapabilities = () => {
+  const userAgent = navigator.userAgent;
+  // Use userAgent for platform detection to avoid deprecation warning
+  const platformInfo = userAgent;
+  
+  // Detect browser type
+  const isChrome = /Chrome/.test(userAgent) && !/Edge/.test(userAgent);
+  const isFirefox = /Firefox/.test(userAgent);
+  const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+  const isEdge = /Edge/.test(userAgent) || /Edg\//.test(userAgent);
+  const isIE = /MSIE|Trident/.test(userAgent);
+  
+  // Detect operating system from userAgent
+  const isWindows = /Win/.test(platformInfo);
+  const isMac = /Mac/.test(platformInfo);
+  const isLinux = /Linux/.test(platformInfo);
+  
+  // Determine print-to-PDF capability level
+  let printCapability = 'unknown';
+  let printDialogSupport = 'basic';
+  
+  if (isChrome) {
+    printCapability = 'excellent'; // Native print-to-PDF, full styling support
+    printDialogSupport = 'advanced';
+  } else if (isEdge) {
+    printCapability = 'excellent'; // Similar to Chrome, full support
+    printDialogSupport = 'advanced';
+  } else if (isFirefox) {
+    printCapability = 'good'; // Good print support, some CSS limitations
+    printDialogSupport = 'good';
+  } else if (isSafari) {
+    printCapability = 'native'; // Native macOS print, good quality
+    printDialogSupport = 'native';
+  } else if (isIE) {
+    printCapability = 'limited'; // Limited CSS support
+    printDialogSupport = 'basic';
+  }
+  
+  return {
+    browser: {
+      isChrome,
+      isFirefox,
+      isSafari,
+      isEdge,
+      isIE,
+      name: isChrome ? 'Chrome' : isFirefox ? 'Firefox' : isSafari ? 'Safari' : isEdge ? 'Edge' : isIE ? 'IE' : 'Unknown'
+    },
+    os: {
+      isWindows,
+      isMac,
+      isLinux,
+      name: isWindows ? 'Windows' : isMac ? 'macOS' : isLinux ? 'Linux' : 'Unknown'
+    },
+    printCapability,
+    printDialogSupport,
+    features: {
+      printColorAdjust: isChrome || isEdge || isSafari,
+      flexboxPrint: isChrome || isEdge || isFirefox,
+      gridPrint: isChrome || isEdge,
+      customFonts: !isIE,
+      backgroundPrint: isChrome || isEdge || isSafari
+    }
+  };
 }; 

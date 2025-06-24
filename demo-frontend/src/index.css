@@ -103,3 +103,12 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* ===========================================
+   PRINT STYLES - Minimal Print Optimization
+   =========================================== */
+
+@page {
+  margin: 0.5in;
+  size: A4;
+}
