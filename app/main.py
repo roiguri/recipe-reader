@@ -16,17 +16,55 @@ if not os.getenv("GOOGLE_AI_API_KEY"):
 else:
     logger.info("GOOGLE_AI_API_KEY found - Gemini service will be available")
 
+# Check database configuration
+if not os.getenv("DATABASE_URL"):
+    logger.warning("DATABASE_URL not found in environment variables. Database features will be unavailable.")
+else:
+    logger.info("DATABASE_URL found - Database features will be available")
+
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
 from app.routers import recipe
+# Import database components
+from app.database.connection import db_manager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Manage application lifespan events.
+    
+    Handles database connection setup and cleanup during application
+    startup and shutdown events.
+    """
+    # Startup
+    try:
+        logger.info("Application startup: Connecting to database...")
+        await db_manager.connect()
+        logger.info("Database connected successfully")
+    except Exception as e:
+        logger.error(f"Failed to connect to database during startup: {str(e)}")
+        # Don't prevent startup if database is unavailable
+        # This allows the service to run without database features
+    
+    yield
+    
+    # Shutdown
+    try:
+        logger.info("Application shutdown: Disconnecting from database...")
+        await db_manager.disconnect()
+        logger.info("Database disconnected successfully")
+    except Exception as e:
+        logger.error(f"Error during database shutdown: {str(e)}")
 
 # Create FastAPI app instance
 app = FastAPI(
     title="Recipe Auto-Creation Service",
     description="API service that automatically creates structured recipe data from various inputs",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -42,9 +80,23 @@ app.add_middleware(
 @app.get("/health", tags=["Health"])
 async def health_check():
     """
-    Health check endpoint to verify the API is running.
+    Health check endpoint to verify the API and database are running.
     """
-    return {"status": "ok", "message": "Recipe Auto-Creation Service is running"}
+    # Check database health
+    db_healthy = await db_manager.health_check() if db_manager.is_connected else False
+    
+    return {
+        "status": "ok",
+        "message": "Recipe Auto-Creation Service is running",
+        "database": {
+            "connected": db_manager.is_connected,
+            "healthy": db_healthy
+        },
+        "services": {
+            "gemini": bool(os.getenv("GOOGLE_AI_API_KEY")),
+            "database": bool(os.getenv("DATABASE_URL"))
+        }
+    }
 
 # Root endpoint
 @app.get("/", tags=["Root"])
