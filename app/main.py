@@ -82,15 +82,36 @@ async def health_check():
     """
     Health check endpoint to verify the API and database are running.
     """
-    # Check database health
-    db_healthy = await db_manager.health_check() if db_manager.is_connected else False
+    db_connected = db_manager.is_connected
+    db_healthy = False
+    connection_error = None
+    
+    # Try to connect if not connected (for serverless)
+    if not db_connected:
+        try:
+            logger.info("Health check: Attempting database connection...")
+            await db_manager.connect()
+            db_connected = db_manager.is_connected
+            logger.info(f"Health check: Connection attempt result: {db_connected}")
+        except Exception as e:
+            connection_error = str(e)
+            logger.error(f"Health check: Database connection failed: {connection_error}")
+    
+    # Check database health if connected
+    if db_connected:
+        try:
+            db_healthy = await db_manager.health_check()
+            logger.info(f"Health check: Database health check result: {db_healthy}")
+        except Exception as e:
+            logger.error(f"Health check: Database health check failed: {str(e)}")
     
     return {
         "status": "ok",
         "message": "Recipe Auto-Creation Service is running",
         "database": {
-            "connected": db_manager.is_connected,
-            "healthy": db_healthy
+            "connected": db_connected,
+            "healthy": db_healthy,
+            "error": connection_error
         },
         "services": {
             "gemini": bool(os.getenv("GOOGLE_AI_API_KEY")),
