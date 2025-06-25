@@ -6,17 +6,15 @@ and statistics functionality.
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from datetime import datetime, timezone
-import secrets
 
 from app.main import app
-from app.routers.admin import CreateClientRequest, ClientStatusUpdate
 
 
 class TestAdminRouter:
-    """Test admin router endpoints."""
+    """Test admin router endpoints with centralized mocking."""
 
     @pytest.fixture
     def client(self):
@@ -29,47 +27,51 @@ class TestAdminRouter:
         return {"X-Admin-Key": "test-admin-key"}
 
     @pytest.fixture
-    def mock_db_connected(self):
-        """Mock database connection."""
-        with patch("app.routers.admin.db_manager") as mock_db:
-            mock_db.is_connected = True
-            mock_db.database = AsyncMock()
-            yield mock_db
+    def mock_admin_environment(self):
+        """Mock admin environment with authentication."""
+        with patch.dict("os.environ", {"ADMIN_API_KEY": "test-admin-key"}):
+            yield
 
     @pytest.fixture
-    def mock_admin_auth(self):
-        """Mock admin authentication to always pass."""
-        with patch("app.dependencies.admin_auth.get_admin_from_key") as mock_auth:
-            mock_auth.return_value = {
-                "admin": True,
-                "authenticated_at": datetime.now(timezone.utc).isoformat(),
-                "key_prefix": "test-adm..."
-            }
-            yield mock_auth
+    def mock_admin_database(self, mock_db_manager):
+        """Mock admin database operations."""
+        with patch("app.routers.admin.db_manager", mock_db_manager):
+            yield mock_db_manager.database
+
+    @pytest.fixture
+    def mock_token_generation(self):
+        """Mock secure token generation."""
+        with patch("app.routers.admin.secrets.token_hex", return_value="generated-api-key-123"):
+            yield
+
+    @pytest.fixture
+    def setup_admin_test(self, mock_admin_environment, mock_admin_database, mock_token_generation):
+        """Complete admin test setup with all required mocks."""
+        # Use all fixtures to avoid unused parameter warnings
+        _ = mock_admin_environment, mock_token_generation
+        yield mock_admin_database
 
 
 class TestCreateClient(TestAdminRouter):
     """Test client creation endpoint."""
 
     @pytest.mark.asyncio
-    async def test_create_client_success(self, mock_db_connected, mock_admin_auth):
+    async def test_create_client_success(self, client, admin_headers, setup_admin_test):
         """Test successful client creation."""
-        # Mock database response
-        mock_result = {
+        # Mock database responses - first call for name check, second for insertion
+        count_result = {"count": 0}  # No existing client with same name
+        insert_result = {
             "api_key": "generated-api-key-123",
             "client_name": "Test Client",
             "created_at": datetime.now(timezone.utc)
         }
-        mock_db_connected.database.fetch_one.return_value = mock_result
+        setup_admin_test.fetch_one.side_effect = [count_result, insert_result]
 
-        # Mock secrets.token_hex
-        with patch("app.routers.admin.secrets.token_hex", return_value="generated-api-key-123"):
-            client = TestClient(app)
-            response = client.post(
-                "/admin/create-client",
-                json={"client_name": "Test Client", "rate_limit": 500},
-                headers={"X-Admin-Key": "test-admin-key"}
-            )
+        response = client.post(
+            "/admin/create-client",
+            json={"client_name": "Test Client", "rate_limit": 500},
+            headers=admin_headers
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -79,16 +81,16 @@ class TestCreateClient(TestAdminRouter):
         assert "created_at" in data
 
     @pytest.mark.asyncio
-    async def test_create_client_database_error(self, mock_db_connected, mock_admin_auth):
+    async def test_create_client_database_error(self, client, admin_headers, setup_admin_test):
         """Test client creation with database error."""
-        # Mock database to return None (creation failed)
-        mock_db_connected.database.fetch_one.return_value = None
+        # Mock database responses - first call succeeds, second call fails (creation failed)
+        count_result = {"count": 0}  # No existing client with same name
+        setup_admin_test.fetch_one.side_effect = [count_result, None]
 
-        client = TestClient(app)
         response = client.post(
             "/admin/create-client",
             json={"client_name": "Test Client"},
-            headers={"X-Admin-Key": "test-admin-key"}
+            headers=admin_headers
         )
 
         assert response.status_code == 500
@@ -96,59 +98,94 @@ class TestCreateClient(TestAdminRouter):
         assert data["detail"]["error"] == "client_creation_failed"
 
     @pytest.mark.asyncio
-    async def test_create_client_missing_auth(self):
+    async def test_create_client_missing_auth(self, client):
         """Test client creation without admin authentication."""
-        client = TestClient(app)
         response = client.post(
             "/admin/create-client",
             json={"client_name": "Test Client"}
+            # No X-Admin-Key header provided
         )
 
-        assert response.status_code == 401
+        # Should return 403 because no X-Admin-Key header is provided
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_create_client_with_rate_limit(self, mock_db_connected, mock_admin_auth):
+    async def test_create_client_invalid_auth(self, client):
+        """Test client creation with invalid admin key."""
+        # Set ADMIN_API_KEY but use wrong key in request
+        with patch.dict("os.environ", {"ADMIN_API_KEY": "correct-admin-key"}):
+            response = client.post(
+                "/admin/create-client",
+                json={"client_name": "Test Client"},
+                headers={"X-Admin-Key": "wrong-admin-key"}
+            )
+
+        # Should return 403 because admin key is invalid
+        assert response.status_code == 403
+        data = response.json()
+        assert data["detail"]["error"] == "invalid_admin_key"
+
+    @pytest.mark.asyncio
+    async def test_create_client_admin_service_misconfigured(self, client):
+        """Test client creation with misconfigured admin service."""
+        # Don't set ADMIN_API_KEY but provide a header - this will trigger the 500 error
+        with patch.dict("os.environ", {}, clear=True):
+            response = client.post(
+                "/admin/create-client",
+                json={"client_name": "Test Client"},
+                headers={"X-Admin-Key": "some-key"}
+            )
+
+        # Should return 500 because ADMIN_API_KEY env var is not configured
+        assert response.status_code == 500
+        data = response.json()
+        assert data["detail"]["error"] == "admin_service_misconfigured"
+
+    @pytest.mark.asyncio
+    async def test_create_client_with_rate_limit(self, client, admin_headers, setup_admin_test):
         """Test client creation with custom rate limit."""
-        mock_result = {
+        # Mock database responses - first call for name check, second for insertion
+        count_result = {"count": 0}  # No existing client with same name
+        insert_result = {
             "api_key": "generated-api-key-123",
             "client_name": "Test Client",
             "created_at": datetime.now(timezone.utc)
         }
-        mock_db_connected.database.fetch_one.return_value = mock_result
+        setup_admin_test.fetch_one.side_effect = [count_result, insert_result]
 
-        with patch("app.routers.admin.secrets.token_hex", return_value="generated-api-key-123"):
-            client = TestClient(app)
-            response = client.post(
-                "/admin/create-client",
-                json={"client_name": "Test Client", "rate_limit": 1000},
-                headers={"X-Admin-Key": "test-admin-key"}
-            )
+        response = client.post(
+            "/admin/create-client",
+            json={"client_name": "Test Client", "rate_limit": 1000},
+            headers=admin_headers
+        )
 
         assert response.status_code == 200
         
         # Verify rate_limit was passed to database
-        mock_db_connected.database.fetch_one.assert_called_once()
-        call_args = mock_db_connected.database.fetch_one.call_args
-        assert call_args[1]["values"]["rate_limit"] == 1000
+        assert setup_admin_test.fetch_one.call_count == 2
+        # Check the second call (insertion) had the correct rate_limit
+        second_call_args = setup_admin_test.fetch_one.call_args_list[1]
+        assert second_call_args[1]["values"]["rate_limit"] == 1000
 
     @pytest.mark.asyncio
-    async def test_api_key_generation_security(self, mock_db_connected, mock_admin_auth):
+    async def test_api_key_generation_security(self, client, admin_headers, setup_admin_test):
         """Test that API keys are generated securely."""
-        mock_result = {
+        # Mock database responses - first call for name check, second for insertion
+        count_result = {"count": 0}  # No existing client with same name
+        insert_result = {
             "api_key": "secure-generated-key",
             "client_name": "Test Client",
             "created_at": datetime.now(timezone.utc)
         }
-        mock_db_connected.database.fetch_one.return_value = mock_result
+        setup_admin_test.fetch_one.side_effect = [count_result, insert_result]
 
         with patch("app.routers.admin.secrets.token_hex") as mock_token_hex:
             mock_token_hex.return_value = "secure-generated-key"
             
-            client = TestClient(app)
             response = client.post(
                 "/admin/create-client",
                 json={"client_name": "Test Client"},
-                headers={"X-Admin-Key": "test-admin-key"}
+                headers=admin_headers
             )
 
         # Verify secrets.token_hex was called with 24 bytes (48 hex chars)
@@ -160,7 +197,7 @@ class TestListClients(TestAdminRouter):
     """Test client listing endpoint."""
 
     @pytest.mark.asyncio
-    async def test_list_clients_active_only(self, mock_db_connected, mock_admin_auth):
+    async def test_list_clients_active_only(self, client, admin_headers, setup_admin_test):
         """Test listing active clients only."""
         mock_clients = [
             {
@@ -182,12 +219,11 @@ class TestListClients(TestAdminRouter):
                 "created_at": datetime.now(timezone.utc)
             }
         ]
-        mock_db_connected.database.fetch_all.return_value = mock_clients
+        setup_admin_test.fetch_all.return_value = mock_clients
 
-        client = TestClient(app)
         response = client.get(
             "/admin/clients",
-            headers={"X-Admin-Key": "test-admin-key"}
+            headers=admin_headers
         )
 
         assert response.status_code == 200
@@ -197,7 +233,7 @@ class TestListClients(TestAdminRouter):
         assert data[1]["last_used_at"] is None
 
     @pytest.mark.asyncio
-    async def test_list_clients_include_inactive(self, mock_db_connected, mock_admin_auth):
+    async def test_list_clients_include_inactive(self, client, admin_headers, setup_admin_test):
         """Test listing clients including inactive ones."""
         mock_clients = [
             {
@@ -219,12 +255,11 @@ class TestListClients(TestAdminRouter):
                 "created_at": datetime.now(timezone.utc)
             }
         ]
-        mock_db_connected.database.fetch_all.return_value = mock_clients
+        setup_admin_test.fetch_all.return_value = mock_clients
 
-        client = TestClient(app)
         response = client.get(
             "/admin/clients?include_inactive=true",
-            headers={"X-Admin-Key": "test-admin-key"}
+            headers=admin_headers
         )
 
         assert response.status_code == 200
@@ -237,20 +272,19 @@ class TestUpdateClientStatus(TestAdminRouter):
     """Test client status update endpoint."""
 
     @pytest.mark.asyncio
-    async def test_deactivate_client_success(self, mock_db_connected, mock_admin_auth):
+    async def test_deactivate_client_success(self, client, admin_headers, setup_admin_test):
         """Test successful client deactivation."""
         mock_result = {
             "api_key": "test-key",
             "client_name": "Test Client",
             "is_active": False
         }
-        mock_db_connected.database.fetch_one.return_value = mock_result
+        setup_admin_test.fetch_one.return_value = mock_result
 
-        client = TestClient(app)
         response = client.patch(
             "/admin/clients/test-key/status",
             json={"is_active": False},
-            headers={"X-Admin-Key": "test-admin-key"}
+            headers=admin_headers
         )
 
         assert response.status_code == 200
@@ -259,20 +293,19 @@ class TestUpdateClientStatus(TestAdminRouter):
         assert data["is_active"] is False
 
     @pytest.mark.asyncio
-    async def test_activate_client_success(self, mock_db_connected, mock_admin_auth):
+    async def test_activate_client_success(self, client, admin_headers, setup_admin_test):
         """Test successful client activation."""
         mock_result = {
             "api_key": "test-key",
             "client_name": "Test Client",
             "is_active": True
         }
-        mock_db_connected.database.fetch_one.return_value = mock_result
+        setup_admin_test.fetch_one.return_value = mock_result
 
-        client = TestClient(app)
         response = client.patch(
             "/admin/clients/test-key/status",
             json={"is_active": True},
-            headers={"X-Admin-Key": "test-admin-key"}
+            headers=admin_headers
         )
 
         assert response.status_code == 200
@@ -281,15 +314,14 @@ class TestUpdateClientStatus(TestAdminRouter):
         assert data["is_active"] is True
 
     @pytest.mark.asyncio
-    async def test_update_nonexistent_client(self, mock_db_connected, mock_admin_auth):
+    async def test_update_nonexistent_client(self, client, admin_headers, setup_admin_test):
         """Test updating status of non-existent client."""
-        mock_db_connected.database.fetch_one.return_value = None
+        setup_admin_test.fetch_one.return_value = None
 
-        client = TestClient(app)
         response = client.patch(
             "/admin/clients/nonexistent-key/status",
             json={"is_active": False},
-            headers={"X-Admin-Key": "test-admin-key"}
+            headers=admin_headers
         )
 
         assert response.status_code == 404
@@ -301,7 +333,7 @@ class TestUsageStatistics(TestAdminRouter):
     """Test usage statistics endpoint."""
 
     @pytest.mark.asyncio
-    async def test_get_usage_statistics_success(self, mock_db_connected, mock_admin_auth):
+    async def test_get_usage_statistics_success(self, client, admin_headers, setup_admin_test):
         """Test successful usage statistics retrieval."""
         mock_stats = {
             "total_clients": 10,
@@ -310,12 +342,11 @@ class TestUsageStatistics(TestAdminRouter):
             "avg_requests_per_client": 150.0,
             "last_activity": datetime.now(timezone.utc)
         }
-        mock_db_connected.database.fetch_one.return_value = mock_stats
+        setup_admin_test.fetch_one.return_value = mock_stats
 
-        client = TestClient(app)
         response = client.get(
             "/admin/usage-stats",
-            headers={"X-Admin-Key": "test-admin-key"}
+            headers=admin_headers
         )
 
         assert response.status_code == 200
@@ -328,7 +359,7 @@ class TestUsageStatistics(TestAdminRouter):
         assert "timestamp" in data
 
     @pytest.mark.asyncio
-    async def test_get_usage_statistics_no_activity(self, mock_db_connected, mock_admin_auth):
+    async def test_get_usage_statistics_no_activity(self, client, admin_headers, setup_admin_test):
         """Test usage statistics when there's no activity."""
         mock_stats = {
             "total_clients": 0,
@@ -337,12 +368,11 @@ class TestUsageStatistics(TestAdminRouter):
             "avg_requests_per_client": 0.0,
             "last_activity": None
         }
-        mock_db_connected.database.fetch_one.return_value = mock_stats
+        setup_admin_test.fetch_one.return_value = mock_stats
 
-        client = TestClient(app)
         response = client.get(
             "/admin/usage-stats",
-            headers={"X-Admin-Key": "test-admin-key"}
+            headers=admin_headers
         )
 
         assert response.status_code == 200
@@ -351,12 +381,11 @@ class TestUsageStatistics(TestAdminRouter):
         assert data["last_activity"] is None
 
 
-class TestAdminRouterSecurity:
+class TestAdminRouterSecurity(TestAdminRouter):
     """Test admin router security features."""
 
-    def test_admin_router_requires_authentication(self):
+    def test_admin_router_requires_authentication(self, client):
         """Test that all admin endpoints require authentication."""
-        client = TestClient(app)
         
         # Test all admin endpoints without authentication
         endpoints = [

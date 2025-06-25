@@ -352,7 +352,7 @@ class TestErrorHandlingAndLogging(TestClientRepository):
                 await client_repository.create_client("Test Client")
         
         assert "Created new client: Test Client" in caplog.text
-        assert "test_key_12" in caplog.text  # API key should be truncated
+        assert "test_key" in caplog.text  # API key should be truncated to 8 chars
     
     @pytest.mark.asyncio
     async def test_logging_client_deactivation(self, client_repository, mock_database, caplog):
@@ -363,7 +363,7 @@ class TestErrorHandlingAndLogging(TestClientRepository):
             await client_repository.deactivate_client("test_key_12345678")
         
         assert "Deactivated client" in caplog.text
-        assert "test_key_12" in caplog.text  # API key should be truncated
+        assert "test_key" in caplog.text  # API key should be truncated to 8 chars
     
     @pytest.mark.asyncio
     async def test_error_logging(self, client_repository, mock_database, caplog):

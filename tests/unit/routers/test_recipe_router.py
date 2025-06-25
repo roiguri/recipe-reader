@@ -1,10 +1,22 @@
 from fastapi.testclient import TestClient
 from unittest.mock import patch
+from fastapi import Depends
 from app.main import app
 from app.models.recipe import RecipeResponse, Recipe, RecipeDifficulty
+from app.dependencies.authentication import get_client_from_db
 import pytest
 from datetime import datetime
 
+# Mock authentication dependency
+def mock_get_client():
+    return {
+        "api_key": "test-key",
+        "client_name": "Test Client", 
+        "is_active": True
+    }
+
+# Override the dependency for all tests
+app.dependency_overrides[get_client_from_db] = mock_get_client
 client = TestClient(app)
 
 def test_process_recipe_text():
@@ -17,8 +29,9 @@ def test_process_recipe_text():
     Serve with maple syrup."""
     
     response = client.post(
-        "/recipe/text",
-        json={"text": recipe_text}
+        "/api/v1/recipe/text",  # Use correct versioned path
+        json={"text": recipe_text},
+        headers={"X-API-Key": "test-key"}
     )
     
     # Check response status code
@@ -108,8 +121,9 @@ def test_text_endpoint_with_difficulty_validation(mock_process_text):
     
     # Make the API call
     response = client.post(
-        "/recipe/text",
-        json={"text": "Some recipe text"}
+        "/api/v1/recipe/text",  # Use correct versioned path
+        json={"text": "Some recipe text"},
+        headers={"X-API-Key": "test-key"}
     )
     
     assert response.status_code == 200
@@ -137,8 +151,9 @@ def test_text_endpoint_handles_validation_errors(mock_process_text):
     
     # Make the API call
     response = client.post(
-        "/recipe/text",
-        json={"text": "Some recipe text"}
+        "/api/v1/recipe/text",  # Use correct versioned path
+        json={"text": "Some recipe text"},
+        headers={"X-API-Key": "test-key"}
     )
     
     # Should return 422 error with clear difficulty validation message
@@ -157,8 +172,9 @@ def test_text_endpoint_handles_processing_errors(mock_process_text):
     
     # Make the API call
     response = client.post(
-        "/recipe/text",
-        json={"text": "Some recipe text"}
+        "/api/v1/recipe/text",  # Use correct versioned path
+        json={"text": "Some recipe text"},
+        headers={"X-API-Key": "test-key"}
     )
     
     # Should return 500 error with validation details

@@ -32,6 +32,15 @@ router = APIRouter(
 class CreateClientRequest(BaseModel):
     client_name: str
     rate_limit: Optional[int] = 500
+    
+    class Config:
+        # Add validation examples for OpenAPI docs
+        schema_extra = {
+            "example": {
+                "client_name": "My Application",
+                "rate_limit": 500
+            }
+        }
 
 class ClientResponse(BaseModel):
     api_key: str
@@ -51,6 +60,12 @@ class CreateClientResponse(BaseModel):
 class ClientStatusUpdate(BaseModel):
     is_active: bool
 
+class DeleteClientResponse(BaseModel):
+    message: str
+    client_name: str
+    api_key_hash: str
+    timestamp: str
+
 @router.post("/create-client", response_model=CreateClientResponse)
 async def create_client(
     request: CreateClientRequest,
@@ -65,9 +80,61 @@ async def create_client(
     Returns the generated API key and client information.
     """
     try:
+        # Validate input
+        if not request.client_name or not request.client_name.strip():
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "invalid_client_name",
+                    "message": "Client name cannot be empty.",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
+        
+        if request.rate_limit is not None and (request.rate_limit < 1 or request.rate_limit > 10000):
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "invalid_rate_limit",
+                    "message": "Rate limit must be between 1 and 10000 requests per minute.",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
+        
         # Ensure database connection
         if not db_manager.is_connected:
             await db_manager.connect()
+        
+        # Check if client name already exists
+        name_check_query = "SELECT COUNT(*) as count FROM clients WHERE client_name = :client_name"
+        name_exists = await db_manager.database.fetch_one(
+            query=name_check_query,
+            values={"client_name": request.client_name.strip()}
+        )
+        
+        # Handle different ways COUNT results might be returned
+        count_value = 0
+        if name_exists:
+            if hasattr(name_exists, 'get'):
+                count_value = name_exists.get("count", 0) or name_exists.get(0, 0)
+            elif hasattr(name_exists, '__getitem__'):
+                try:
+                    count_value = name_exists["count"]
+                except (KeyError, TypeError):
+                    try:
+                        count_value = name_exists[0]  # May be returned as tuple/list
+                    except (IndexError, TypeError):
+                        count_value = 0
+        
+        if count_value > 0:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": "client_name_exists",
+                    "message": "Client with this name already exists.",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
         
         # Generate secure API key
         api_key = secrets.token_hex(24)  # 48-character secure key
@@ -83,8 +150,8 @@ async def create_client(
             query=query,
             values={
                 "api_key": api_key,
-                "client_name": request.client_name,
-                "rate_limit": request.rate_limit
+                "client_name": request.client_name.strip(),
+                "rate_limit": request.rate_limit or 500
             }
         )
         
@@ -180,6 +247,71 @@ async def list_clients(
             detail={
                 "error": "admin_operation_failed",
                 "message": "Failed to retrieve client list.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        )
+
+@router.get("/clients/{api_key}", response_model=ClientResponse)
+async def get_client(
+    api_key: str,
+    admin_context: dict = Depends(get_admin_from_key)
+):
+    """
+    Get detailed information about a specific client.
+    
+    - **api_key**: The API key of the client to retrieve
+    
+    Returns detailed client information including usage statistics.
+    """
+    try:
+        # Ensure database connection
+        if not db_manager.is_connected:
+            await db_manager.connect()
+        
+        # Get client information
+        query = """
+            SELECT api_key, client_name, is_active, total_requests_this_month,
+                   master_rate_limit_per_minute, last_used_at, created_at
+            FROM clients 
+            WHERE api_key = :api_key
+        """
+        
+        result = await db_manager.database.fetch_one(
+            query=query,
+            values={"api_key": api_key}
+        )
+        
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "client_not_found",
+                    "message": "Client with specified API key not found.",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
+        
+        logger.info(f"Admin retrieved client info: {result['client_name']}")
+        
+        return ClientResponse(
+            api_key=result["api_key"],
+            client_name=result["client_name"],
+            is_active=result["is_active"],
+            total_requests_this_month=result["total_requests_this_month"],
+            master_rate_limit_per_minute=result["master_rate_limit_per_minute"],
+            last_used_at=result["last_used_at"].isoformat() if result["last_used_at"] else None,
+            created_at=result["created_at"].isoformat()
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving client: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "admin_operation_failed",
+                "message": "Failed to retrieve client information.",
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
         )
@@ -299,6 +431,90 @@ async def get_usage_statistics(
             detail={
                 "error": "admin_operation_failed",
                 "message": "Failed to retrieve usage statistics.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        )
+
+@router.delete("/clients/{api_key}", response_model=DeleteClientResponse)
+async def delete_client(
+    api_key: str,
+    admin_context: dict = Depends(get_admin_from_key)
+):
+    """
+    Delete a client and all associated data.
+    
+    - **api_key**: The API key of the client to delete
+    
+    Permanently removes the client from the system.
+    WARNING: This action cannot be undone.
+    """
+    try:
+        # Ensure database connection
+        if not db_manager.is_connected:
+            await db_manager.connect()
+        
+        # First, get client info for logging before deletion
+        check_query = "SELECT client_name FROM clients WHERE api_key = :api_key"
+        client_record = await db_manager.database.fetch_one(
+            query=check_query,
+            values={"api_key": api_key}
+        )
+        
+        if not client_record:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "client_not_found",
+                    "message": "Client with specified API key not found.",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
+        
+        # Delete the client
+        delete_query = """
+            DELETE FROM clients 
+            WHERE api_key = :api_key
+            RETURNING client_name
+        """
+        
+        result = await db_manager.database.fetch_one(
+            query=delete_query,
+            values={"api_key": api_key}
+        )
+        
+        if not result:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": "deletion_failed",
+                    "message": "Failed to delete client. Please try again.",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            )
+        
+        # Create hash for audit trail (don't log the actual key)
+        import hashlib
+        api_key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:16]
+        
+        # Log admin operation
+        logger.info(f"Admin deleted client: {client_record['client_name']} (key hash: {api_key_hash})")
+        
+        return DeleteClientResponse(
+            message="Client deleted successfully",
+            client_name=client_record["client_name"],
+            api_key_hash=api_key_hash,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting client: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "admin_operation_failed",
+                "message": "Failed to delete client due to internal error.",
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
         )
