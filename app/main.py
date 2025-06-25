@@ -185,8 +185,8 @@ app.include_router(
     dependencies=[Depends(get_client_from_db)]
 )
 
-# Include admin router (no versioning, has its own auth)
-app.include_router(admin.router)
+# Include admin router
+app.include_router(admin.router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn
