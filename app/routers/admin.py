@@ -14,6 +14,7 @@ import logging
 
 from ..dependencies.admin_auth import get_admin_from_key
 from ..database.connection import db_manager
+from ..services.audit_logger import audit_logger, AuditAction
 
 logger = logging.getLogger(__name__)
 
@@ -165,8 +166,14 @@ async def create_client(
                 }
             )
         
-        # Log admin operation
-        logger.info(f"Admin created new client: {request.client_name} (API key: {api_key[:8]}...)")
+        # Audit log successful client creation
+        audit_logger.log_client_creation(
+            admin_key_prefix=admin_context.get("key_prefix", "unknown"),
+            client_name=request.client_name.strip(),
+            api_key_prefix=api_key[:8],
+            rate_limit=request.rate_limit or 500,
+            success=True
+        )
         
         return CreateClientResponse(
             api_key=result["api_key"],
@@ -176,9 +183,27 @@ async def create_client(
         )
         
     except HTTPException:
+        # Audit log failed client creation
+        audit_logger.log_client_creation(
+            admin_key_prefix=admin_context.get("key_prefix", "unknown"),
+            client_name=request.client_name,
+            api_key_prefix="",
+            rate_limit=request.rate_limit or 500,
+            success=False,
+            error_message="Client creation failed due to validation error"
+        )
         raise
     except Exception as e:
         logger.error(f"Error creating client: {str(e)}")
+        # Audit log failed client creation
+        audit_logger.log_client_creation(
+            admin_key_prefix=admin_context.get("key_prefix", "unknown"),
+            client_name=request.client_name,
+            api_key_prefix="",
+            rate_limit=request.rate_limit or 500,
+            success=False,
+            error_message=str(e)
+        )
         raise HTTPException(
             status_code=500,
             detail={
@@ -237,7 +262,16 @@ async def list_clients(
                 created_at=result["created_at"].isoformat()
             ))
         
-        logger.info(f"Admin listed {len(clients)} clients (include_inactive: {include_inactive})")
+        # Audit log client list access
+        audit_logger.log_data_access(
+            admin_key_prefix=admin_context.get("key_prefix", "unknown"),
+            action=AuditAction.CLIENT_LIST_ACCESSED,
+            details={
+                "client_count": len(clients),
+                "include_inactive": include_inactive
+            }
+        )
+        
         return clients
         
     except Exception as e:
@@ -361,9 +395,16 @@ async def update_client_status(
                 }
             )
         
-        # Log admin operation
+        # Audit log client status change
         status_text = "activated" if status_update.is_active else "deactivated"
-        logger.info(f"Admin {status_text} client: {result['client_name']} ({api_key[:8]}...)")
+        audit_action = AuditAction.CLIENT_REACTIVATED if status_update.is_active else AuditAction.CLIENT_DEACTIVATED
+        
+        audit_logger.log_client_status_change(
+            admin_key_prefix=admin_context.get("key_prefix", "unknown"),
+            api_key_prefix=api_key[:8],
+            action=audit_action,
+            success=True
+        )
         
         return {
             "message": f"Client {status_text} successfully",
@@ -412,7 +453,16 @@ async def get_usage_statistics(
         
         result = await db_manager.database.fetch_one(query=query)
         
-        logger.info("Admin requested usage statistics")
+        # Audit log usage statistics access
+        audit_logger.log_data_access(
+            admin_key_prefix=admin_context.get("key_prefix", "unknown"),
+            action=AuditAction.USAGE_STATS_ACCESSED,
+            details={
+                "total_clients": result["total_clients"],
+                "active_clients": result["active_clients"],
+                "total_requests": result["total_requests_this_month"]
+            }
+        )
         
         return {
             "total_clients": result["total_clients"],
