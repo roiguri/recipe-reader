@@ -23,13 +23,15 @@ else:
     logger.info("DATABASE_URL found - Database features will be available")
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
 from app.routers import recipe
 # Import database components
 from app.database.connection import db_manager
+# Import authentication dependencies
+from app.dependencies.authentication import get_client_from_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -131,8 +133,57 @@ async def root():
         "version": app.version,
     }
 
-# Include routers
-app.include_router(recipe.router)
+# API Version Discovery endpoint
+@app.get("/api/versions", tags=["Versioning"])
+async def get_api_versions():
+    """
+    Discover available API versions and their status.
+    
+    This endpoint provides information about supported API versions,
+    deprecation timelines, and migration guidance for clients.
+    
+    Returns:
+        dict: API version information including supported versions,
+              latest version, deprecated versions, and metadata
+    """
+    from datetime import datetime
+    
+    return {
+        "supported_versions": ["v1"],
+        "latest_version": "v1",
+        "deprecated_versions": [],
+        "version_info": {
+            "v1": {
+                "status": "stable",
+                "released_date": "2024-01-15",
+                "deprecated_date": None,
+                "sunset_date": None,
+                "documentation": "/docs",
+                "features": [
+                    "API key authentication",
+                    "Recipe text processing",
+                    "Recipe URL processing", 
+                    "Recipe image processing",
+                    "Usage tracking"
+                ],
+                "breaking_changes": [],
+                "migration_guide": None
+            }
+        },
+        "policies": {
+            "deprecation_notice_period": "6 months",
+            "support_period_after_deprecation": "12 months",
+            "backward_compatibility": "Guaranteed within major versions"
+        },
+        "current_time": datetime.now(datetime.UTC).isoformat()
+    }
+
+# Include routers with versioning and authentication
+app.include_router(
+    recipe.router,
+    prefix="/api/v1",
+    dependencies=[Depends(get_client_from_db)]
+)
 
 if __name__ == "__main__":
     import uvicorn
