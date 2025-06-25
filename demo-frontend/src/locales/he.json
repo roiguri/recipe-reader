@@ -242,9 +242,9 @@
     "hebrew": "עברית",
     "switchTo": "עבר ל{{language}}"
   },
-  "formProcessor": {
-    "title": "הזן טופס מתכון",
-    "description": "הוסף מתכון בעזרת טופס"
+  "videoProcessor": {
+    "title": "עבד וידאו",
+    "description": "חלץ מתכון מוידאו"
   },
   "errorBoundary": {
     "title": "משהו השתבש",

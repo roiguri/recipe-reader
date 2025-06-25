@@ -20,7 +20,7 @@ const OptionCard = ({ icon, title, description, onClick, layoutId }) => {
       tabIndex={0}
       role="button"
       aria-label={t('aria.optionCard', { title, description })}
-      className="flex flex-1 gap-3 rounded-lg border border-[#e7d0d1] bg-[#fcf8f8] p-4 flex-col cursor-pointer min-h-[120px] touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-[#994d51] focus-visible:ring-offset-2"
+      className="flex flex-1 gap-3 rounded-lg border border-[#e7d0d1] bg-[#fcf8f8] p-4 flex-col cursor-pointer min-h-[140px] touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-[#994d51] focus-visible:ring-offset-2"
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >

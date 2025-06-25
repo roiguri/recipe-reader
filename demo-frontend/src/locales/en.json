@@ -242,9 +242,9 @@
     "hebrew": "עברית",
     "switchTo": "Switch to {{language}}"
   },
-  "formProcessor": {
-    "title": "Enter recipe form",
-    "description": "Fill out a structured recipe form"
+  "videoProcessor": {
+    "title": "Process video",
+    "description": "Extract recipe from video"
   },
   "errorBoundary": {
     "title": "Something went wrong",

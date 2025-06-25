@@ -45,17 +45,6 @@
         "dependencies": [],
         "priority": "high",
         "subtasks": []
-      },
-      {
-        "id": 4,
-        "title": "Replace form processing with video processing",
-        "description": "Replace the form processing with video processing place holfer - opens unimplemented component.",
-        "details":"",
-        "testStrategy":"manual",
-        "status": "pending",
-        "dependencies": [],
-        "priority": "high",
-        "subtasks": []
       }
     ],
     "metadata": {
@@ -97,6 +86,17 @@
         "status": "done",
         "dependencies": [],
         "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Replace form processing with video processing",
+        "description": "Replace the form processing with video processing place holfer - opens unimplemented component.",
+        "details":"",
+        "testStrategy":"manual",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
         "subtasks": []
       }
     ],

@@ -16,17 +16,6 @@ export const getCardConfigs = (t) => ({
     buttonText: t('textProcessor.buttons.process'),
     isComingSoon: false
   },
-  form: {
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
-        <path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z"></path>
-      </svg>
-    ),
-    title: t('formProcessor.title', 'Fill out a form'),
-    description: t('formProcessor.description', 'Add a recipe by filling out a form'),
-    inputType: "form",
-    isComingSoon: true
-  },
   url: {
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
@@ -51,6 +40,23 @@ export const getCardConfigs = (t) => ({
     inputType: "file",
     buttonText: t('imageProcessor.buttons.processImages'),
     isComingSoon: false
+  },
+  video: {
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24px" 
+        height="24px" fill="currentColor" viewBox="0 0 256 256" 
+        aria-hidden="true">
+          <path d="M251.77,73a8,8,0,0,0-8.21.39L208,97.05V72a16,16,0,0,
+        0-16-16H32A16,16,0,0,0,16,72V184a16,16,0,0,0,16,16H192a16,16,0,
+        0,0,16-16V159l35.56,23.71A8,8,0,0,0,248,184a8,8,0,0,0,8-8V80A8,
+        8,0,0,0,251.77,73ZM192,184H32V72H192V184Zm48-22.95L208,140.95v2
+        5.9L240,187Z"></path>
+      </svg>
+    ),
+    title: t('videoProcessor.title', 'Process video'),
+    description: t('videoProcessor.description', 'Extract recipe from video'),
+    inputType: "video",
+    isComingSoon: true
   }
 });
 
