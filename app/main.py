@@ -27,7 +27,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
-from app.routers import recipe
+from app.routers import recipe, admin
 # Import database components
 from app.database.connection import db_manager
 # Import authentication dependencies
@@ -184,6 +184,9 @@ app.include_router(
     prefix="/api/v1",
     dependencies=[Depends(get_client_from_db)]
 )
+
+# Include admin router (no versioning, has its own auth)
+app.include_router(admin.router)
 
 if __name__ == "__main__":
     import uvicorn
