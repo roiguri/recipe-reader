@@ -6,11 +6,10 @@ API key generation, and system monitoring.
 """
 
 import secrets
-import re
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, Request, Response
 from pydantic import BaseModel, field_validator, ConfigDict
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 import logging
 
 from ..dependencies.admin_auth import get_admin_from_key
@@ -349,7 +348,7 @@ async def get_client(
     api_key: str,
     fastapi_request: Request,
     response: Response,
-    admin_context: dict = Depends(get_admin_from_key)
+    _admin_context: dict = Depends(get_admin_from_key)
 ):
     """
     Get detailed information about a specific client.
@@ -564,6 +563,77 @@ async def get_usage_statistics(
             }
         )
 
+@router.post("/reset-monthly-usage")
+async def reset_monthly_usage(
+    admin_context: dict = Depends(get_admin_from_key)
+):
+    """
+    Reset monthly usage counters for all clients.
+    
+    This endpoint resets the total_requests_this_month counter for all clients
+    back to zero. Typically used at the beginning of each month for billing
+    and usage tracking purposes.
+    
+    WARNING: This action cannot be undone.
+    """
+    try:
+        # Ensure database connection
+        if not db_manager.is_connected:
+            await db_manager.connect()
+        
+        # Get current usage before reset for audit
+        pre_reset_query = """
+            SELECT 
+                COUNT(*) as total_clients,
+                COALESCE(SUM(total_requests_this_month), 0) as total_requests_reset
+            FROM clients
+        """
+        
+        pre_reset_stats = await db_manager.database.fetch_one(query=pre_reset_query)
+        
+        # Reset monthly usage counters
+        reset_query = """
+            UPDATE clients 
+            SET total_requests_this_month = 0
+            WHERE total_requests_this_month > 0
+            RETURNING api_key, client_name, total_requests_this_month
+        """
+        
+        results = await db_manager.database.fetch_all(query=reset_query)
+        clients_reset = len(results)
+        
+        # Audit log the reset operation
+        audit_logger.log_admin_action(
+            action=AuditAction.USAGE_STATS_ACCESSED,  # Reusing existing action
+            admin_key_prefix=admin_context.get("key_prefix", "unknown"),
+            details={
+                "operation": "monthly_usage_reset",
+                "clients_affected": clients_reset,
+                "total_requests_reset": pre_reset_stats["total_requests_reset"]
+            },
+            success=True
+        )
+        
+        logger.info(f"Monthly usage reset completed: {clients_reset} clients affected, {pre_reset_stats['total_requests_reset']} total requests reset")
+        
+        return {
+            "message": "Monthly usage counters reset successfully",
+            "clients_affected": clients_reset,
+            "total_requests_reset": pre_reset_stats["total_requests_reset"],
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error resetting monthly usage: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "admin_operation_failed",
+                "message": "Failed to reset monthly usage counters.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        )
+
 @router.delete("/clients/{api_key}", response_model=DeleteClientResponse)
 async def delete_client(
     api_key: str,
@@ -644,6 +714,19 @@ async def delete_client(
         # Create hash for audit trail (don't log the actual key)
         import hashlib
         api_key_hash = hashlib.sha256(api_key.encode()).hexdigest()[:16]
+        
+        # Audit log client deletion
+        audit_logger.log_admin_action(
+            action=AuditAction.CLIENT_UPDATED,  # Using closest available action
+            admin_key_prefix=admin_context.get("key_prefix", "unknown"),
+            details={
+                "operation": "client_deletion",
+                "client_name": client_record["client_name"],
+                "api_key_hash": api_key_hash
+            },
+            resource_id=api_key[:8],
+            success=True
+        )
         
         # Log admin operation
         logger.info(f"Admin deleted client: {client_record['client_name']} (key hash: {api_key_hash})")
