@@ -92,8 +92,8 @@
         "id": 4,
         "title": "Replace form processing with video processing",
         "description": "Replace the form processing with video processing place holfer - opens unimplemented component.",
-        "details":"",
-        "testStrategy":"manual",
+        "details": "",
+        "testStrategy": "manual",
         "status": "done",
         "dependencies": [],
         "priority": "high",
@@ -104,6 +104,64 @@
       "created": "2025-06-24T09:34:47.735Z",
       "updated": "2025-06-24T18:47:44.019Z",
       "description": "Completed tasks archive"
+    }
+  },
+  "demo": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Implement User Authentication and Profile Management System",
+        "description": "Create a complete user authentication system with login/signup functionality and comprehensive user profile management capabilities.",
+        "details": "Implementation should include: 1) User registration with email validation and password hashing using bcrypt or similar secure method, 2) Login system with JWT token generation and validation, 3) Password reset functionality with email-based verification, 4) Protected route middleware for authenticated endpoints, 5) User profile CRUD operations including profile picture upload, 6) Session management with token refresh capabilities, 7) Rate limiting for auth endpoints to prevent brute force attacks, 8) Input validation and sanitization for all user inputs, 9) Database schema for users table with appropriate indexes, 10) Integration with frontend authentication state management. Use industry-standard security practices including password complexity requirements, secure cookie handling, and proper error messaging that doesn't leak sensitive information.",
+        "testStrategy": "Create comprehensive test suite including: 1) Unit tests for authentication middleware and password hashing functions, 2) Integration tests for registration, login, and logout endpoints, 3) Test password reset flow with mock email service, 4) Verify JWT token generation and validation, 5) Test protected routes with valid and invalid tokens, 6) Test profile CRUD operations with proper authorization, 7) Test rate limiting functionality, 8) Security testing for common vulnerabilities like SQL injection and XSS, 9) Test file upload functionality for profile pictures with proper validation, 10) End-to-end tests for complete user registration and login flows using testing framework like Cypress or Playwright.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Implement Recipe Storage and Management System",
+        "description": "Create a comprehensive database storage system that allows authenticated users to save, organize, and manage their personal recipe collections with full CRUD operations.",
+        "details": "Implementation should include: 1) Design and create recipe database schema with fields for title, ingredients, instructions, cooking time, servings, difficulty level, tags, and metadata, 2) Implement recipe model with proper relationships to users table including foreign key constraints, 3) Create RESTful API endpoints for recipe CRUD operations (POST /recipes, GET /recipes, GET /recipes/:id, PUT /recipes/:id, DELETE /recipes/:id), 4) Add recipe categorization system with tags and custom categories, 5) Implement recipe search and filtering functionality by ingredients, tags, cooking time, and difficulty, 6) Add recipe sharing capabilities with public/private visibility settings, 7) Implement recipe import/export functionality to support common formats, 8) Add recipe rating and notes system for user feedback, 9) Implement proper data validation and sanitization for all recipe fields, 10) Add pagination for recipe listings and bulk operations support, 11) Include recipe image upload and storage integration, 12) Implement recipe versioning to track changes over time",
+        "testStrategy": "Create comprehensive test coverage including: 1) Unit tests for recipe model validation and database operations, 2) Integration tests for all recipe API endpoints with various user scenarios, 3) Test recipe creation with valid and invalid data to verify validation rules, 4) Test recipe retrieval with different filtering and sorting options, 5) Verify recipe update and deletion operations with proper authorization checks, 6) Test recipe search functionality with various query combinations, 7) Test recipe sharing permissions and visibility settings, 8) Verify recipe import/export functionality with sample data files, 9) Test recipe categorization and tagging system, 10) Performance tests for recipe queries with large datasets, 11) Test recipe image upload and storage operations, 12) Verify recipe ownership and access control for different user roles",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Create My Recipes Page with Recipe Management Interface",
+        "description": "Build a comprehensive user interface page where authenticated users can view, organize, search, and manage their personal collection of saved recipes.",
+        "details": "Implementation should include: 1) Create a dedicated '/my-recipes' route with proper authentication guards to ensure only logged-in users can access, 2) Design responsive recipe grid/list layout with recipe cards displaying title, image thumbnail, cooking time, difficulty, and tags, 3) Implement recipe search and filtering functionality by title, ingredients, tags, cooking time, and difficulty level, 4) Add sorting options (newest first, alphabetical, cooking time, difficulty), 5) Create recipe management actions including edit, delete, and duplicate recipe functionality with confirmation dialogs, 6) Implement bulk selection and batch operations for multiple recipes, 7) Add recipe categorization with custom folders/collections that users can create and organize recipes into, 8) Include recipe statistics dashboard showing total recipes, favorite categories, and cooking analytics, 9) Implement pagination or infinite scroll for large recipe collections, 10) Add export functionality to allow users to export recipes in various formats (PDF, text, JSON), 11) Create quick-add recipe button and integration with recipe import functionality, 12) Implement recipe sharing options with privacy controls (private, shared link, public), 13) Add recipe rating and notes system for personal recipe reviews, 14) Include responsive design for mobile and tablet viewing, 15) Implement proper error handling and loading states throughout the interface.",
+        "testStrategy": "Create comprehensive testing strategy including: 1) Unit tests for all recipe management components with proper props and state handling, 2) Integration tests for recipe CRUD operations through the UI including create, read, update, and delete flows, 3) Test authentication requirements ensuring unauthenticated users are redirected to login, 4) Verify search and filtering functionality with various query combinations and edge cases, 5) Test sorting functionality with different data sets and empty states, 6) Validate bulk operations and batch recipe management with proper confirmation flows, 7) Test responsive design across different screen sizes and devices, 8) Verify pagination or infinite scroll performance with large datasets, 9) Test export functionality with various formats and recipe selections, 10) Validate recipe sharing functionality and privacy controls, 11) Test error handling for network failures, invalid data, and server errors, 12) Perform accessibility testing for keyboard navigation and screen readers, 13) Test recipe categorization and folder organization features, 14) Validate loading states and user feedback during async operations, 15) Cross-browser compatibility testing for major browsers.",
+        "status": "pending",
+        "dependencies": [
+          1,
+          2
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Add share option to PDF - implement functionality to share generated PDF recipes via various methods",
+        "description": "Implement comprehensive PDF sharing functionality that allows users to share their generated recipe PDFs through multiple channels including email, social media, direct download, and cloud storage services.",
+        "details": "Implementation should include: 1) Create a share modal/dropdown component that appears after PDF generation with multiple sharing options, 2) Implement email sharing functionality with customizable subject line and message body, integrating with email service provider (SendGrid, AWS SES, or similar), 3) Add social media sharing capabilities for platforms like Facebook, Twitter, Pinterest with proper Open Graph meta tags and recipe preview images, 4) Implement direct download option with proper file naming convention (recipe-title-date.pdf), 5) Add cloud storage integration for services like Google Drive, Dropbox, or OneDrive using their respective APIs, 6) Create copy-to-clipboard functionality for shareable links if recipes are made publicly accessible, 7) Implement sharing analytics to track which sharing methods are most popular, 8) Add share history feature in user profiles to track previously shared recipes, 9) Ensure proper error handling for failed sharing attempts with user-friendly error messages, 10) Implement rate limiting for sharing actions to prevent abuse, 11) Add privacy controls allowing users to choose sharing permissions (public, private, friends only), 12) Create responsive sharing interface that works on both desktop and mobile devices.",
+        "testStrategy": "Create comprehensive test coverage including: 1) Unit tests for all sharing components and utility functions, 2) Integration tests for email sharing with mock email service provider, 3) Test social media sharing functionality with proper meta tag generation and URL formatting, 4) Verify PDF download functionality across different browsers and devices, 5) Test cloud storage integrations with mock API responses and error scenarios, 6) Validate sharing analytics tracking and data collection, 7) Test rate limiting functionality to ensure proper throttling of sharing requests, 8) Verify privacy controls and permission settings work correctly, 9) Test responsive design of sharing interface on various screen sizes, 10) End-to-end tests for complete sharing workflows from PDF generation to successful sharing, 11) Test error handling scenarios including network failures and API rate limits, 12) Verify sharing history functionality and proper data persistence.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-25T05:57:38.225Z",
+      "updated": "2025-06-25T06:06:23.778Z",
+      "description": "Tag created on 6/25/2025"
     }
   }
 }
