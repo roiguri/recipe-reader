@@ -49,7 +49,7 @@ export const getCardConfigs = (t) => ({
     title: t('imageProcessor.title'),
     description: t('imageProcessor.description'),
     inputType: "file",
-    buttonText: t('imageProcessor.buttons.process'),
+    buttonText: t('imageProcessor.buttons.processImages'),
     isComingSoon: false
   }
 });
