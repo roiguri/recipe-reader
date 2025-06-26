@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "devCommand": "npm start",
+  "installCommand": "npm install",
+  "framework": "create-react-app",
+  "env": {
+    "REACT_APP_API_URL": "@recipe-api-url",
+    "REACT_APP_API_KEY": "@demo-api-key"
+  }
+}
