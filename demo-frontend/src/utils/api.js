@@ -3,6 +3,8 @@
  */
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_KEY = process.env.REACT_APP_API_KEY;
+const API_VERSION = 'v1';
 
 class APIError extends Error {
   constructor(message, status, details) {
@@ -14,6 +16,35 @@ class APIError extends Error {
 }
 
 /**
+ * Handle common API request errors
+ * @param {Error} error - The caught error
+ * @throws {APIError} Processed API error
+ */
+function handleRequestError(error) {
+  if (error.name === 'AbortError') {
+    throw new APIError('Request was cancelled', 0, { cancelled: true });
+  }
+  
+  if (error instanceof APIError) {
+    if (error.status === 401 || error.status === 403) {
+      throw new APIError('Authentication failed. Please check API configuration.', error.status, error.details);
+    }
+    throw error;
+  }
+  
+  // Network or other fetch errors
+  if (!navigator.onLine) {
+    throw new APIError('No internet connection', 0, { offline: true });
+  }
+  
+  throw new APIError(
+    `Failed to connect to server: ${error.message}`,
+    0,
+    { networkError: true, originalError: error }
+  );
+}
+
+/**
  * Process recipe text using the FastAPI backend
  * @param {string} text - Recipe text to process
  * @param {Object} options - Optional processing parameters
@@ -21,7 +52,7 @@ class APIError extends Error {
  * @returns {Promise<Object>} Processed recipe response
  */
 export async function processRecipeText(text, options = {}, signal = null) {
-  const url = `${API_BASE_URL}/recipe/text`;
+  const url = `${API_BASE_URL}/api/${API_VERSION}/recipe/text`;
   
   const requestBody = {
     text: text.trim(),
@@ -32,6 +63,7 @@ export async function processRecipeText(text, options = {}, signal = null) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-API-Key': API_KEY,
     },
     body: JSON.stringify(requestBody),
     signal
@@ -46,7 +78,7 @@ export async function processRecipeText(text, options = {}, signal = null) {
       
       try {
         const errorData = await response.json();
-        errorMessage = errorData.detail || errorMessage;
+        errorMessage = errorData.message || errorData.detail || errorMessage;
         errorDetails = errorData;
       } catch (parseError) {
         // If we can't parse the error response, use the status text
@@ -59,24 +91,7 @@ export async function processRecipeText(text, options = {}, signal = null) {
     return data;
     
   } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new APIError('Request was cancelled', 0, { cancelled: true });
-    }
-    
-    if (error instanceof APIError) {
-      throw error;
-    }
-    
-    // Network or other fetch errors
-    if (!navigator.onLine) {
-      throw new APIError('No internet connection', 0, { offline: true });
-    }
-    
-    throw new APIError(
-      `Failed to connect to server: ${error.message}`,
-      0,
-      { networkError: true, originalError: error }
-    );
+    handleRequestError(error);
   }
 }
 
@@ -88,7 +103,7 @@ export async function processRecipeText(text, options = {}, signal = null) {
  * @returns {Promise<Object>} Processed recipe response
  */
 export async function processRecipeUrl(url, options = {}, signal = null) {
-  const apiUrl = `${API_BASE_URL}/recipe/url`;
+  const apiUrl = `${API_BASE_URL}/api/${API_VERSION}/recipe/url`;
   
   const requestBody = {
     url: url.trim(),
@@ -99,6 +114,7 @@ export async function processRecipeUrl(url, options = {}, signal = null) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-API-Key': API_KEY,
     },
     body: JSON.stringify(requestBody),
     signal
@@ -113,7 +129,7 @@ export async function processRecipeUrl(url, options = {}, signal = null) {
       
       try {
         const errorData = await response.json();
-        errorMessage = errorData.detail || errorMessage;
+        errorMessage = errorData.message || errorData.detail || errorMessage;
         errorDetails = errorData;
       } catch (parseError) {
         // If we can't parse the error response, use the status text
@@ -126,24 +142,7 @@ export async function processRecipeUrl(url, options = {}, signal = null) {
     return data;
     
   } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new APIError('Request was cancelled', 0, { cancelled: true });
-    }
-    
-    if (error instanceof APIError) {
-      throw error;
-    }
-    
-    // Network or other fetch errors
-    if (!navigator.onLine) {
-      throw new APIError('No internet connection', 0, { offline: true });
-    }
-    
-    throw new APIError(
-      `Failed to connect to server: ${error.message}`,
-      0,
-      { networkError: true, originalError: error }
-    );
+    handleRequestError(error);
   }
 }
 
@@ -155,7 +154,7 @@ export async function processRecipeUrl(url, options = {}, signal = null) {
  * @returns {Promise<Object>} Processed recipe response
  */
 export async function processRecipeImage(imageData, options = {}, signal = null) {
-  const apiUrl = `${API_BASE_URL}/recipe/image`;
+  const apiUrl = `${API_BASE_URL}/api/${API_VERSION}/recipe/image`;
   
   const requestBody = {
     image_data: imageData,
@@ -166,6 +165,7 @@ export async function processRecipeImage(imageData, options = {}, signal = null)
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-API-Key': API_KEY,
     },
     body: JSON.stringify(requestBody),
     signal
@@ -180,7 +180,7 @@ export async function processRecipeImage(imageData, options = {}, signal = null)
       
       try {
         const errorData = await response.json();
-        errorMessage = errorData.detail || errorMessage;
+        errorMessage = errorData.message || errorData.detail || errorMessage;
         errorDetails = errorData;
       } catch (parseError) {
         // If we can't parse the error response, use the status text
@@ -193,24 +193,7 @@ export async function processRecipeImage(imageData, options = {}, signal = null)
     return data;
     
   } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new APIError('Request was cancelled', 0, { cancelled: true });
-    }
-    
-    if (error instanceof APIError) {
-      throw error;
-    }
-    
-    // Network or other fetch errors
-    if (!navigator.onLine) {
-      throw new APIError('No internet connection', 0, { offline: true });
-    }
-    
-    throw new APIError(
-      `Failed to connect to server: ${error.message}`,
-      0,
-      { networkError: true, originalError: error }
-    );
+    handleRequestError(error);
   }
 }
 
@@ -249,6 +232,26 @@ export function createRequestController(timeoutMs = 30000) {
   });
   
   return controller;
+}
+
+/**
+ * Check API version compatibility between frontend and backend
+ * @returns {Promise<Object|null>} Version information or null if unavailable
+ */
+export async function checkAPICompatibility() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/versions`);
+    const versions = await response.json();
+    
+    if (!versions.supported_versions.includes(API_VERSION)) {
+      console.warn(`API version ${API_VERSION} may not be supported. Latest: ${versions.latest_version}`);
+    }
+    
+    return versions;
+  } catch (error) {
+    console.error('Failed to check API version compatibility:', error);
+    return null;
+  }
 }
 
 export { APIError };

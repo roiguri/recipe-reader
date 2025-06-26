@@ -644,7 +644,7 @@
         "dependencies": [
           7
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -652,7 +652,7 @@
             "description": "Modify the frontend API service layer to include authentication headers and handle authentication errors",
             "dependencies": [],
             "details": "Update API service methods to include JWT tokens in requests, implement token refresh logic, handle 401/403 responses, and update request interceptors for authentication",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -708,7 +708,7 @@
     ],
     "metadata": {
       "created": "2025-06-25T09:05:06.323Z",
-      "updated": "2025-06-26T09:23:46.478Z",
+      "updated": "2025-06-26T12:11:08.983Z",
       "description": "Tasks for deploy_api context"
     }
   }
