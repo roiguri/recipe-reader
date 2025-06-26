@@ -2,14 +2,13 @@
 Database connection management for Recipe Reader API.
 
 This module handles PostgreSQL connections using asyncpg for high-performance
-async database operations with connection pooling.
+async database operations with connection pooling optimized for Vercel serverless.
 """
 
 import os
-import asyncio
 import logging
-from typing import Optional
-from databases import Database
+from typing import Optional, Dict, Any, List
+import asyncpg
 from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)
@@ -18,12 +17,12 @@ class DatabaseManager:
     """
     Manages database connections and connection pooling for the Recipe Reader API.
     
-    This class implements the singleton pattern to ensure only one database
-    connection pool is created per application lifecycle.
+    This class implements serverless-optimized connection pooling using asyncpg
+    for better performance and reliability in Vercel's serverless environment.
     """
     
     _instance: Optional['DatabaseManager'] = None
-    _database: Optional[Database] = None
+    _pool: Optional[asyncpg.Pool] = None
     _is_connected: bool = False
     
     def __new__(cls) -> 'DatabaseManager':
@@ -58,106 +57,252 @@ class DatabaseManager:
     
     async def connect(self) -> None:
         """
-        Establish database connection with connection pooling.
+        Establish database connection pool optimized for Vercel serverless.
         
-        Creates a connection pool with optimized settings for production use.
+        Creates a connection pool with settings optimized for serverless functions.
+        Handles event loop issues by recreating the pool when necessary.
         """
-        if self._is_connected and self._database:
-            logger.info("Database already connected")
+        # Check if pool is still valid
+        if self._is_connected and self._pool and not self._is_pool_invalid():
             return
+        
+        # Close existing pool if it exists but is invalid
+        if self._pool:
+            try:
+                await self._pool.close()
+            except Exception as e:
+                logger.warning(f"Error closing invalid pool: {e}")
+            finally:
+                self._pool = None
+                self._is_connected = False
         
         # Lazy initialization of database URL
         if self.database_url is None:
             self.database_url = self._get_database_url()
         
         try:
-            self._database = Database(
+            # Create asyncpg connection pool optimized for serverless
+            self._pool = await asyncpg.create_pool(
                 self.database_url,
-                min_size=1,        # Minimum connections in pool
-                max_size=10,       # Maximum connections in pool
-                ssl=True,          # Enable SSL for Vercel PostgreSQL
+                min_size=1,         # Minimum connections for serverless
+                max_size=3,         # Smaller pool for serverless environments
+                max_queries=50000,  # Max queries per connection
+                max_inactive_connection_lifetime=300,  # 5 minutes
                 server_settings={
-                    "jit": "off"   # Disable JIT for better cold start performance
+                    "jit": "off"    # Disable JIT for better cold start performance
                 }
             )
             
-            await self._database.connect()
             self._is_connected = True
-            logger.info("Database connected successfully with connection pooling")
+            logger.info("Database pool connected successfully for serverless")
             
         except Exception as e:
             logger.error(f"Failed to connect to database: {str(e)}")
             self._is_connected = False
             raise
     
+    def _is_pool_invalid(self) -> bool:
+        """
+        Check if the connection pool is invalid (closed or has event loop issues).
+        
+        Returns:
+            bool: True if pool is invalid and needs recreation
+        """
+        if not self._pool:
+            return True
+        
+        try:
+            # Check if pool is closed
+            if hasattr(self._pool, '_closed') and self._pool._closed:
+                return True
+            
+            # Check if pool is still connected to the correct event loop
+            import asyncio
+            current_loop = asyncio.get_event_loop()
+            if hasattr(self._pool, '_loop') and self._pool._loop != current_loop:
+                return True
+                
+            return False
+        except Exception as e:
+            logger.warning(f"Error checking pool validity: {e}")
+            return True
+    
     async def disconnect(self) -> None:
         """
-        Close database connection and cleanup resources.
+        Close database connection pool and cleanup resources.
         
         Should be called during application shutdown.
         """
-        if self._database and self._is_connected:
+        if self._pool and self._is_connected:
             try:
-                await self._database.disconnect()
+                await self._pool.close()
                 self._is_connected = False
-                logger.info("Database disconnected successfully")
+                logger.info("Database pool disconnected successfully")
             except Exception as e:
                 logger.error(f"Error disconnecting from database: {str(e)}")
                 raise
     
     @property
-    def database(self) -> Database:
+    def pool(self) -> asyncpg.Pool:
         """
-        Get the database connection instance.
+        Get the database connection pool.
         
         Returns:
-            Database: Active database connection
+            asyncpg.Pool: Active database connection pool
             
         Raises:
             RuntimeError: If database is not connected
         """
-        if not self._is_connected or not self._database:
+        if not self._is_connected or not self._pool:
             raise RuntimeError(
                 "Database not connected. Call connect() first or use get_database() dependency."
             )
-        return self._database
+        return self._pool
     
     @property
     def is_connected(self) -> bool:
-        """Check if database is currently connected."""
-        return self._is_connected
+        """Check if database pool is currently connected."""
+        return self._is_connected and self._pool is not None
     
     async def health_check(self) -> bool:
         """
-        Perform a health check on the database connection.
+        Perform a health check on the database connection pool.
         
         Returns:
             bool: True if database is healthy, False otherwise
         """
         try:
-            if not self._is_connected or not self._database:
+            # Ensure we have a valid connection
+            await self.connect()
+            
+            if not self._is_connected or not self._pool:
+                logger.error("Health check failed: Pool not connected or None after connect attempt")
                 return False
             
-            # Simple query to test connection
-            result = await self._database.fetch_one("SELECT 1 as health_check")
-            return result is not None and result["health_check"] == 1
+            # Simple query to test connection using pool
+            async with self._pool.acquire() as connection:
+                result = await connection.fetchval("SELECT 1")
+                return result == 1
             
         except Exception as e:
             logger.error(f"Database health check failed: {str(e)}")
+            # Mark pool as invalid so it gets recreated next time
+            self._is_connected = False
             return False
+    
+    async def fetch_one(self, query: str, values: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+        """
+        Fetch one row from the database.
+        
+        Args:
+            query: SQL query to execute (using :param syntax for named parameters)
+            values: Query parameters as dictionary
+            
+        Returns:
+            Optional[Dict[str, Any]]: Query result or None
+        """
+        # Ensure we have a valid connection
+        await self.connect()
+        
+        async with self._pool.acquire() as connection:
+            # Convert named parameters to positional for asyncpg
+            if values:
+                # Replace :param with $1, $2, etc. and get ordered values
+                converted_query, ordered_values = self._convert_named_params(query, values)
+                result = await connection.fetchrow(converted_query, *ordered_values)
+            else:
+                result = await connection.fetchrow(query)
+            
+            if result:
+                return dict(result)
+            return None
+    
+    async def fetch_all(self, query: str, values: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """
+        Fetch all rows from the database.
+        
+        Args:
+            query: SQL query to execute (using :param syntax for named parameters)
+            values: Query parameters as dictionary
+            
+        Returns:
+            List[Dict[str, Any]]: Query results
+        """
+        # Ensure we have a valid connection
+        await self.connect()
+        
+        async with self._pool.acquire() as connection:
+            # Convert named parameters to positional for asyncpg
+            if values:
+                converted_query, ordered_values = self._convert_named_params(query, values)
+                results = await connection.fetch(converted_query, *ordered_values)
+            else:
+                results = await connection.fetch(query)
+            
+            return [dict(row) for row in results]
+    
+    async def execute(self, query: str, values: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Execute a query without returning results.
+        
+        Args:
+            query: SQL query to execute (using :param syntax for named parameters)
+            values: Query parameters as dictionary
+            
+        Returns:
+            str: Query execution status
+        """
+        # Ensure we have a valid connection
+        await self.connect()
+        
+        async with self._pool.acquire() as connection:
+            # Convert named parameters to positional for asyncpg
+            if values:
+                converted_query, ordered_values = self._convert_named_params(query, values)
+                return await connection.execute(converted_query, *ordered_values)
+            else:
+                return await connection.execute(query)
+    
+    def _convert_named_params(self, query: str, values: Dict[str, Any]) -> tuple[str, list]:
+        """
+        Convert named parameters (:param) to positional parameters ($1, $2, etc.) for asyncpg.
+        
+        Args:
+            query: SQL query with named parameters
+            values: Dictionary of parameter values
+            
+        Returns:
+            tuple: (converted_query, ordered_values_list)
+        """
+        import re
+        
+        # Find all named parameters in the query
+        param_pattern = r':(\w+)'
+        matches = re.findall(param_pattern, query)
+        
+        # Create ordered list of values and convert query
+        ordered_values = []
+        converted_query = query
+        
+        for i, param_name in enumerate(matches, 1):
+            if param_name in values:
+                ordered_values.append(values[param_name])
+                converted_query = converted_query.replace(f':{param_name}', f'${i}', 1)
+        
+        return converted_query, ordered_values
 
 # Global database manager instance
 db_manager = DatabaseManager()
 
-async def get_database() -> Database:
+async def get_database() -> DatabaseManager:
     """
-    FastAPI dependency to get database connection.
+    FastAPI dependency to get database manager.
     
-    This function ensures the database is connected and returns the connection
+    This function ensures the database pool is connected and returns the manager
     instance for use in route handlers.
     
     Returns:
-        Database: Active database connection
+        DatabaseManager: Active database manager with connection pool
         
     Raises:
         RuntimeError: If database connection fails
@@ -165,7 +310,7 @@ async def get_database() -> Database:
     if not db_manager.is_connected:
         await db_manager.connect()
     
-    return db_manager.database
+    return db_manager
 
 @asynccontextmanager
 async def database_lifespan():
@@ -218,7 +363,7 @@ async def execute_migration(sql_file_path: str) -> bool:
         statements = [stmt.strip() for stmt in sql_content.split(';') if stmt.strip()]
         
         for statement in statements:
-            await db_manager.database.execute(statement)
+            await db_manager.execute(statement)
         
         logger.info(f"Migration {sql_file_path} executed successfully")
         return True

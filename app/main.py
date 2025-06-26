@@ -67,7 +67,65 @@ app = FastAPI(
     description="API service that automatically creates structured recipe data from various inputs",
     version="0.1.0",
     lifespan=lifespan,
+    # Add security schemes for both admin and client authentication
+    openapi_tags=[
+        {
+            "name": "Admin",
+            "description": "Administrative operations - requires X-Admin-Key"
+        },
+        {
+            "name": "Recipe Processing", 
+            "description": "Recipe processing operations - requires X-API-Key (client key)"
+        },
+        {
+            "name": "Health",
+            "description": "System health and status checks"
+        },
+        {
+            "name": "Root",
+            "description": "API information and version discovery"
+        },
+        {
+            "name": "Versioning",
+            "description": "API version discovery"
+        }
+    ]
 )
+
+# Custom OpenAPI schema to support both authentication methods
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    from fastapi.openapi.utils import get_openapi
+    
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    
+    # Add both security schemes
+    openapi_schema["components"]["securitySchemes"] = {
+        "AdminKey": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Admin-Key",
+            "description": "Admin API key for administrative operations"
+        },
+        "ClientKey": {
+            "type": "apiKey", 
+            "in": "header",
+            "name": "X-API-Key",
+            "description": "Client API key for recipe processing operations"
+        }
+    }
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # Add CORS middleware
 app.add_middleware(

@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 # API Key header scheme for client authentication
 api_key_header = APIKeyHeader(
     name="X-API-Key",
-    description="API key for client authentication"
+    description="Client API key for recipe processing operations",
+    scheme_name="ClientKey"
 )
 
 async def get_client_from_db(api_key: str = Security(api_key_header)):
@@ -66,7 +67,7 @@ async def get_client_from_db(api_key: str = Security(api_key_header)):
             WHERE api_key = :api_key
         """
         
-        client_record = await db_manager.database.fetch_one(
+        client_record = await db_manager.fetch_one(
             query=query, 
             values={"api_key": api_key}
         )
@@ -102,7 +103,7 @@ async def get_client_from_db(api_key: str = Security(api_key_header)):
             WHERE api_key = :api_key
         """
         
-        await db_manager.database.execute(
+        await db_manager.execute(
             query=update_query, 
             values={"api_key": api_key}
         )

@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 # Admin API Key header scheme
 admin_key_header = APIKeyHeader(
     name="X-Admin-Key",
-    description="Admin API key for administrative operations"
+    description="Admin API key for administrative operations",
+    scheme_name="AdminKey"
 )
 
 async def get_admin_from_key(admin_key: str = Security(admin_key_header)):

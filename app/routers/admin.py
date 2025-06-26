@@ -124,7 +124,7 @@ async def create_client(
         
         # Check if client name already exists
         name_check_query = "SELECT COUNT(*) as count FROM clients WHERE client_name = :client_name"
-        name_exists = await db_manager.database.fetch_one(
+        name_exists = await db_manager.fetch_one(
             query=name_check_query,
             values={"client_name": request.client_name}  # Already sanitized by validator
         )
@@ -173,7 +173,7 @@ async def create_client(
             RETURNING api_key, client_name, created_at
         """
         
-        result = await db_manager.database.fetch_one(
+        result = await db_manager.fetch_one(
             query=query,
             values={
                 "api_key": api_key,
@@ -305,7 +305,7 @@ async def list_clients(
                 ORDER BY created_at DESC
             """
         
-        results = await db_manager.database.fetch_all(query=query)
+        results = await db_manager.fetch_all(query=query)
         
         # Convert to response format
         clients = []
@@ -388,7 +388,7 @@ async def get_client(
             WHERE api_key = :api_key
         """
         
-        result = await db_manager.database.fetch_one(
+        result = await db_manager.fetch_one(
             query=query,
             values={"api_key": api_key}
         )
@@ -455,7 +455,7 @@ async def update_client_status(
             RETURNING api_key, client_name, is_active
         """
         
-        result = await db_manager.database.fetch_one(
+        result = await db_manager.fetch_one(
             query=query,
             values={
                 "api_key": api_key,
@@ -529,25 +529,25 @@ async def get_usage_statistics(
             FROM clients
         """
         
-        result = await db_manager.database.fetch_one(query=query)
+        result = await db_manager.fetch_one(query=query)
         
         # Audit log usage statistics access
         audit_logger.log_data_access(
             admin_key_prefix=admin_context.get("key_prefix", "unknown"),
             action=AuditAction.USAGE_STATS_ACCESSED,
             details={
-                "total_clients": result["total_clients"],
-                "active_clients": result["active_clients"],
-                "total_requests": result["total_requests_this_month"]
+                "total_clients": int(result["total_clients"]),
+                "active_clients": int(result["active_clients"]),
+                "total_requests": int(result["total_requests_this_month"])
             }
         )
         
         return {
-            "total_clients": result["total_clients"],
-            "active_clients": result["active_clients"],
-            "inactive_clients": result["total_clients"] - result["active_clients"],
-            "total_requests_this_month": result["total_requests_this_month"],
-            "avg_requests_per_client": round(result["avg_requests_per_client"], 2),
+            "total_clients": int(result["total_clients"]),
+            "active_clients": int(result["active_clients"]),
+            "inactive_clients": int(result["total_clients"]) - int(result["active_clients"]),
+            "total_requests_this_month": int(result["total_requests_this_month"]),
+            "avg_requests_per_client": round(float(result["avg_requests_per_client"]), 2),
             "last_activity": result["last_activity"].isoformat() if result["last_activity"] else None,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
@@ -589,7 +589,7 @@ async def reset_monthly_usage(
             FROM clients
         """
         
-        pre_reset_stats = await db_manager.database.fetch_one(query=pre_reset_query)
+        pre_reset_stats = await db_manager.fetch_one(query=pre_reset_query)
         
         # Reset monthly usage counters
         reset_query = """
@@ -599,7 +599,7 @@ async def reset_monthly_usage(
             RETURNING api_key, client_name, total_requests_this_month
         """
         
-        results = await db_manager.database.fetch_all(query=reset_query)
+        results = await db_manager.fetch_all(query=reset_query)
         clients_reset = len(results)
         
         # Audit log the reset operation
@@ -609,17 +609,17 @@ async def reset_monthly_usage(
             details={
                 "operation": "monthly_usage_reset",
                 "clients_affected": clients_reset,
-                "total_requests_reset": pre_reset_stats["total_requests_reset"]
+                "total_requests_reset": int(pre_reset_stats["total_requests_reset"])
             },
             success=True
         )
         
-        logger.info(f"Monthly usage reset completed: {clients_reset} clients affected, {pre_reset_stats['total_requests_reset']} total requests reset")
+        logger.info(f"Monthly usage reset completed: {clients_reset} clients affected, {int(pre_reset_stats['total_requests_reset'])} total requests reset")
         
         return {
             "message": "Monthly usage counters reset successfully",
             "clients_affected": clients_reset,
-            "total_requests_reset": pre_reset_stats["total_requests_reset"],
+            "total_requests_reset": int(pre_reset_stats["total_requests_reset"]),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
@@ -674,7 +674,7 @@ async def delete_client(
         
         # First, get client info for logging before deletion
         check_query = "SELECT client_name FROM clients WHERE api_key = :api_key"
-        client_record = await db_manager.database.fetch_one(
+        client_record = await db_manager.fetch_one(
             query=check_query,
             values={"api_key": api_key}
         )
@@ -696,7 +696,7 @@ async def delete_client(
             RETURNING client_name
         """
         
-        result = await db_manager.database.fetch_one(
+        result = await db_manager.fetch_one(
             query=delete_query,
             values={"api_key": api_key}
         )
