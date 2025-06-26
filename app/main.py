@@ -204,7 +204,7 @@ async def get_api_versions():
         dict: API version information including supported versions,
               latest version, deprecated versions, and metadata
     """
-    from datetime import datetime
+    from datetime import datetime, timezone
     
     return {
         "supported_versions": ["v1"],
@@ -233,7 +233,7 @@ async def get_api_versions():
             "support_period_after_deprecation": "12 months",
             "backward_compatibility": "Guaranteed within major versions"
         },
-        "current_time": datetime.now(datetime.UTC).isoformat()
+        "current_time": datetime.now(timezone.utc).isoformat()
     }
 
 # Include routers with versioning and authentication
