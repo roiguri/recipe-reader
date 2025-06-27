@@ -279,8 +279,38 @@ async def test_image_cache_functionality():
         # Should have called API only once
         assert mock_client.models.generate_content.call_count == 1
         
-        # Results should be similar
+        # Verify cache hit - results should have same content (cache creates new objects)
         assert result1.recipe.name == result2.recipe.name
+        assert result1.recipe.description == result2.recipe.description
+        assert result1.confidence_score == result2.confidence_score
+        assert result2.processing_time == 0.0, "Cached result should have 0 processing time"
+        
+        # Test cache invalidation - different image should call API again
+        # Create a genuinely different image by changing size
+        from PIL import Image
+        from io import BytesIO
+        different_image = Image.new('RGB', (900, 700), color='blue')  # Different size and color
+        different_buffer = BytesIO()
+        different_image.save(different_buffer, format='JPEG')
+        different_image_bytes = different_buffer.getvalue()
+        
+        result3 = await service.extract_recipe_from_image(different_image_bytes, {"use_cache": True})
+        
+        # Should have called API twice now (once for each unique image)
+        assert mock_client.models.generate_content.call_count == 2
+        
+        # Third result should have same content as others (same mock response)
+        assert result3.recipe.name == result1.recipe.name
+        
+        # Test cache disabled - should call API again even with same image
+        result4 = await service.extract_recipe_from_image(image_bytes, {"use_cache": False})
+        
+        # Should have called API three times now
+        assert mock_client.models.generate_content.call_count == 3
+        
+        # Fourth result should have same content but came from fresh API call
+        assert result4.recipe.name == result1.recipe.name
+        assert result4.processing_time > 0, "Non-cached result should have processing time"
 
 
 def test_image_process_request_validation():

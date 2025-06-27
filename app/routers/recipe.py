@@ -8,7 +8,7 @@ from ..config.confidence import URL_EXTRACTION_CONFIDENCE_WEIGHT, AI_PROCESSING_
 
 router = APIRouter(
     prefix="/recipe",
-    tags=["Recipe"],
+    tags=["Recipe Processing"],
     responses={404: {"description": "Not found"}},
 )
 

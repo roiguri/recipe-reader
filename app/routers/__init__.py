@@ -1,5 +1,5 @@
 """API route handlers."""
 
-from . import recipe
+from . import recipe, admin
 
-__all__ = ["recipe"]
+__all__ = ["recipe", "admin"]

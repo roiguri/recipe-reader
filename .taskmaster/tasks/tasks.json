@@ -163,5 +163,36 @@
       "updated": "2025-06-25T06:06:23.778Z",
       "description": "Tag created on 6/25/2025"
     }
+  },
+  "demo-deployment": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Demo Frontend Integration and Client Onboarding",
+        "description": "Update demo frontend to work with authenticated API and create comprehensive client integration documentation including environment configuration, error handling, and deployment guides.",
+        "details": "Update demo frontend application to integrate with authenticated backend API:\n\n1. **Environment Configuration Setup**\n   - Create `.env.example` with required variables: REACT_APP_API_URL, REACT_APP_API_KEY\n   - Update API service layer to include X-API-Key header in all requests\n   - Add API version management with explicit v1 endpoint usage\n   - Configure Vercel deployment environment variables\n\n2. **API Service Enhancement**\n   - Modify `src/utils/api.js` to include authentication headers\n   - Add version compatibility checking endpoint calls\n   - Implement enhanced error handling for 401/403 authentication errors\n   - Add retry logic for temporary service unavailability\n\n3. **Error Handling and User Experience**\n   - Create user-friendly error messages for authentication failures\n   - Add loading states and error boundaries for API calls\n   - Implement graceful degradation when API is unavailable\n   - Add configuration validation on app startup\n\n4. **Client Integration Documentation**\n   - Create comprehensive integration guide with code examples\n   - Document authentication requirements and header format\n   - Provide error handling best practices and status codes\n   - Include backend proxy implementation examples for multi-user apps\n   - Add troubleshooting section for common integration issues\n\n5. **Demo Application Updates**\n   - Test all recipe processing workflows with authentication\n   - Validate demo continues to function as showcase application\n   - Update deployment configuration for production environment\n   - Create admin API key specifically for demo application",
+        "testStrategy": "1. **Local Development Testing**\n   - Configure .env.local with valid API key and test all recipe processing features\n   - Verify error handling by testing with invalid/missing API keys\n   - Test offline behavior and network error scenarios\n   - Validate API version compatibility checking functionality\n\n2. **Authentication Flow Validation**\n   - Test successful recipe processing with valid API key\n   - Verify 401/403 error handling displays appropriate user messages\n   - Test API key validation on application startup\n   - Confirm all API requests include proper authentication headers\n\n3. **Production Deployment Testing**\n   - Deploy demo to Vercel with production environment variables\n   - Test end-to-end recipe processing in production environment\n   - Verify demo application performance and responsiveness\n   - Validate SSL/HTTPS connections to authenticated API\n\n4. **Client Documentation Validation**\n   - Follow integration guide step-by-step with fresh API key\n   - Test all provided code examples in isolation\n   - Verify error response format matches documentation\n   - Validate backend proxy examples with test implementation\n\n5. **Cross-Browser and Device Testing**\n   - Test demo functionality across major browsers (Chrome, Firefox, Safari, Edge)\n   - Verify mobile responsiveness and touch interactions\n   - Test with various network conditions (slow 3G, WiFi, etc.)\n   - Validate accessibility features with screen readers",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Prepare rate limiting foundation",
+        "description": "Build foundational components needed for future rate limiting implementation including database schema extensions, tracking mechanisms, and basic rate limit validation structure.",
+        "details": "Establish the groundwork for implementing client-based rate limiting:\n\n1. **Database Schema Extensions**\n   - Add rate limiting fields to clients table: `rate_limit_per_minute`, `rate_limit_per_hour`, `rate_limit_per_day`\n   - Create `rate_limit_tracking` table with columns: `api_key`, `window_start`, `request_count`, `window_type`\n   - Add indexes for efficient rate limit queries on api_key and window_start\n   - Include migration script for existing client records with default limits\n\n2. **Rate Limiting Service Foundation**\n   - Create `services/rate_limiter.py` with sliding window rate limiting logic\n   - Implement Redis-compatible in-memory tracking for request counting\n   - Add utility functions for different time window calculations (minute, hour, day)\n   - Create rate limit validation middleware structure (not yet enforced)\n\n3. **Configuration Management**\n   - Add environment variables for default rate limits and Redis connection\n   - Create rate limiting configuration constants and validation\n   - Add admin endpoints for viewing and updating client rate limits\n   - Include rate limit information in client creation response\n\n4. **Monitoring and Logging Infrastructure**\n   - Add rate limiting metrics collection points\n   - Create logging for rate limit checks (without enforcement)\n   - Add database queries for rate limit usage reporting\n   - Prepare admin interface for rate limit monitoring",
+        "testStrategy": "1. **Database Schema Validation**\n   - Run migration scripts on test database and verify all new columns exist\n   - Test client creation with default rate limit values\n   - Validate database indexes improve query performance for rate limit lookups\n   - Verify existing client records are properly updated with default limits\n\n2. **Rate Limiting Service Testing**\n   - Unit tests for sliding window calculations with various time scenarios\n   - Test request counting accuracy under concurrent access\n   - Validate rate limit checks return correct remaining quota information\n   - Test Redis/in-memory storage persistence and cleanup\n\n3. **Admin Interface Testing**\n   - Test admin endpoints for viewing client rate limits\n   - Verify rate limit updates are properly stored and retrieved\n   - Test rate limit information display in client creation responses\n   - Validate admin authentication prevents unauthorized rate limit changes\n\n4. **Integration and Performance Testing**\n   - Test rate limiting service integration with existing authentication flow\n   - Measure performance impact of rate limit checks on API response times\n   - Verify rate limiting infrastructure doesn't affect current API functionality\n   - Test concurrent request handling and accurate counting under load",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-26T12:57:05.461Z",
+      "updated": "2025-06-26T13:07:01.513Z",
+      "description": "Demo frontend deployment and remaining integration tasks"
+    }
   }
 }

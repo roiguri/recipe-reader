@@ -176,8 +176,10 @@ cython_debug/
 # Ignore cursor rules
 .cursor
 
-# Claude Code documentation
+# CLI agents documentation
 CLAUDE.md
+GEMINI.md
+
 
 # Logs
 logs
@@ -199,6 +201,4 @@ node_modules/
 # OS specific
 .DS_Store
 
-# Task files
-# tasks.json
-# tasks/ 
+.vercel
