@@ -1,198 +1,355 @@
 {
   "master": {
-    "tasks": [],
-    "metadata": {
-      "created": "2025-06-24T05:57:29.805Z",
-      "updated": "2025-06-24T05:57:29.805Z",
-      "description": "Tasks for master context"
-    }
-  },
-  "features": {
     "tasks": [
       {
         "id": 1,
-        "title": "Add video support for URL API endpoint",
-        "description": "Extend the existing URL API endpoint to accept and process video files, enabling recipe extraction from video content such as cooking tutorials and recipe demonstrations.",
-        "details": "Implementation involves:\n\n1. **Backend API Enhancement**:\n   - Modify the URL endpoint to detect video content types (mp4, avi, mov, webm, etc.)\n   - Integrate video processing library (e.g., opencv-python, moviepy) for frame extraction\n   - Implement video-to-text extraction using OCR on key frames or video transcription\n   - Add video metadata extraction (duration, resolution, format)\n   - Update request validation to accept video URLs and file uploads\n\n2. **Video Processing Pipeline**:\n   - Extract key frames at regular intervals or scene changes\n   - Apply OCR to frames containing text (recipe ingredients, instructions)\n   - Implement audio transcription if video contains spoken instructions\n   - Combine extracted text from multiple sources (OCR + transcription)\n   - Clean and structure the extracted content into recipe format\n\n3. **API Response Enhancement**:\n   - Include video metadata in response (duration, source URL, processing method)\n   - Add confidence scores for extracted content\n   - Provide frame timestamps for extracted text segments\n   - Handle cases where no recipe content is detected\n\n4. **Error Handling**:\n   - Validate video accessibility and format support\n   - Handle network timeouts for large video files\n   - Implement fallback mechanisms for processing failures\n   - Add appropriate error messages for unsupported formats",
-        "testStrategy": "1. **Unit Tests**:\n   - Test video format detection and validation\n   - Verify frame extraction functionality with sample videos\n   - Test OCR accuracy on recipe text in video frames\n   - Validate error handling for invalid/corrupted videos\n\n2. **Integration Tests**:\n   - Test end-to-end video processing with various video formats (mp4, webm, mov)\n   - Verify API response structure includes video metadata\n   - Test processing of cooking tutorial videos from popular platforms\n   - Validate timeout handling for large video files\n\n3. **Performance Tests**:\n   - Measure processing time for videos of different lengths\n   - Test memory usage during video processing\n   - Verify cleanup of temporary files after processing\n\n4. **Manual Testing**:\n   - Process real cooking videos with visible recipe text\n   - Test videos with both spoken and written recipe content\n   - Verify extracted recipes are accurate and well-formatted\n   - Test edge cases: videos without recipe content, very short/long videos",
+        "title": "Setup Supabase Authentication Infrastructure",
+        "description": "Create and configure Supabase project with OAuth providers and database schema for rate limiting",
+        "details": "Create new Supabase project and configure Google OAuth 2.0 and Apple Sign-In providers. Set up Google Cloud Console with OAuth 2.0 credentials (client ID, client secret) and configure authorized redirect URIs. For Apple Sign-In, configure Apple Developer Portal with Services ID and domain verification. Create demo_rate_limits table with schema: id (UUID primary key), user_id (UUID foreign key to auth.users), requests_used (integer default 0), requests_limit (integer default 5), is_admin (boolean default false), created_at (timestamp), updated_at (timestamp). Implement Row Level Security policies: CREATE POLICY demo_rate_limits_policy ON demo_rate_limits FOR ALL USING (auth.uid() = user_id). Add database triggers for automatic rate limit record creation on user registration. Configure Supabase Auth settings with proper redirect URLs for both development (localhost:3000) and production environments.",
+        "testStrategy": "Test OAuth flows with real Google and Apple accounts in development environment. Verify RLS policies by attempting cross-user data access. Test database triggers by creating new users and confirming rate limit records are automatically generated. Validate redirect URLs work correctly for both providers.",
+        "priority": "high",
+        "dependencies": [],
         "status": "pending",
-        "dependencies": [
-          2
-        ],
-        "priority": "medium",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create and configure Supabase project",
+            "description": "Set up new Supabase project with basic configuration and obtain project credentials",
+            "dependencies": [],
+            "details": "Create new Supabase project, configure project settings, obtain project URL and anon key, set up project-level security settings",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Configure Google OAuth provider in Supabase",
+            "description": "Set up Google OAuth integration including Google Cloud Console configuration and Supabase provider setup",
+            "dependencies": [
+              1
+            ],
+            "details": "Create Google Cloud project, configure OAuth consent screen, generate client ID and secret, configure Google provider in Supabase Auth settings with proper scopes and redirect URLs",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Configure Apple OAuth provider in Supabase",
+            "description": "Set up Apple Sign-In integration including Apple Developer Portal configuration and Supabase provider setup",
+            "dependencies": [
+              1
+            ],
+            "details": "Configure Apple Developer account, create App ID and Service ID, generate private key, configure Apple provider in Supabase Auth settings with proper team ID and key ID",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Design and create database schema",
+            "description": "Create comprehensive database schema for multi-tenant recipe application with proper relationships",
+            "dependencies": [
+              1
+            ],
+            "details": "Create clients table for API key management, recipes table for processed recipes, usage tracking tables, implement proper foreign key relationships and indexes for performance",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Row Level Security (RLS) policies",
+            "description": "Configure RLS policies for all database tables to ensure proper data isolation and security",
+            "dependencies": [
+              4
+            ],
+            "details": "Enable RLS on all tables, create policies for client data isolation, implement admin access policies, configure user-specific data access rules for multi-tenant architecture",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Configure environment variables for development and production",
+            "description": "Set up environment configuration for both development and production environments with proper secrets management",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Configure .env files for local development, set up Vercel environment variables for production, configure OAuth redirect URLs for both environments, document environment setup process",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 2,
-        "title": "Create upload video API endpoint",
-        "description": "Implement a dedicated API endpoint for direct video file uploads, enabling users to upload video files containing recipes for processing and extraction.",
-        "details": "Implementation involves:\n\n1. **API Endpoint Creation**:\n   - Create POST /api/upload/video endpoint in the appropriate router\n   - Implement multipart/form-data handling for video file uploads\n   - Add file size validation and limits (e.g., max 500MB)\n   - Validate uploaded file types (mp4, avi, mov, webm, mkv)\n   - Generate unique identifiers for uploaded videos\n\n2. **File Storage Management**:\n   - Implement temporary file storage with cleanup mechanisms\n   - Add file path sanitization and security validation\n   - Create storage directories with proper permissions\n   - Implement file cleanup after processing completion\n\n3. **Request/Response Models**:\n   - Create VideoUploadRequest model with file validation\n   - Design VideoUploadResponse with upload status and processing info\n   - Add progress tracking for large file uploads\n   - Include error responses for invalid files or upload failures\n\n4. **Integration with Video Processing**:\n   - Connect to existing video processing pipeline from Task 1\n   - Pass uploaded file path to video processing functions\n   - Handle processing status updates and results\n   - Implement async processing for large video files\n\n5. **Security and Validation**:\n   - Add MIME type verification beyond file extension checking\n   - Implement virus scanning if required\n   - Add rate limiting for upload endpoints\n   - Validate file headers to prevent malicious uploads",
-        "testStrategy": "1. **Unit Tests**:\n   - Test file upload validation with various file types and sizes\n   - Verify MIME type detection and security checks\n   - Test file storage and cleanup mechanisms\n   - Validate request/response model serialization\n\n2. **Integration Tests**:\n   - Test complete upload-to-processing workflow\n   - Verify integration with video processing pipeline\n   - Test error handling for corrupted or invalid files\n   - Validate async processing status updates\n\n3. **Load Testing**:\n   - Test concurrent file uploads\n   - Verify performance with large video files\n   - Test system behavior under storage constraints\n\n4. **Security Testing**:\n   - Test with malicious file uploads\n   - Verify file type spoofing protection\n   - Test rate limiting effectiveness\n   - Validate proper file cleanup and no data leaks",
-        "status": "pending",
+        "title": "Integrate Supabase Authentication in React Frontend",
+        "description": "Install Supabase client and implement authentication context with OAuth sign-in components",
+        "details": "Install @supabase/supabase-js latest version (^2.39.0). Create authentication context using React.createContext and useReducer for state management. Implement AuthProvider component with session persistence using supabase.auth.getSession() and onAuthStateChange listener. Create OAuth sign-in components with supabase.auth.signInWithOAuth() for both Google and Apple providers. Add sign-out functionality with supabase.auth.signOut(). Implement session management with automatic token refresh. Create user profile display component showing user email and avatar from user metadata. Add loading states during authentication process and error handling for failed authentication attempts. Store Supabase credentials in environment variables: REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY.",
+        "testStrategy": "Test OAuth sign-in flow with both Google and Apple accounts. Verify session persistence across browser restarts. Test sign-out functionality clears all session data. Validate error handling for network failures and invalid credentials. Test authentication state changes are properly reflected in UI components.",
+        "priority": "high",
         "dependencies": [
           1
         ],
-        "priority": "medium",
-        "subtasks": []
-      },
-      {
-        "id": 3,
-        "title": "Add comprehensive image support with scraping, editing, and PDF display",
-        "description": "Implement complete image functionality including URL image scraping, image upload/edit capabilities in demo mode, and image display in PDF exports.",
-        "details": "Implementation involves:\n\n1. **Backend Image Scraping Enhancement**:\n   - Extend URL processing to detect and extract recipe images from web pages\n   - Implement image scraping using BeautifulSoup to find recipe-related images\n   - Add image download and validation (format, size, content type)\n   - Implement image optimization and resizing for storage efficiency\n   - Add image metadata extraction (dimensions, format, file size)\n   - Update Recipe model to include image_url and image_metadata fields\n\n2. **Image Upload API**:\n   - Create POST /api/recipe/image endpoint for direct image uploads\n   - Implement multipart/form-data handling for image files\n   - Add image validation (JPEG, PNG, WebP formats, max 10MB)\n   - Implement image storage with unique naming and path management\n   - Add image processing pipeline (resize, optimize, generate thumbnails)\n\n3. **Demo Frontend Image Integration**:\n   - Add image upload component to edit mode interface\n   - Implement image preview and crop functionality\n   - Add image removal and replacement options\n   - Update recipe display components to show images\n   - Integrate with existing edit recipe screen functionality\n   - Add drag-and-drop image upload support\n\n4. **PDF Export Image Support**:\n   - Modify HTML template system to include image placeholders\n   - Update weasyprint PDF generation to embed images\n   - Implement responsive image sizing for PDF layout\n   - Add image quality optimization for PDF output\n   - Handle RTL layout considerations for image positioning\n   - Support for multiple images per recipe in PDF format\n\n5. **Database Schema Updates**:\n   - Add image-related fields to Recipe model\n   - Implement image storage path management\n   - Add image metadata tracking (upload date, file size, dimensions)\n   - Create database migrations for new image fields",
-        "testStrategy": "1. **Backend Image Processing Tests**:\n   - Test image scraping from various recipe websites\n   - Verify image download and validation functionality\n   - Test image optimization and resizing algorithms\n   - Validate image upload API with different file formats and sizes\n   - Test error handling for corrupted or invalid images\n\n2. **Frontend Integration Tests**:\n   - Test image upload component in edit mode\n   - Verify image preview and crop functionality\n   - Test drag-and-drop upload behavior\n   - Validate image display in recipe view components\n   - Test image removal and replacement workflows\n\n3. **PDF Export Tests**:\n   - Verify images appear correctly in PDF exports\n   - Test image quality and sizing in PDF output\n   - Validate RTL layout with images\n   - Test PDF generation with multiple images per recipe\n   - Verify image embedding doesn't break PDF structure\n\n4. **Performance Tests**:\n   - Test large image upload handling\n   - Verify image processing doesn't block API responses\n   - Test PDF generation time with image-heavy recipes\n   - Validate storage space management for images",
         "status": "pending",
-        "dependencies": [],
-        "priority": "high",
-        "subtasks": []
-      }
-    ],
-    "metadata": {
-      "created": "2025-06-24T07:14:50.441Z",
-      "updated": "2025-06-24T21:21:53.906Z",
-      "description": "Tag created on 6/24/2025"
-    }
-  },
-  "completed": {
-    "tasks": [
-      {
-        "id": 1,
-        "title": "Complete PDF Export Feature Implementation",
-        "description": "Integrate all PDF export components into a cohesive system with comprehensive testing, documentation, and deployment preparation for production use.",
-        "details": "Conduct comprehensive integration testing of all PDF export components to ensure seamless functionality across the entire user workflow. Perform thorough cross-browser validation on Chrome, Firefox, Safari, and Edge across Windows, macOS, and Linux platforms. Validate complete user journey from recipe display through print preview to PDF generation with proper error handling and user feedback. Update project documentation with PDF export feature capabilities, browser compatibility notes, and troubleshooting guide. Implement final performance optimizations for print CSS rendering and modal interactions. Add comprehensive unit and integration test coverage for the entire PDF export workflow. Prepare deployment checklist and validate feature readiness for production release. Conduct accessibility audit to ensure compliance with WCAG guidelines for print functionality. Review and optimize bundle size impact of new PDF export features. Create user guide documentation for optimal print-to-PDF usage across different browsers.",
-        "testStrategy": "Full end-to-end testing of PDF export workflow across all supported browsers and operating systems. Automated test suite covering component integration, user interactions, and error scenarios. Performance testing for print CSS rendering speed and modal responsiveness. Accessibility testing with screen readers and keyboard navigation. Load testing with various recipe content sizes and complexity. User acceptance testing with real users to validate intuitive workflow. Cross-device testing including desktop, tablet, and mobile browsers. Print quality validation across different PDF viewers and printers.",
-        "status": "done",
-        "dependencies": [],
-        "priority": "medium",
-        "subtasks": []
-      },
-      {
-        "id": 2,
-        "title": "Time Fields Standardization Feature Summary and Documentation",
-        "description": "Create comprehensive documentation and summary of the completed Time Fields Standardization feature that removed waitTime field and converted totalTime to computed property across backend models, service extraction, and frontend components.",
-        "details": "Document the complete implementation of the time fields standardization feature including: (1) Backend model changes that removed the waitTime field and converted totalTime to a computed property based on prepTime and cookTime; (2) Service extraction updates that modified recipe parsing logic to handle the new time field structure; (3) Frontend component updates that adjusted time display and input handling; (4) Database migration scripts and data transformation procedures; (5) API endpoint modifications to support the new time field schema; (6) Impact analysis on existing recipes and user data; (7) Performance improvements gained from simplified time calculations; (8) Create comprehensive documentation covering the technical implementation, migration process, and user-facing changes; (9) Update relevant code comments and inline documentation; (10) Generate changelog entries highlighting the feature completion and benefits.",
-        "testStrategy": "Verify all documentation accurately reflects the implemented changes by cross-referencing with actual code modifications. Test that all time-related functionality works correctly with the new computed totalTime property. Validate that no waitTime references remain in the codebase. Confirm that existing recipes display correct time values after the standardization. Test recipe creation and editing forms to ensure proper time field handling. Verify API responses contain correct time field structure. Review migration scripts for data integrity. Validate that PDF export and other features correctly handle the new time field format.",
-        "status": "done",
-        "dependencies": [],
-        "priority": "medium",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup Supabase client configuration",
+            "description": "Initialize and configure the Supabase client with proper environment variables and connection settings",
+            "dependencies": [],
+            "details": "Create Supabase client instance with API URL and anon key from environment variables. Configure client options for authentication and ensure proper error handling for connection issues.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create authentication context provider",
+            "description": "Implement React context for managing authentication state across the application",
+            "dependencies": [
+              1
+            ],
+            "details": "Create AuthContext with user state, loading states, and authentication methods. Implement context provider component that wraps the application and manages global auth state.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build OAuth sign-in components",
+            "description": "Create reusable UI components for OAuth authentication flows",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement sign-in buttons and forms for OAuth providers. Create components for sign-in, sign-up, and sign-out actions with proper loading states and user feedback.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement session management",
+            "description": "Add session persistence and automatic session refresh functionality",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement session storage, automatic token refresh, and session validation. Handle session expiration and provide methods for checking authentication status.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Add comprehensive error handling",
+            "description": "Implement error handling for authentication failures and edge cases",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Create error handling for network failures, invalid credentials, expired sessions, and OAuth callback errors. Implement user-friendly error messages and recovery flows.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 3,
-        "title": "Add comments attribute to recipe data models and API endpoints",
-        "description": "Add a comments field to recipe data models and implement full CRUD support across all API endpoints to allow users to add, view, edit, and delete comments on recipes.",
-        "details": "Implementation involves:\n\n1. **Backend Data Model Updates**:\n   - Add comments field to Recipe model in app/models/recipe.py\n   - Define Comment model with fields: id, recipe_id, user_id (optional), content, timestamp, author_name (optional)\n   - Update database schema with migration for comments table\n   - Add foreign key relationship between Recipe and Comment models\n   - Implement comment validation (length limits, content filtering)\n\n2. **API Endpoint Enhancements**:\n   - Update GET /recipe/{id} to include comments in response\n   - Add POST /recipe/{id}/comments endpoint for adding new comments\n   - Add GET /recipe/{id}/comments endpoint for retrieving all comments\n   - Add PUT /recipe/{id}/comments/{comment_id} for editing comments\n   - Add DELETE /recipe/{id}/comments/{comment_id} for removing comments\n   - Update recipe creation/update endpoints to handle comments if provided\n\n3. **Request/Response Models**:\n   - Create CommentRequest and CommentResponse Pydantic models\n   - Update RecipeResponse to include comments array\n   - Add pagination support for comments endpoint\n   - Implement comment sorting (newest/oldest first)\n\n4. **Database Layer**:\n   - Add comment CRUD operations in repository layer\n   - Implement cascading delete for comments when recipe is deleted\n   - Add indexing on recipe_id for efficient comment queries\n   - Add comment count aggregation for recipe listings",
-        "testStrategy": "1. **Unit Tests**:\n   - Test Comment model validation with various input scenarios\n   - Verify comment CRUD operations in repository layer\n   - Test comment-recipe relationship constraints\n   - Validate request/response model serialization\n\n2. **Integration Tests**:\n   - Test complete comment workflow: create, read, update, delete\n   - Verify comments inclusion in recipe retrieval endpoints\n   - Test comment pagination and sorting functionality\n   - Validate error handling for invalid comment operations\n\n3. **API Tests**:\n   - Test all comment endpoints with various payloads\n   - Verify proper HTTP status codes and error messages\n   - Test comment permissions and authorization\n   - Validate comment data persistence across requests\n\n4. **Database Tests**:\n   - Test database migrations for comments table\n   - Verify foreign key constraints and cascading deletes\n   - Test comment indexing and query performance\n   - Validate data integrity with concurrent comment operations",
-        "status": "done",
-        "dependencies": [],
+        "title": "Implement Rate Limiting Display and Management",
+        "description": "Create quota tracking components and real-time usage display with admin user detection",
+        "details": "Create rate limiting service using Supabase client to fetch user quota from demo_rate_limits table. Implement quota progress component using HTML progress element or custom CSS progress bar with Tailwind CSS classes. Add real-time subscription using supabase.channel().on('postgres_changes') to listen for rate limit updates. Create quota exceeded component with contact information and next steps messaging. Implement admin user detection by checking is_admin flag from database or user metadata. For admin users, display unlimited status instead of quota progress. Add usage increment logic that updates requests_used after successful API calls. Create custom hook useRateLimit() for managing quota state across components. Style quota display with Tailwind CSS using green/yellow/red color scheme based on usage percentage.",
+        "testStrategy": "Test quota display accuracy by comparing with database values. Verify real-time updates when quota changes. Test admin user detection with flagged admin account. Validate quota exceeded state prevents API calls and shows appropriate messaging. Test quota progress visual indicators at different usage levels.",
         "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
         "subtasks": []
       },
       {
         "id": 4,
-        "title": "Replace form processing with video processing",
-        "description": "Replace the form processing with video processing place holfer - opens unimplemented component.",
-        "details": "",
-        "testStrategy": "manual",
-        "status": "done",
-        "dependencies": [],
+        "title": "Implement Backend JWT Verification and Rate Limiting",
+        "description": "Add Supabase JWT verification to FastAPI backend with rate limiting middleware",
+        "details": "Install supabase-py client library (^2.3.0) in FastAPI backend. Create JWT verification dependency using supabase.auth.get_user() to validate and extract user information from Authorization header. Implement rate limiting middleware that checks user quota against demo_rate_limits table before processing requests. Add atomic database operations using Supabase client to increment requests_used counter. Create admin user bypass logic checking is_admin flag from user record. Add rate limit headers to API responses: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset. Implement proper error responses for quota exceeded (429 status) and authentication failures (401 status). Add comprehensive logging for rate limiting events and quota tracking. Create database connection pooling for performance optimization. Update existing recipe processing endpoints to use authentication dependency: /api/v1/recipe/text, /api/v1/recipe/url, /api/v1/recipe/image.",
+        "testStrategy": "Test JWT verification with valid and invalid tokens. Verify rate limiting blocks requests when quota exceeded. Test admin user bypass functionality. Validate rate limit headers are correctly returned. Test atomic database operations under concurrent load. Verify error responses match expected format and status codes.",
         "priority": "high",
-        "subtasks": []
-      }
-    ],
-    "metadata": {
-      "created": "2025-06-24T09:34:47.735Z",
-      "updated": "2025-06-24T18:47:44.019Z",
-      "description": "Completed tasks archive"
-    }
-  },
-  "demo": {
-    "tasks": [
-      {
-        "id": 1,
-        "title": "Implement User Authentication and Profile Management System",
-        "description": "Create a complete user authentication system with login/signup functionality and comprehensive user profile management capabilities.",
-        "details": "Implementation should include: 1) User registration with email validation and password hashing using bcrypt or similar secure method, 2) Login system with JWT token generation and validation, 3) Password reset functionality with email-based verification, 4) Protected route middleware for authenticated endpoints, 5) User profile CRUD operations including profile picture upload, 6) Session management with token refresh capabilities, 7) Rate limiting for auth endpoints to prevent brute force attacks, 8) Input validation and sanitization for all user inputs, 9) Database schema for users table with appropriate indexes, 10) Integration with frontend authentication state management. Use industry-standard security practices including password complexity requirements, secure cookie handling, and proper error messaging that doesn't leak sensitive information.",
-        "testStrategy": "Create comprehensive test suite including: 1) Unit tests for authentication middleware and password hashing functions, 2) Integration tests for registration, login, and logout endpoints, 3) Test password reset flow with mock email service, 4) Verify JWT token generation and validation, 5) Test protected routes with valid and invalid tokens, 6) Test profile CRUD operations with proper authorization, 7) Test rate limiting functionality, 8) Security testing for common vulnerabilities like SQL injection and XSS, 9) Test file upload functionality for profile pictures with proper validation, 10) End-to-end tests for complete user registration and login flows using testing framework like Cypress or Playwright.",
-        "status": "pending",
-        "dependencies": [],
-        "priority": "medium",
-        "subtasks": []
-      },
-      {
-        "id": 2,
-        "title": "Implement Recipe Storage and Management System",
-        "description": "Create a comprehensive database storage system that allows authenticated users to save, organize, and manage their personal recipe collections with full CRUD operations.",
-        "details": "Implementation should include: 1) Design and create recipe database schema with fields for title, ingredients, instructions, cooking time, servings, difficulty level, tags, and metadata, 2) Implement recipe model with proper relationships to users table including foreign key constraints, 3) Create RESTful API endpoints for recipe CRUD operations (POST /recipes, GET /recipes, GET /recipes/:id, PUT /recipes/:id, DELETE /recipes/:id), 4) Add recipe categorization system with tags and custom categories, 5) Implement recipe search and filtering functionality by ingredients, tags, cooking time, and difficulty, 6) Add recipe sharing capabilities with public/private visibility settings, 7) Implement recipe import/export functionality to support common formats, 8) Add recipe rating and notes system for user feedback, 9) Implement proper data validation and sanitization for all recipe fields, 10) Add pagination for recipe listings and bulk operations support, 11) Include recipe image upload and storage integration, 12) Implement recipe versioning to track changes over time",
-        "testStrategy": "Create comprehensive test coverage including: 1) Unit tests for recipe model validation and database operations, 2) Integration tests for all recipe API endpoints with various user scenarios, 3) Test recipe creation with valid and invalid data to verify validation rules, 4) Test recipe retrieval with different filtering and sorting options, 5) Verify recipe update and deletion operations with proper authorization checks, 6) Test recipe search functionality with various query combinations, 7) Test recipe sharing permissions and visibility settings, 8) Verify recipe import/export functionality with sample data files, 9) Test recipe categorization and tagging system, 10) Performance tests for recipe queries with large datasets, 11) Test recipe image upload and storage operations, 12) Verify recipe ownership and access control for different user roles",
-        "status": "pending",
         "dependencies": [
           1
         ],
-        "priority": "medium",
-        "subtasks": []
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement JWT verification middleware",
+            "description": "Create JWT token validation middleware for request authentication",
+            "dependencies": [],
+            "details": "Implement JWT token validation middleware that extracts and verifies JWT tokens from Authorization headers. Include token expiration checks, signature validation, and payload extraction. Handle malformed tokens and expired tokens with appropriate error responses.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create rate limiting service",
+            "description": "Implement rate limiting functionality with configurable limits per client",
+            "dependencies": [
+              1
+            ],
+            "details": "Design and implement rate limiting service that tracks request counts per client within time windows. Support configurable limits, sliding window or fixed window algorithms, and integration with database for persistence. Include rate limit headers in responses.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement database operations for authentication",
+            "description": "Create database layer for client authentication and usage tracking",
+            "dependencies": [],
+            "details": "Implement database operations for client lookup, authentication status verification, and usage tracking updates. Include atomic operations for request counting, connection pooling, and proper error handling for database failures.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create admin bypass logic and error handling",
+            "description": "Implement admin authentication bypass and comprehensive error handling",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Create admin bypass logic for administrative endpoints with separate authentication mechanism. Implement comprehensive error handling for authentication failures, database errors, and rate limiting. Include proper HTTP status codes and structured error responses.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Integrate endpoint protection and logging",
+            "description": "Apply authentication middleware to endpoints and implement request logging",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Integrate authentication middleware with FastAPI endpoints using dependency injection. Implement comprehensive request logging with client identification, request details, and performance metrics. Ensure all recipe endpoints are protected while maintaining backward compatibility.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
-        "id": 3,
-        "title": "Create My Recipes Page with Recipe Management Interface",
-        "description": "Build a comprehensive user interface page where authenticated users can view, organize, search, and manage their personal collection of saved recipes.",
-        "details": "Implementation should include: 1) Create a dedicated '/my-recipes' route with proper authentication guards to ensure only logged-in users can access, 2) Design responsive recipe grid/list layout with recipe cards displaying title, image thumbnail, cooking time, difficulty, and tags, 3) Implement recipe search and filtering functionality by title, ingredients, tags, cooking time, and difficulty level, 4) Add sorting options (newest first, alphabetical, cooking time, difficulty), 5) Create recipe management actions including edit, delete, and duplicate recipe functionality with confirmation dialogs, 6) Implement bulk selection and batch operations for multiple recipes, 7) Add recipe categorization with custom folders/collections that users can create and organize recipes into, 8) Include recipe statistics dashboard showing total recipes, favorite categories, and cooking analytics, 9) Implement pagination or infinite scroll for large recipe collections, 10) Add export functionality to allow users to export recipes in various formats (PDF, text, JSON), 11) Create quick-add recipe button and integration with recipe import functionality, 12) Implement recipe sharing options with privacy controls (private, shared link, public), 13) Add recipe rating and notes system for personal recipe reviews, 14) Include responsive design for mobile and tablet viewing, 15) Implement proper error handling and loading states throughout the interface.",
-        "testStrategy": "Create comprehensive testing strategy including: 1) Unit tests for all recipe management components with proper props and state handling, 2) Integration tests for recipe CRUD operations through the UI including create, read, update, and delete flows, 3) Test authentication requirements ensuring unauthenticated users are redirected to login, 4) Verify search and filtering functionality with various query combinations and edge cases, 5) Test sorting functionality with different data sets and empty states, 6) Validate bulk operations and batch recipe management with proper confirmation flows, 7) Test responsive design across different screen sizes and devices, 8) Verify pagination or infinite scroll performance with large datasets, 9) Test export functionality with various formats and recipe selections, 10) Validate recipe sharing functionality and privacy controls, 11) Test error handling for network failures, invalid data, and server errors, 12) Perform accessibility testing for keyboard navigation and screen readers, 13) Test recipe categorization and folder organization features, 14) Validate loading states and user feedback during async operations, 15) Cross-browser compatibility testing for major browsers.",
-        "status": "pending",
+        "id": 5,
+        "title": "Build Guided Tutorial System",
+        "description": "Create comprehensive onboarding tutorial with step-by-step recipe processing walkthrough",
+        "details": "Create tutorial context using React Context API with tutorial state management. Define tutorial steps array with step data including target elements, content, and actions. Implement tutorial overlay component using React Portal for modal-like behavior. Add spotlight effect using CSS backdrop-filter and absolute positioning to highlight specific UI elements. Create tutorial navigation with Next/Previous/Skip buttons and step indicators. Implement sample recipe text auto-population: Hebrew recipe with complex ingredients to showcase RTL and AI parsing capabilities. Add tutorial completion tracking in localStorage to prevent repeated tutorials. Create skip tutorial functionality with confirmation dialog. Use Framer Motion for smooth transitions between tutorial steps. Implement mobile-responsive tutorial design with touch-friendly navigation. Add tutorial progress indicator showing current step and total steps.",
+        "testStrategy": "Test tutorial flow from start to completion with sample recipe processing. Verify skip functionality works correctly and persists completion status. Test tutorial on mobile devices for responsive behavior. Validate spotlight effects correctly highlight target elements. Test tutorial completion status persistence across browser sessions.",
+        "priority": "medium",
         "dependencies": [
-          1,
-          2
+          "7"
         ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement tutorial state management system",
+            "description": "Create React Context and hooks for managing tutorial state across the application",
+            "dependencies": [],
+            "details": "Develop TutorialContext with state for current step, active tutorials, completion status, and user preferences. Include hooks for accessing and updating tutorial state, with persistence to localStorage. Handle tutorial initialization, step navigation, and completion logic.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Build overlay and backdrop components",
+            "description": "Create the visual overlay system that dims the background during tutorials",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement overlay component with configurable opacity and color. Use React Portal to render at document root level. Add fade-in/fade-out animations and ensure proper z-index stacking. Include click-outside handling to close tutorials when appropriate.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Develop spotlight component with positioning",
+            "description": "Create the spotlight effect that highlights specific UI elements during tutorials",
+            "dependencies": [
+              2
+            ],
+            "details": "Build spotlight component that can dynamically position and resize based on target elements. Implement smooth transitions between different spotlight positions. Add border radius and shadow effects. Handle edge cases for elements near viewport boundaries and ensure mobile responsiveness.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create tutorial navigation system",
+            "description": "Build the navigation controls for moving through tutorial steps",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement next/previous buttons, step indicators, and progress bar. Add keyboard navigation support (arrow keys, escape). Include skip tutorial and restart functionality. Handle branching tutorials and conditional steps based on user actions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement content delivery system",
+            "description": "Create the system for displaying tutorial content and tooltips",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Build tooltip/popover component with smart positioning relative to spotlight. Support rich content including text, images, and interactive elements. Implement content templates and markdown support. Add dynamic content loading and localization support using the existing locale system.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Create sample tutorial data and configuration",
+            "description": "Define sample tutorial content and configuration for the recipe processing workflow",
+            "dependencies": [],
+            "details": "Create tutorial definitions for key app features like recipe input, processing options, and result interpretation. Define tutorial steps with target selectors, content, and positioning. Include onboarding tutorial for new users and feature-specific tutorials for advanced functionality.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement completion tracking and analytics",
+            "description": "Build system to track tutorial completion and user engagement",
+            "dependencies": [
+              1,
+              5,
+              6
+            ],
+            "details": "Implement completion tracking with localStorage persistence. Add analytics events for tutorial start, step completion, and abandonment. Create user preferences for tutorial visibility and replay options. Include admin capabilities to reset tutorial state for testing purposes.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Configure Netlify Production Deployment",
+        "description": "Set up Netlify hosting with build configuration and environment variables for production",
+        "details": "Create Netlify project connected to GitHub repository with automatic deployment on main branch push. Configure build settings: Build command 'npm run build', Publish directory 'build', Install command 'npm install'. Set up environment variables in Netlify dashboard: REACT_APP_SUPABASE_URL (production Supabase URL), REACT_APP_SUPABASE_ANON_KEY (production anonymous key), REACT_APP_API_URL (production FastAPI backend URL), REACT_APP_API_KEY (demo client API key). Configure custom domain with SSL certificate through Let's Encrypt. Set up redirects for SPA routing: /* /index.html 200. Add security headers: X-Frame-Options, X-Content-Type-Options, Referrer-Policy. Configure caching headers for static assets with long-term caching for JS/CSS and short-term for HTML. Set up Netlify Edge Functions if needed for any server-side processing. Add build optimization: code splitting, tree shaking, and bundle analysis using webpack-bundle-analyzer.",
+        "testStrategy": "Test production deployment builds successfully without errors. Verify all environment variables are correctly configured and accessible. Test custom domain resolves with valid SSL certificate. Validate SPA routing works correctly with direct URL access. Test caching headers optimize load times without breaking functionality.",
         "priority": "medium",
+        "dependencies": [
+          "3",
+          "4"
+        ],
+        "status": "pending",
         "subtasks": []
       },
       {
-        "id": 4,
-        "title": "Add share option to PDF - implement functionality to share generated PDF recipes via various methods",
-        "description": "Implement comprehensive PDF sharing functionality that allows users to share their generated recipe PDFs through multiple channels including email, social media, direct download, and cloud storage services.",
-        "details": "Implementation should include: 1) Create a share modal/dropdown component that appears after PDF generation with multiple sharing options, 2) Implement email sharing functionality with customizable subject line and message body, integrating with email service provider (SendGrid, AWS SES, or similar), 3) Add social media sharing capabilities for platforms like Facebook, Twitter, Pinterest with proper Open Graph meta tags and recipe preview images, 4) Implement direct download option with proper file naming convention (recipe-title-date.pdf), 5) Add cloud storage integration for services like Google Drive, Dropbox, or OneDrive using their respective APIs, 6) Create copy-to-clipboard functionality for shareable links if recipes are made publicly accessible, 7) Implement sharing analytics to track which sharing methods are most popular, 8) Add share history feature in user profiles to track previously shared recipes, 9) Ensure proper error handling for failed sharing attempts with user-friendly error messages, 10) Implement rate limiting for sharing actions to prevent abuse, 11) Add privacy controls allowing users to choose sharing permissions (public, private, friends only), 12) Create responsive sharing interface that works on both desktop and mobile devices.",
-        "testStrategy": "Create comprehensive test coverage including: 1) Unit tests for all sharing components and utility functions, 2) Integration tests for email sharing with mock email service provider, 3) Test social media sharing functionality with proper meta tag generation and URL formatting, 4) Verify PDF download functionality across different browsers and devices, 5) Test cloud storage integrations with mock API responses and error scenarios, 6) Validate sharing analytics tracking and data collection, 7) Test rate limiting functionality to ensure proper throttling of sharing requests, 8) Verify privacy controls and permission settings work correctly, 9) Test responsive design of sharing interface on various screen sizes, 10) End-to-end tests for complete sharing workflows from PDF generation to successful sharing, 11) Test error handling scenarios including network failures and API rate limits, 12) Verify sharing history functionality and proper data persistence.",
+        "id": 7,
+        "title": "Integrate Frontend with Authenticated Backend API",
+        "description": "Update API service layer to include JWT authentication and handle rate limiting responses",
+        "details": "Update existing API service functions in demo-frontend/src/utils/api.js to include Authorization header with JWT token from Supabase session. Modify processRecipeText, processRecipeUrl, and processRecipeImage functions to handle authentication. Add rate limiting error handling for 429 status responses with user-friendly messaging. Implement retry logic with exponential backoff for temporary failures. Add rate limit header parsing to extract quota information from API responses. Update error handling to distinguish between authentication errors (401), rate limiting (429), and server errors (500). Add request interceptor to automatically include JWT token in all API calls. Implement token refresh logic when JWT expires during API calls. Add loading states specific to rate limiting checks vs actual processing. Update API base URL to use environment variable for production deployment.",
+        "testStrategy": "Test API calls include proper Authorization headers with valid JWT tokens. Verify rate limiting errors are handled gracefully with appropriate user messaging. Test token refresh functionality when JWT expires. Validate rate limit information is correctly extracted from response headers. Test error handling for various failure scenarios.",
+        "priority": "high",
+        "dependencies": [
+          5
+        ],
         "status": "pending",
-        "dependencies": [],
-        "priority": "medium",
-        "subtasks": []
-      }
-    ],
-    "metadata": {
-      "created": "2025-06-25T05:57:38.225Z",
-      "updated": "2025-06-25T06:06:23.778Z",
-      "description": "Tag created on 6/25/2025"
-    }
-  },
-  "demo-deployment": {
-    "tasks": [
-      {
-        "id": 1,
-        "title": "Demo Frontend Integration and Client Onboarding",
-        "description": "Update demo frontend to work with authenticated API and create comprehensive client integration documentation including environment configuration, error handling, and deployment guides.",
-        "details": "Update demo frontend application to integrate with authenticated backend API:\n\n1. **Environment Configuration Setup**\n   - Create `.env.example` with required variables: REACT_APP_API_URL, REACT_APP_API_KEY\n   - Update API service layer to include X-API-Key header in all requests\n   - Add API version management with explicit v1 endpoint usage\n   - Configure Vercel deployment environment variables\n\n2. **API Service Enhancement**\n   - Modify `src/utils/api.js` to include authentication headers\n   - Add version compatibility checking endpoint calls\n   - Implement enhanced error handling for 401/403 authentication errors\n   - Add retry logic for temporary service unavailability\n\n3. **Error Handling and User Experience**\n   - Create user-friendly error messages for authentication failures\n   - Add loading states and error boundaries for API calls\n   - Implement graceful degradation when API is unavailable\n   - Add configuration validation on app startup\n\n4. **Client Integration Documentation**\n   - Create comprehensive integration guide with code examples\n   - Document authentication requirements and header format\n   - Provide error handling best practices and status codes\n   - Include backend proxy implementation examples for multi-user apps\n   - Add troubleshooting section for common integration issues\n\n5. **Demo Application Updates**\n   - Test all recipe processing workflows with authentication\n   - Validate demo continues to function as showcase application\n   - Update deployment configuration for production environment\n   - Create admin API key specifically for demo application",
-        "testStrategy": "1. **Local Development Testing**\n   - Configure .env.local with valid API key and test all recipe processing features\n   - Verify error handling by testing with invalid/missing API keys\n   - Test offline behavior and network error scenarios\n   - Validate API version compatibility checking functionality\n\n2. **Authentication Flow Validation**\n   - Test successful recipe processing with valid API key\n   - Verify 401/403 error handling displays appropriate user messages\n   - Test API key validation on application startup\n   - Confirm all API requests include proper authentication headers\n\n3. **Production Deployment Testing**\n   - Deploy demo to Vercel with production environment variables\n   - Test end-to-end recipe processing in production environment\n   - Verify demo application performance and responsiveness\n   - Validate SSL/HTTPS connections to authenticated API\n\n4. **Client Documentation Validation**\n   - Follow integration guide step-by-step with fresh API key\n   - Test all provided code examples in isolation\n   - Verify error response format matches documentation\n   - Validate backend proxy examples with test implementation\n\n5. **Cross-Browser and Device Testing**\n   - Test demo functionality across major browsers (Chrome, Firefox, Safari, Edge)\n   - Verify mobile responsiveness and touch interactions\n   - Test with various network conditions (slow 3G, WiFi, etc.)\n   - Validate accessibility features with screen readers",
-        "status": "pending",
-        "dependencies": [],
-        "priority": "medium",
-        "subtasks": []
-      },
-      {
-        "id": 2,
-        "title": "Prepare rate limiting foundation",
-        "description": "Build foundational components needed for future rate limiting implementation including database schema extensions, tracking mechanisms, and basic rate limit validation structure.",
-        "details": "Establish the groundwork for implementing client-based rate limiting:\n\n1. **Database Schema Extensions**\n   - Add rate limiting fields to clients table: `rate_limit_per_minute`, `rate_limit_per_hour`, `rate_limit_per_day`\n   - Create `rate_limit_tracking` table with columns: `api_key`, `window_start`, `request_count`, `window_type`\n   - Add indexes for efficient rate limit queries on api_key and window_start\n   - Include migration script for existing client records with default limits\n\n2. **Rate Limiting Service Foundation**\n   - Create `services/rate_limiter.py` with sliding window rate limiting logic\n   - Implement Redis-compatible in-memory tracking for request counting\n   - Add utility functions for different time window calculations (minute, hour, day)\n   - Create rate limit validation middleware structure (not yet enforced)\n\n3. **Configuration Management**\n   - Add environment variables for default rate limits and Redis connection\n   - Create rate limiting configuration constants and validation\n   - Add admin endpoints for viewing and updating client rate limits\n   - Include rate limit information in client creation response\n\n4. **Monitoring and Logging Infrastructure**\n   - Add rate limiting metrics collection points\n   - Create logging for rate limit checks (without enforcement)\n   - Add database queries for rate limit usage reporting\n   - Prepare admin interface for rate limit monitoring",
-        "testStrategy": "1. **Database Schema Validation**\n   - Run migration scripts on test database and verify all new columns exist\n   - Test client creation with default rate limit values\n   - Validate database indexes improve query performance for rate limit lookups\n   - Verify existing client records are properly updated with default limits\n\n2. **Rate Limiting Service Testing**\n   - Unit tests for sliding window calculations with various time scenarios\n   - Test request counting accuracy under concurrent access\n   - Validate rate limit checks return correct remaining quota information\n   - Test Redis/in-memory storage persistence and cleanup\n\n3. **Admin Interface Testing**\n   - Test admin endpoints for viewing client rate limits\n   - Verify rate limit updates are properly stored and retrieved\n   - Test rate limit information display in client creation responses\n   - Validate admin authentication prevents unauthorized rate limit changes\n\n4. **Integration and Performance Testing**\n   - Test rate limiting service integration with existing authentication flow\n   - Measure performance impact of rate limit checks on API response times\n   - Verify rate limiting infrastructure doesn't affect current API functionality\n   - Test concurrent request handling and accurate counting under load",
-        "status": "pending",
-        "dependencies": [],
-        "priority": "medium",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-26T12:57:05.461Z",
-      "updated": "2025-06-26T13:07:01.513Z",
-      "description": "Demo frontend deployment and remaining integration tasks"
+      "updated": "2025-06-27T14:42:08.559Z",
+      "description": "Tasks for demo-deployment context"
     }
   }
 }
