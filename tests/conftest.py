@@ -3,7 +3,6 @@ import pytest
 import os
 import json
 from pathlib import Path
-import asyncio
 from unittest.mock import MagicMock, patch
 
 # Path to test fixtures
@@ -73,13 +72,25 @@ def mock_database():
 @pytest.fixture
 def mock_db_manager(mock_database):
     """Create a mock database manager."""
-    with patch("app.database.connection.db_manager") as mock_manager:
+    with patch("app.database.connection.db_manager") as mock_manager, \
+         patch("app.routers.admin.db_manager", mock_manager):
         mock_manager.is_connected = True
         mock_manager.database = mock_database
         mock_manager.connect = AsyncMock()
         mock_manager.disconnect = AsyncMock()
         mock_manager.health_check = AsyncMock(return_value=True)
+        # Add database methods directly to db_manager for compatibility
+        mock_manager.fetch_one = AsyncMock()
+        mock_manager.fetch_all = AsyncMock()
+        mock_manager.execute = AsyncMock()
         yield mock_manager
+
+@pytest.fixture
+def mock_client_ip():
+    """Mock client IP extraction to return valid IP address for testing."""
+    with patch("app.config.security.SecurityConfig.is_trusted_proxy", return_value=False), \
+         patch("app.security.admin_security.get_client_ip", return_value="127.0.0.1") as ip_mock:
+        yield ip_mock
 
 @pytest.fixture
 def mock_environment():
@@ -87,7 +98,9 @@ def mock_environment():
     test_env = {
         "DATABASE_URL": "postgresql://test:test@localhost:5432/test_db",
         "GOOGLE_AI_API_KEY": "test-google-key",
-        "ADMIN_API_KEY": "test-admin-key"
+        "ADMIN_API_KEY": "test-admin-key",
+        "ENV": "test",
+        "TESTING": "true"
     }
     
     with patch.dict(os.environ, test_env):

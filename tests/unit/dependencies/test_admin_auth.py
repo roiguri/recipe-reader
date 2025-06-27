@@ -115,7 +115,7 @@ class TestAdminAuthentication:
                 await get_admin_from_key("invalid-key")
         
         assert "Admin request with invalid admin key" in caplog.text
-        assert "invalid-key..." in caplog.text  # Truncated key in logs
+        assert "inva..." in caplog.text  # Truncated to 4 chars in logs
 
     @pytest.mark.asyncio
     async def test_logging_missing_key(self, caplog):

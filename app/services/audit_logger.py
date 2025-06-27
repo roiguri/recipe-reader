@@ -33,6 +33,12 @@ class AuditLogger:
         self.logger = logging.getLogger("audit")
         self.logger.setLevel(logging.INFO)
         
+        # Define sensitive field patterns to filter from logs
+        self.sensitive_fields = {
+            'password', 'token', 'secret', 'key', 'api_key', 
+            'auth', 'credential', 'private', 'sensitive'
+        }
+        
         # Only add handler if not already configured
         if not self.logger.handlers:
             handler = logging.StreamHandler()
@@ -44,6 +50,42 @@ class AuditLogger:
             )
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
+    
+    def _filter_sensitive_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Filter sensitive data from details dictionary.
+        
+        Args:
+            data: Dictionary that may contain sensitive fields
+            
+        Returns:
+            Filtered dictionary with sensitive values masked
+        """
+        if not isinstance(data, dict):
+            return data
+            
+        filtered_data = {}
+        
+        for key, value in data.items():
+            key_lower = key.lower()
+            
+            # Check if key contains any sensitive patterns
+            is_sensitive = any(pattern in key_lower for pattern in self.sensitive_fields)
+            
+            if is_sensitive:
+                # Mask sensitive values
+                if isinstance(value, str) and len(value) > 4:
+                    filtered_data[key] = f"{value[:4]}***"
+                else:
+                    filtered_data[key] = "***"
+            elif isinstance(value, dict):
+                # Recursively filter nested dictionaries
+                filtered_data[key] = self._filter_sensitive_data(value)
+            else:
+                # Keep non-sensitive values as-is
+                filtered_data[key] = value
+                
+        return filtered_data
     
     def log_admin_action(
         self,
@@ -65,13 +107,16 @@ class AuditLogger:
             success: Whether the action succeeded
             error_message: Error message if action failed
         """
+        # Filter sensitive data from details before logging
+        filtered_details = self._filter_sensitive_data(details or {})
+        
         audit_data = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "action": action.value,
             "admin_key_prefix": admin_key_prefix,
             "success": success,
             "resource_id": resource_id,
-            "details": details or {},
+            "details": filtered_details,
         }
         
         if not success and error_message:

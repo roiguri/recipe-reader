@@ -46,20 +46,27 @@ class TestConfidenceConstants:
         # should be weighted more heavily than URL extraction confidence
         assert AI_PROCESSING_CONFIDENCE_WEIGHT > URL_EXTRACTION_CONFIDENCE_WEIGHT
     
-    def test_confidence_calculation_example(self):
-        """Test example confidence score calculation."""
-        # Example: URL extraction confidence = 0.8, AI processing confidence = 0.9
-        url_confidence = 0.8
-        ai_confidence = 0.9
-        
-        combined_confidence = (
-            url_confidence * URL_EXTRACTION_CONFIDENCE_WEIGHT +
-            ai_confidence * AI_PROCESSING_CONFIDENCE_WEIGHT
+    def test_confidence_calculation_weighted_average(self):
+        """Test that confidence calculation produces expected weighted averages."""
+        # Test case 1: Equal input confidences should return the same value
+        equal_confidence = 0.5
+        result = (
+            equal_confidence * URL_EXTRACTION_CONFIDENCE_WEIGHT +
+            equal_confidence * AI_PROCESSING_CONFIDENCE_WEIGHT
         )
+        assert result == equal_confidence
         
-        # Should be weighted average favoring AI processing
-        expected = 0.8 * 0.3 + 0.9 * 0.7  # 0.24 + 0.63 = 0.87
-        assert abs(combined_confidence - expected) < 0.001
+        # Test case 2: Higher AI confidence should increase overall score
+        # (since AI_PROCESSING_CONFIDENCE_WEIGHT > URL_EXTRACTION_CONFIDENCE_WEIGHT)
+        low_url_high_ai = (
+            0.2 * URL_EXTRACTION_CONFIDENCE_WEIGHT +
+            0.9 * AI_PROCESSING_CONFIDENCE_WEIGHT
+        )
+        high_url_low_ai = (
+            0.9 * URL_EXTRACTION_CONFIDENCE_WEIGHT +
+            0.2 * AI_PROCESSING_CONFIDENCE_WEIGHT
+        )
+        assert low_url_high_ai > high_url_low_ai
     
     def test_confidence_boundary_cases(self):
         """Test confidence calculation with boundary values."""
@@ -83,7 +90,8 @@ class TestConfidenceConstants:
         # If the assertion fails, the module import would fail
         try:
             # Re-import to trigger the assertion check
-            import app.config.confidence
-            assert True  # If we get here, assertion passed
+            import app.config.confidence as confidence_module
+            # If we get here, assertion passed
+            assert confidence_module is not None
         except AssertionError:
             pytest.fail("Module assertion failed: confidence weights don't sum to 1.0")

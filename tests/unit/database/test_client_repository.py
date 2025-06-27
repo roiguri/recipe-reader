@@ -142,12 +142,11 @@ class TestClientRetrieval(TestClientRepository):
     
     @pytest.mark.asyncio
     async def test_get_client_by_api_key_error(self, client_repository, mock_database):
-        """Test client retrieval with database error."""
+        """Test client retrieval with database error - should return None and log error."""
         mock_database.fetch_one.side_effect = Exception("Database error")
         
         result = await client_repository.get_client_by_api_key("test_key")
-        
-        assert result is None  # Should return None on error
+        assert result is None
     
     @pytest.mark.asyncio
     async def test_get_all_clients_active_only(self, client_repository, mock_database):
@@ -371,6 +370,7 @@ class TestErrorHandlingAndLogging(TestClientRepository):
         mock_database.fetch_one.side_effect = Exception("Test database error")
         
         with caplog.at_level("ERROR"):
-            await client_repository.get_client_by_api_key("test_key")
+            result = await client_repository.get_client_by_api_key("test_key")
         
+        assert result is None
         assert "Error fetching client by API key" in caplog.text

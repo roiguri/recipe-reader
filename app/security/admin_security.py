@@ -13,27 +13,89 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, Request, Response
 import logging
 
+from app.config.security import security_config
+
 logger = logging.getLogger(__name__)
 
 # Simple in-memory rate limiter for admin operations
 class AdminRateLimiter:
     """
-    Simple rate limiter for admin operations.
-    Tracks requests per IP address with configurable limits.
+    Simple in-memory rate limiter for admin operations.
+    
+    Tracks requests per IP address with configurable limits and automatic cleanup
+    to prevent memory bloat from inactive IP addresses.
+    
+    PRODUCTION NOTE:
+    This in-memory implementation is suitable for single-instance deployments only.
+    For production multi-instance deployments, use a distributed cache solution
+    like Redis with a library such as:
+    - slowapi (Redis-backed rate limiting for FastAPI)
+    - python-redis-rate-limit
+    - Custom Redis-based implementation
+    
+    Example Redis configuration:
+        import redis
+        from slowapi import Limiter, _rate_limit_exceeded_handler
+        from slowapi.util import get_remote_address
+        
+        redis_client = redis.Redis(host='localhost', port=6379, db=0)
+        limiter = Limiter(
+            key_func=get_remote_address,
+            storage_uri="redis://localhost:6379"
+        )
     """
     
-    def __init__(self, max_requests: int = 10, window_seconds: int = 60):
+    def __init__(self, max_requests: int = 10, window_seconds: int = 60, cleanup_interval: int = 300):
         """
         Initialize rate limiter.
         
         Args:
             max_requests: Maximum requests allowed per window
             window_seconds: Time window in seconds
+            cleanup_interval: Seconds between cleanup runs (default: 5 minutes)
         """
         self.max_requests = max_requests
         self.window_seconds = window_seconds
+        self.cleanup_interval = cleanup_interval
         self.requests: Dict[str, list] = defaultdict(list)
+        self.last_cleanup = time.time()
     
+    def _cleanup_old_entries(self, now: float) -> None:
+        """
+        Remove IP entries that have no recent requests to prevent memory bloat.
+        
+        Args:
+            now: Current timestamp
+        """
+        if now - self.last_cleanup < self.cleanup_interval:
+            return
+            
+        # Track IPs to remove (empty after cleanup)
+        ips_to_remove = []
+        
+        for ip, request_times in self.requests.items():
+            # Clean old requests for this IP
+            recent_requests = [
+                req_time for req_time in request_times
+                if now - req_time < self.window_seconds
+            ]
+            
+            if recent_requests:
+                # Update with cleaned requests
+                self.requests[ip] = recent_requests
+            else:
+                # Mark for removal - no recent requests
+                ips_to_remove.append(ip)
+        
+        # Remove inactive IPs
+        for ip in ips_to_remove:
+            del self.requests[ip]
+        
+        self.last_cleanup = now
+        
+        if ips_to_remove:
+            logger.debug(f"Rate limiter cleanup removed {len(ips_to_remove)} inactive IP entries")
+
     def is_allowed(self, client_ip: str) -> bool:
         """
         Check if request is allowed for given client IP.
@@ -46,7 +108,10 @@ class AdminRateLimiter:
         """
         now = time.time()
         
-        # Clean old requests outside the window
+        # Perform periodic cleanup to prevent memory bloat
+        self._cleanup_old_entries(now)
+        
+        # Clean old requests outside the window for this specific IP
         self.requests[client_ip] = [
             req_time for req_time in self.requests[client_ip]
             if now - req_time < self.window_seconds
@@ -61,20 +126,63 @@ class AdminRateLimiter:
         return True
     
     def get_remaining_requests(self, client_ip: str) -> int:
-        """Get remaining requests for client IP."""
+        """
+        Get remaining requests for client IP.
+        
+        Args:
+            client_ip: Client IP address
+            
+        Returns:
+            int: Number of remaining requests in current window
+        """
         now = time.time()
+        
+        # Clean old requests for this specific IP
         self.requests[client_ip] = [
             req_time for req_time in self.requests[client_ip]
             if now - req_time < self.window_seconds
         ]
         return max(0, self.max_requests - len(self.requests[client_ip]))
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """
+        Get rate limiter statistics for monitoring.
+        
+        Returns:
+            dict: Statistics including active IPs and memory usage
+        """
+        now = time.time()
+        active_ips = 0
+        total_requests = 0
+        
+        for ip, request_times in self.requests.items():
+            recent_requests = [
+                req_time for req_time in request_times
+                if now - req_time < self.window_seconds
+            ]
+            if recent_requests:
+                active_ips += 1
+                total_requests += len(recent_requests)
+        
+        return {
+            "active_ips": active_ips,
+            "total_tracked_ips": len(self.requests),
+            "total_recent_requests": total_requests,
+            "window_seconds": self.window_seconds,
+            "max_requests_per_window": self.max_requests,
+            "cleanup_interval": self.cleanup_interval,
+            "last_cleanup": self.last_cleanup
+        }
 
 # Global rate limiter instance for admin operations
 admin_rate_limiter = AdminRateLimiter(max_requests=30, window_seconds=300)  # 30 requests per 5 minutes
 
 def get_client_ip(request: Request) -> str:
     """
-    Extract client IP address from request, handling proxies.
+    Extract client IP address from request, securely handling proxies.
+    
+    Only trusts proxy headers (X-Forwarded-For, X-Real-IP) when the request
+    originates from a known trusted proxy to prevent IP spoofing attacks.
     
     Args:
         request: FastAPI request object
@@ -82,18 +190,33 @@ def get_client_ip(request: Request) -> str:
     Returns:
         str: Client IP address
     """
-    # Check for forwarded IP headers (common in production deployments)
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        # Take the first IP in the chain (original client)
-        return forwarded_for.split(",")[0].strip()
+    # Get the direct client IP (the immediate connection source)
+    direct_client_ip = request.client.host if request.client else "unknown"
     
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip.strip()
+    # Only trust proxy headers if the request comes from a trusted proxy
+    if security_config.is_trusted_proxy(direct_client_ip):
+        # Check X-Forwarded-For header first (RFC 7239 standard)
+        forwarded_for = request.headers.get("X-Forwarded-For")
+        if forwarded_for:
+            # Take the first IP in the chain (original client)
+            # Format: "client, proxy1, proxy2"
+            original_client_ip = forwarded_for.split(",")[0].strip()
+            logger.debug(f"Using X-Forwarded-For IP: {original_client_ip} (from trusted proxy: {direct_client_ip})")
+            return original_client_ip
+        
+        # Check X-Real-IP header as fallback
+        real_ip = request.headers.get("X-Real-IP")
+        if real_ip:
+            logger.debug(f"Using X-Real-IP: {real_ip.strip()} (from trusted proxy: {direct_client_ip})")
+            return real_ip.strip()
+    else:
+        # Log potential spoofing attempts for monitoring
+        if request.headers.get("X-Forwarded-For") or request.headers.get("X-Real-IP"):
+            logger.debug(f"Ignoring proxy headers from untrusted IP: {direct_client_ip}")
     
-    # Fallback to direct client IP
-    return request.client.host if request.client else "unknown"
+    # Use direct client IP (either no proxy headers or untrusted source)
+    logger.debug(f"Using direct client IP: {direct_client_ip}")
+    return direct_client_ip
 
 def check_admin_rate_limit(request: Request) -> None:
     """
@@ -234,7 +357,13 @@ def add_security_headers(response: Response) -> None:
     # Prevent information leakage
     response.headers["Server"] = "Recipe-API"
     
-    # HSTS for HTTPS deployments (will be ignored on HTTP)
+    # HSTS (HTTP Strict Transport Security) for HTTPS deployments
+    # This header tells browsers to only connect via HTTPS for the next year.
+    # While ignored on HTTP connections, it's included because:
+    # 1. Production deployments should use HTTPS (Vercel, etc.)
+    # 2. Browsers will remember this setting when switching to HTTPS
+    # 3. It's a security best practice that doesn't harm HTTP development
+    # 4. Prevents accidental downgrades from HTTPS to HTTP in production
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
 def log_admin_operation(

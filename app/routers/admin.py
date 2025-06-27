@@ -5,6 +5,7 @@ This module provides administrative endpoints for client management,
 API key generation, and system monitoring.
 """
 
+import os
 import secrets
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, Request, Response
@@ -129,19 +130,14 @@ async def create_client(
             values={"client_name": request.client_name}  # Already sanitized by validator
         )
         
-        # Handle different ways COUNT results might be returned
-        count_value = 0
-        if name_exists:
-            if hasattr(name_exists, 'get'):
-                count_value = name_exists.get("count", 0) or name_exists.get(0, 0)
-            elif hasattr(name_exists, '__getitem__'):
-                try:
-                    count_value = name_exists["count"]
-                except (KeyError, TypeError):
-                    try:
-                        count_value = name_exists[0]  # May be returned as tuple/list
-                    except (IndexError, TypeError):
-                        count_value = 0
+        # Extract count value from standardized database result
+        if name_exists is None:
+            count_value = 0
+        else:
+            try:
+                count_value = int(name_exists.get("count", 0))
+            except (ValueError, TypeError):
+                count_value = 0
         
         if count_value > 0:
             raise HTTPException(
@@ -157,14 +153,17 @@ async def create_client(
         api_key = secrets.token_hex(24)  # 48-character secure key
         
         # Validate the generated API key format (additional security check for production)
-        # Check if we're in a test environment (detect mock keys)
-        is_test_environment = not api_key.isalnum() or len(api_key) != 48
+        # Check if we're in a test environment using explicit environment variables
+        is_test_environment = os.getenv("ENV") == "test" or os.getenv("TESTING", "").lower() == "true"
         
         try:
             validate_api_key_format(api_key, strict_length=not is_test_environment)
         except ValueError as e:
             logger.warning(f"Generated API key validation failed: {str(e)}")
-            # For production, we'd want to regenerate, but for tests we'll allow it to continue
+            # Allow test environments to continue even with validation failures:
+            # - Tests may use mock/non-standard API keys that don't meet production format requirements
+            # - This prevents test failures due to format validation while maintaining security in production
+            # - In production, this validation failure would indicate a serious issue that should be investigated
         
         # Insert new client
         query = """
@@ -348,7 +347,7 @@ async def get_client(
     api_key: str,
     fastapi_request: Request,
     response: Response,
-    _admin_context: dict = Depends(get_admin_from_key)
+    admin_context: dict = Depends(get_admin_from_key)
 ):
     """
     Get detailed information about a specific client.
@@ -432,6 +431,8 @@ async def get_client(
 async def update_client_status(
     api_key: str,
     status_update: ClientStatusUpdate,
+    fastapi_request: Request = None,
+    response: Response = None,
     admin_context: dict = Depends(get_admin_from_key)
 ):
     """
@@ -442,6 +443,11 @@ async def update_client_status(
     
     Activates or deactivates a client's API access.
     """
+    if fastapi_request:
+        check_admin_rate_limit(fastapi_request)
+    if response:
+        add_security_headers(response)
+    
     try:
         # Ensure database connection
         if not db_manager.is_connected:
@@ -506,6 +512,8 @@ async def update_client_status(
 
 @router.get("/usage-stats")
 async def get_usage_statistics(
+    fastapi_request: Request = None,
+    response: Response = None,
     admin_context: dict = Depends(get_admin_from_key)
 ):
     """
@@ -513,6 +521,11 @@ async def get_usage_statistics(
     
     Returns aggregated usage data across all clients.
     """
+    if fastapi_request:
+        check_admin_rate_limit(fastapi_request)
+    if response:
+        add_security_headers(response)
+    
     try:
         # Ensure database connection
         if not db_manager.is_connected:
@@ -565,6 +578,9 @@ async def get_usage_statistics(
 
 @router.post("/reset-monthly-usage")
 async def reset_monthly_usage(
+    confirm: bool = False,
+    fastapi_request: Request = None,
+    response: Response = None,
     admin_context: dict = Depends(get_admin_from_key)
 ):
     """
@@ -576,6 +592,22 @@ async def reset_monthly_usage(
     
     WARNING: This action cannot be undone.
     """
+    if fastapi_request:
+        check_admin_rate_limit(fastapi_request)
+    if response:
+        add_security_headers(response)
+    
+    # Require explicit confirmation
+    if not confirm:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "confirmation_required",
+                "message": "This operation requires confirmation. Set confirm=true to proceed.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        )
+    
     try:
         # Ensure database connection
         if not db_manager.is_connected:

@@ -66,7 +66,7 @@ async def get_admin_from_key(admin_key: str = Security(admin_key_header)):
     
     # Validate admin key
     if admin_key != expected_admin_key:
-        logger.warning(f"Admin request with invalid admin key: {admin_key[:12]}...")
+        logger.warning(f"Admin request with invalid admin key: {admin_key[:4]}...")
         raise HTTPException(
             status_code=403,
             detail={

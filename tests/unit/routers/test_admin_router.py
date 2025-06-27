@@ -32,11 +32,6 @@ class TestAdminRouter:
         with patch.dict("os.environ", {"ADMIN_API_KEY": "test-admin-key"}):
             yield
 
-    @pytest.fixture
-    def mock_admin_database(self, mock_db_manager):
-        """Mock admin database operations."""
-        with patch("app.routers.admin.db_manager", mock_db_manager):
-            yield mock_db_manager.database
 
     @pytest.fixture
     def mock_token_generation(self):
@@ -45,11 +40,11 @@ class TestAdminRouter:
             yield
 
     @pytest.fixture
-    def setup_admin_test(self, mock_admin_environment, mock_admin_database, mock_token_generation):
+    def setup_admin_test(self, mock_admin_environment, mock_db_manager, mock_token_generation, mock_client_ip):
         """Complete admin test setup with all required mocks."""
         # Use all fixtures to avoid unused parameter warnings
-        _ = mock_admin_environment, mock_token_generation
-        yield mock_admin_database
+        _ = mock_admin_environment, mock_token_generation, mock_client_ip
+        yield mock_db_manager
 
 
 class TestCreateClient(TestAdminRouter):
@@ -59,7 +54,7 @@ class TestCreateClient(TestAdminRouter):
     async def test_create_client_success(self, client, admin_headers, setup_admin_test):
         """Test successful client creation."""
         # Mock database responses - first call for name check, second for insertion
-        count_result = {"count": 0}  # No existing client with same name
+        count_result = None  # No existing client with same name (None means count = 0)
         insert_result = {
             "api_key": "generated-api-key-123",
             "client_name": "Test Client",
@@ -68,7 +63,7 @@ class TestCreateClient(TestAdminRouter):
         setup_admin_test.fetch_one.side_effect = [count_result, insert_result]
 
         response = client.post(
-            "/admin/create-client",
+            "/api/v1/admin/create-client",
             json={"client_name": "Test Client", "rate_limit": 500},
             headers=admin_headers
         )
@@ -88,7 +83,7 @@ class TestCreateClient(TestAdminRouter):
         setup_admin_test.fetch_one.side_effect = [count_result, None]
 
         response = client.post(
-            "/admin/create-client",
+            "/api/v1/admin/create-client",
             json={"client_name": "Test Client"},
             headers=admin_headers
         )
@@ -101,7 +96,7 @@ class TestCreateClient(TestAdminRouter):
     async def test_create_client_missing_auth(self, client):
         """Test client creation without admin authentication."""
         response = client.post(
-            "/admin/create-client",
+            "/api/v1/admin/create-client",
             json={"client_name": "Test Client"}
             # No X-Admin-Key header provided
         )
@@ -115,7 +110,7 @@ class TestCreateClient(TestAdminRouter):
         # Set ADMIN_API_KEY but use wrong key in request
         with patch.dict("os.environ", {"ADMIN_API_KEY": "correct-admin-key"}):
             response = client.post(
-                "/admin/create-client",
+                "/api/v1/admin/create-client",
                 json={"client_name": "Test Client"},
                 headers={"X-Admin-Key": "wrong-admin-key"}
             )
@@ -131,7 +126,7 @@ class TestCreateClient(TestAdminRouter):
         # Don't set ADMIN_API_KEY but provide a header - this will trigger the 500 error
         with patch.dict("os.environ", {}, clear=True):
             response = client.post(
-                "/admin/create-client",
+                "/api/v1/admin/create-client",
                 json={"client_name": "Test Client"},
                 headers={"X-Admin-Key": "some-key"}
             )
@@ -154,7 +149,7 @@ class TestCreateClient(TestAdminRouter):
         setup_admin_test.fetch_one.side_effect = [count_result, insert_result]
 
         response = client.post(
-            "/admin/create-client",
+            "/api/v1/admin/create-client",
             json={"client_name": "Test Client", "rate_limit": 1000},
             headers=admin_headers
         )
@@ -183,7 +178,7 @@ class TestCreateClient(TestAdminRouter):
             mock_token_hex.return_value = "secure-generated-key"
             
             response = client.post(
-                "/admin/create-client",
+                "/api/v1/admin/create-client",
                 json={"client_name": "Test Client"},
                 headers=admin_headers
             )
@@ -222,7 +217,7 @@ class TestListClients(TestAdminRouter):
         setup_admin_test.fetch_all.return_value = mock_clients
 
         response = client.get(
-            "/admin/clients",
+            "/api/v1/admin/clients",
             headers=admin_headers
         )
 
@@ -258,7 +253,7 @@ class TestListClients(TestAdminRouter):
         setup_admin_test.fetch_all.return_value = mock_clients
 
         response = client.get(
-            "/admin/clients?include_inactive=true",
+            "/api/v1/admin/clients?include_inactive=true",
             headers=admin_headers
         )
 
@@ -282,7 +277,7 @@ class TestUpdateClientStatus(TestAdminRouter):
         setup_admin_test.fetch_one.return_value = mock_result
 
         response = client.patch(
-            "/admin/clients/test-key/status",
+            "/api/v1/admin/clients/test-key/status",
             json={"is_active": False},
             headers=admin_headers
         )
@@ -303,7 +298,7 @@ class TestUpdateClientStatus(TestAdminRouter):
         setup_admin_test.fetch_one.return_value = mock_result
 
         response = client.patch(
-            "/admin/clients/test-key/status",
+            "/api/v1/admin/clients/test-key/status",
             json={"is_active": True},
             headers=admin_headers
         )
@@ -319,7 +314,7 @@ class TestUpdateClientStatus(TestAdminRouter):
         setup_admin_test.fetch_one.return_value = None
 
         response = client.patch(
-            "/admin/clients/nonexistent-key/status",
+            "/api/v1/admin/clients/nonexistent-key/status",
             json={"is_active": False},
             headers=admin_headers
         )
@@ -345,7 +340,7 @@ class TestUsageStatistics(TestAdminRouter):
         setup_admin_test.fetch_one.return_value = mock_stats
 
         response = client.get(
-            "/admin/usage-stats",
+            "/api/v1/admin/usage-stats",
             headers=admin_headers
         )
 
@@ -371,7 +366,7 @@ class TestUsageStatistics(TestAdminRouter):
         setup_admin_test.fetch_one.return_value = mock_stats
 
         response = client.get(
-            "/admin/usage-stats",
+            "/api/v1/admin/usage-stats",
             headers=admin_headers
         )
 
@@ -389,10 +384,10 @@ class TestAdminRouterSecurity(TestAdminRouter):
         
         # Test all admin endpoints without authentication
         endpoints = [
-            ("POST", "/admin/create-client", {"client_name": "Test"}),
-            ("GET", "/admin/clients", None),
-            ("PATCH", "/admin/clients/test-key/status", {"is_active": False}),
-            ("GET", "/admin/usage-stats", None)
+            ("POST", "/api/v1/admin/create-client", {"client_name": "Test"}),
+            ("GET", "/api/v1/admin/clients", None),
+            ("PATCH", "/api/v1/admin/clients/test-key/status", {"is_active": False}),
+            ("GET", "/api/v1/admin/usage-stats", None)
         ]
         
         for method, url, json_data in endpoints:

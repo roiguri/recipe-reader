@@ -19,7 +19,7 @@ class TestDatabaseDependencies:
         db_generator = get_db()
         database = await db_generator.__anext__()
         
-        assert database is mock_db_manager.database
+        assert database is mock_db_manager  # get_database() returns the manager itself
         
         # Test generator cleanup (should not raise)
         try:
@@ -41,7 +41,7 @@ class TestDatabaseDependencies:
         repository = await get_client_repository()
         
         assert isinstance(repository, ClientRepository)
-        assert repository.database is mock_db_manager.database
+        assert repository.database is mock_db_manager  # get_database() returns the manager itself
 
 
 class TestDependencyIntegration:

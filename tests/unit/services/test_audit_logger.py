@@ -8,7 +8,7 @@ import pytest
 import json
 import logging
 from unittest.mock import MagicMock, patch
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.services.audit_logger import AuditLogger, AuditAction
 
@@ -77,7 +77,7 @@ class TestAuditLogger:
         
         assert logged_data["action"] == "client_created"
         assert logged_data["details"]["client_name"] == "Test Client"
-        assert logged_data["details"]["api_key_prefix"] == "api_key_123"
+        assert logged_data["details"]["api_key_prefix"] == "api_***"  # Sensitive data is masked
         assert logged_data["details"]["rate_limit"] == 500
         assert logged_data["success"] is True
 
