@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import AppHeader from './components/AppHeader.jsx';
 import MainContent from './components/MainContent.jsx';
 import ComingSoonContent from './components/ComingSoonContent.jsx';
@@ -12,8 +12,28 @@ function App() {
   const [expandedCard, setExpandedCard] = useState(null);
   const cardConfigs = useCardConfigs();
 
+  // Restore expanded card state on page load (after OAuth redirect)
+  useEffect(() => {
+    const savedExpandedCard = sessionStorage.getItem('app_expandedCard');
+    if (savedExpandedCard && savedExpandedCard !== 'null') {
+      setExpandedCard(savedExpandedCard);
+      // Clean up after restoration with delay to ensure processors have time to restore form data
+      setTimeout(() => {
+        sessionStorage.removeItem('app_expandedCard');
+      }, 1000);
+    }
+  }, []);
+
   const handleCardClick = (cardId) => {
-    setExpandedCard(expandedCard === cardId ? null : cardId);
+    const newExpandedCard = expandedCard === cardId ? null : cardId;
+    setExpandedCard(newExpandedCard);
+    
+    // Save expanded card state when changing
+    if (newExpandedCard) {
+      sessionStorage.setItem('app_expandedCard', newExpandedCard);
+    } else {
+      sessionStorage.removeItem('app_expandedCard');
+    }
   };
 
   const getExpandedContent = (id, config) => {

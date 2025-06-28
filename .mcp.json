@@ -1,5 +1,16 @@
 {
   "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=ggvcbmxcntvnaxtgsmbs"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_8bcdc2679ba9dadb2b436e685f9d11b9590d801f"
+      }
+    },
     "task-master-ai": {
       "command": "npx",
       "args": ["-y", "--package=task-master-ai", "task-master-ai"]
