@@ -150,8 +150,8 @@
             "dependencies": [
               1
             ],
-            "details": "Configure Apple Developer account, create App ID and Service ID, generate private key, configure Apple provider in Supabase Auth settings with proper team ID and key ID",
-            "status": "pending",
+            "details": "Configure Apple Developer account, create App ID and Service ID, generate private key, configure Apple provider in Supabase Auth settings with proper team ID and key ID\n<info added on 2025-06-28T08:19:47.728Z>\nSwitched from Apple OAuth to GitHub OAuth due to Apple's paid requirements. Updated environment configuration for GitHub OAuth, created GitHub OAuth test script. Ready for GitHub OAuth setup which is free and simpler than Apple Sign-In.\n</info added on 2025-06-28T08:19:47.728Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -473,7 +473,7 @@
     ],
     "metadata": {
       "created": "2025-06-26T12:57:05.461Z",
-      "updated": "2025-06-28T08:13:58.810Z",
+      "updated": "2025-06-28T08:52:48.410Z",
       "description": "Tasks for demo-deployment context"
     }
   }
