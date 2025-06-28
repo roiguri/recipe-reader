@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { processRecipeText, createRequestController, APIError } from '../../utils/api';
+import { createRequestController, APIError } from '../../utils/api';
+import { secureProcessRecipeText, checkRequestPermission, getErrorDisplayInfo } from '../../utils/secureApi';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
@@ -20,8 +21,8 @@ import useFormValidation from './useFormValidation';
 const TextProcessor = () => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
-  const { isAuthenticated } = useAuth();
-  const { hasQuota, incrementUsage } = useRateLimit();
+  const auth = useAuth();
+  const rateLimit = useRateLimit();
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -47,7 +48,7 @@ const TextProcessor = () => {
 
   // Restore form data after sign-in
   useEffect(() => {
-    if (isAuthenticated) {
+    if (auth.isAuthenticated) {
       // Check for saved form data in sessionStorage
       const savedData = sessionStorage.getItem('textProcessor_formData');
       if (savedData) {
@@ -64,7 +65,7 @@ const TextProcessor = () => {
       // Clear local state as well
       setSavedFormData(null);
     }
-  }, [isAuthenticated]);
+  }, [auth.isAuthenticated]);
 
   const handleTextChange = (e) => {
     const newText = e.target.value;
@@ -78,20 +79,24 @@ const TextProcessor = () => {
       return;
     }
 
-    // Check authentication and show sign-in modal if needed
-    if (!isAuthenticated) {
-      // Save current form state to sessionStorage (persists across re-renders)
-      sessionStorage.setItem('textProcessor_formData', JSON.stringify({ text }));
-      // Save that this card should be expanded after OAuth redirect
-      sessionStorage.setItem('app_expandedCard', 'text');
-      setSavedFormData({ text });
-      setShowSignInModal(true);
-      return;
-    }
-
-    if (!hasQuota) {
-      setShowQuotaExceeded(true);
-      return;
+    // Check authentication and rate limiting with secure API
+    const permission = checkRequestPermission(auth, rateLimit);
+    if (!permission.canMakeRequest) {
+      if (permission.errorType === 'AuthenticationError') {
+        // Save current form state to sessionStorage (persists across re-renders)
+        sessionStorage.setItem('textProcessor_formData', JSON.stringify({ text }));
+        // Save that this card should be expanded after OAuth redirect
+        sessionStorage.setItem('app_expandedCard', 'text');
+        setSavedFormData({ text });
+        setShowSignInModal(true);
+        return;
+      } else if (permission.errorType === 'RateLimitError') {
+        setShowQuotaExceeded(true);
+        return;
+      } else {
+        setError(permission.reason);
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -102,18 +107,23 @@ const TextProcessor = () => {
     abortControllerRef.current = createRequestController(30000);
 
     try {
-      const response = await processRecipeText(
+      const response = await secureProcessRecipeText(
         text,
         {},
+        auth,
+        rateLimit,
         abortControllerRef.current.signal
       );
       
-      // Increment usage after successful processing
-      await incrementUsage();
-      
       setResult(response);
     } catch (err) {
-      if (err instanceof APIError) {
+      const errorInfo = getErrorDisplayInfo(err);
+      
+      if (errorInfo.type === 'authentication') {
+        setShowSignInModal(true);
+      } else if (errorInfo.type === 'rateLimit') {
+        setShowQuotaExceeded(true);
+      } else if (err instanceof APIError) {
         if (err.details?.cancelled) {
           setError(t('errors.cancelled'));
         } else if (err.details?.offline) {
@@ -124,7 +134,7 @@ const TextProcessor = () => {
           setError(err.message);
         }
       } else {
-        setError(t('errors.unexpected'));
+        setError(errorInfo.message || t('errors.unexpected'));
       }
     } finally {
       setIsLoading(false);

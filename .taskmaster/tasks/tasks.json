@@ -268,75 +268,78 @@
         "dependencies": [
           2
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": []
       },
       {
         "id": 4,
         "title": "Implement Backend JWT Verification and Rate Limiting",
-        "description": "Add Supabase JWT verification to FastAPI backend with rate limiting middleware",
-        "details": "Install supabase-py client library (^2.3.0) in FastAPI backend. Create JWT verification dependency using supabase.auth.get_user() to validate and extract user information from Authorization header. Implement rate limiting middleware that checks user quota against demo_rate_limits table before processing requests. Add atomic database operations using Supabase client to increment requests_used counter. Create admin user bypass logic checking is_admin flag from user record. Add rate limit headers to API responses: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset. Implement proper error responses for quota exceeded (429 status) and authentication failures (401 status). Add comprehensive logging for rate limiting events and quota tracking. Create database connection pooling for performance optimization. Update existing recipe processing endpoints to use authentication dependency: /api/v1/recipe/text, /api/v1/recipe/url, /api/v1/recipe/image.",
-        "testStrategy": "Test JWT verification with valid and invalid tokens. Verify rate limiting blocks requests when quota exceeded. Test admin user bypass functionality. Validate rate limit headers are correctly returned. Test atomic database operations under concurrent load. Verify error responses match expected format and status codes.",
-        "priority": "high",
+        "description": "Implement frontend-only authentication and rate limiting security using Supabase, while maintaining existing API key authentication for backend",
+        "status": "in-progress",
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "priority": "high",
+        "details": "Implement comprehensive frontend security to ensure users cannot bypass authentication or rate limiting. Create authentication guards that prevent API requests without valid Supabase JWT tokens. Implement client-side rate limiting that tracks user quota in Supabase database before allowing requests. Add security measures to prevent quota circumvention through token manipulation or client-side bypassing. Use existing demo API key for all backend requests while enforcing user authentication and rate limiting on frontend. Create admin user detection and unlimited access handling. Implement proper error handling for authentication failures and quota exceeded scenarios. Add rate limit display components showing remaining requests. Ensure all recipe processing functionality requires authenticated users with valid quota.",
+        "testStrategy": "Test that unauthenticated users cannot access recipe processing. Verify rate limiting prevents requests when quota exceeded. Test admin user bypass functionality. Validate quota tracking accuracy across sessions. Test security measures against quota circumvention attempts. Verify existing API endpoints work with demo API key.",
         "subtasks": [
           {
             "id": 1,
-            "title": "Implement JWT verification middleware",
-            "description": "Create JWT token validation middleware for request authentication",
+            "title": "Implement authentication guards and request blocking",
+            "description": "Create frontend guards that prevent API requests without valid authentication",
+            "status": "done",
             "dependencies": [],
-            "details": "Implement JWT token validation middleware that extracts and verifies JWT tokens from Authorization headers. Include token expiration checks, signature validation, and payload extraction. Handle malformed tokens and expired tokens with appropriate error responses.",
-            "status": "pending",
-            "testStrategy": ""
+            "details": "Implement authentication guards that check for valid Supabase JWT tokens before allowing any API requests. Block all recipe processing functionality for unauthenticated users. Create middleware or context providers that wrap API calls with authentication checks. Ensure no requests can be made to backend without valid user session.",
+            "testStrategy": "Test that unauthenticated users cannot trigger API requests. Verify authentication state prevents access to processing features."
           },
           {
             "id": 2,
-            "title": "Create rate limiting service",
-            "description": "Implement rate limiting functionality with configurable limits per client",
+            "title": "Implement frontend rate limiting with Supabase",
+            "description": "Create client-side rate limiting that enforces quota before API requests",
+            "status": "pending",
             "dependencies": [
               1
             ],
-            "details": "Design and implement rate limiting service that tracks request counts per client within time windows. Support configurable limits, sliding window or fixed window algorithms, and integration with database for persistence. Include rate limit headers in responses.",
-            "status": "pending",
-            "testStrategy": ""
+            "details": "Implement rate limiting logic that checks user quota in Supabase database before allowing API requests. Create atomic operations to increment usage counter and validate remaining quota. Implement 5 requests per user limit with admin bypass for unlimited access. Add real-time quota tracking and display in UI components.",
+            "testStrategy": "Test quota enforcement blocks requests when limit reached. Verify admin users have unlimited access. Test quota tracking accuracy."
           },
           {
             "id": 3,
-            "title": "Implement database operations for authentication",
-            "description": "Create database layer for client authentication and usage tracking",
-            "dependencies": [],
-            "details": "Implement database operations for client lookup, authentication status verification, and usage tracking updates. Include atomic operations for request counting, connection pooling, and proper error handling for database failures.",
+            "title": "Add security measures against quota bypassing",
+            "description": "Implement security controls to prevent rate limiting circumvention",
             "status": "pending",
-            "testStrategy": ""
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Add security measures to prevent users from bypassing rate limiting through client-side manipulation. Implement server-side validation of quota checks using Supabase RLS policies. Add request signing or validation to prevent direct API access. Create monitoring for suspicious usage patterns or quota bypass attempts.",
+            "testStrategy": "Test attempts to bypass rate limiting fail. Verify RLS policies prevent unauthorized quota manipulation. Test direct API access prevention."
           },
           {
             "id": 4,
-            "title": "Create admin bypass logic and error handling",
-            "description": "Implement admin authentication bypass and comprehensive error handling",
+            "title": "Integrate demo API key with authenticated requests",
+            "description": "Configure frontend to use demo API key for backend requests while maintaining user authentication",
+            "status": "pending",
             "dependencies": [
               1,
-              3
+              2
             ],
-            "details": "Create admin bypass logic for administrative endpoints with separate authentication mechanism. Implement comprehensive error handling for authentication failures, database errors, and rate limiting. Include proper HTTP status codes and structured error responses.",
-            "status": "pending",
-            "testStrategy": ""
+            "details": "Configure frontend to use existing demo API key for all backend recipe processing requests. Ensure API key is properly secured in environment variables. Maintain user authentication and rate limiting while using demo key for backend communication. Update request handling to include both user authentication validation and API key for backend.",
+            "testStrategy": "Test backend requests use demo API key correctly. Verify user authentication still enforced. Test API key security and proper environment configuration."
           },
           {
             "id": 5,
-            "title": "Integrate endpoint protection and logging",
-            "description": "Apply authentication middleware to endpoints and implement request logging",
+            "title": "Update UI components with authentication and quota display",
+            "description": "Modify frontend components to show authentication status and rate limiting information",
+            "status": "pending",
             "dependencies": [
               1,
               2,
               3,
               4
             ],
-            "details": "Integrate authentication middleware with FastAPI endpoints using dependency injection. Implement comprehensive request logging with client identification, request details, and performance metrics. Ensure all recipe endpoints are protected while maintaining backward compatibility.",
-            "status": "pending",
-            "testStrategy": ""
+            "details": "Update recipe processing components to show authentication requirements and quota status. Add rate limit progress indicators and remaining request counters. Implement proper error handling and user feedback for authentication failures and quota exceeded scenarios. Create admin status indicators for unlimited users.",
+            "testStrategy": "Test UI properly displays authentication status. Verify quota information is accurate and updates in real-time. Test error messaging for authentication and quota issues."
           }
         ]
       },
@@ -473,7 +476,7 @@
     ],
     "metadata": {
       "created": "2025-06-26T12:57:05.461Z",
-      "updated": "2025-06-28T20:19:00.648Z",
+      "updated": "2025-06-28T22:32:13.777Z",
       "description": "Tasks for demo-deployment context"
     }
   },

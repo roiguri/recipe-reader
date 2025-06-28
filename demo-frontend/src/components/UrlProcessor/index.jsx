@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { processRecipeUrl, createRequestController, APIError } from '../../utils/api';
+import { createRequestController, APIError } from '../../utils/api';
+import { secureProcessRecipeUrl, checkRequestPermission, getErrorDisplayInfo } from '../../utils/secureApi';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
@@ -19,8 +20,8 @@ import useUrlValidation from './useUrlValidation';
 const UrlProcessor = () => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
-  const { isAuthenticated } = useAuth();
-  const { hasQuota, incrementUsage } = useRateLimit();
+  const auth = useAuth();
+  const rateLimit = useRateLimit();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -42,7 +43,7 @@ const UrlProcessor = () => {
 
   // Restore form data after sign-in
   useEffect(() => {
-    if (isAuthenticated) {
+    if (auth.isAuthenticated) {
       // Check for saved form data in sessionStorage
       const savedData = sessionStorage.getItem('urlProcessor_formData');
       if (savedData) {
@@ -59,7 +60,7 @@ const UrlProcessor = () => {
       // Clear local state as well
       setSavedFormData(null);
     }
-  }, [isAuthenticated]);
+  }, [auth.isAuthenticated]);
 
   const handleUrlChange = (e) => {
     const newUrl = e.target.value;
@@ -73,20 +74,24 @@ const UrlProcessor = () => {
       return;
     }
 
-    // Check authentication and show sign-in modal if needed
-    if (!isAuthenticated) {
-      // Save current form state to sessionStorage (persists across re-renders)
-      sessionStorage.setItem('urlProcessor_formData', JSON.stringify({ url }));
-      // Save that this card should be expanded after OAuth redirect
-      sessionStorage.setItem('app_expandedCard', 'url');
-      setSavedFormData({ url });
-      setShowSignInModal(true);
-      return;
-    }
-
-    if (!hasQuota) {
-      setShowQuotaExceeded(true);
-      return;
+    // Check authentication and rate limiting with secure API
+    const permission = checkRequestPermission(auth, rateLimit);
+    if (!permission.canMakeRequest) {
+      if (permission.errorType === 'AuthenticationError') {
+        // Save current form state to sessionStorage (persists across re-renders)
+        sessionStorage.setItem('urlProcessor_formData', JSON.stringify({ url }));
+        // Save that this card should be expanded after OAuth redirect
+        sessionStorage.setItem('app_expandedCard', 'url');
+        setSavedFormData({ url });
+        setShowSignInModal(true);
+        return;
+      } else if (permission.errorType === 'RateLimitError') {
+        setShowQuotaExceeded(true);
+        return;
+      } else {
+        setError(permission.reason);
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -97,21 +102,26 @@ const UrlProcessor = () => {
     abortControllerRef.current = createRequestController(45000); // Longer timeout for URL processing
 
     try {
-      const response = await processRecipeUrl(
+      const response = await secureProcessRecipeUrl(
         url,
         {
           timeout: 30,
           max_retries: 3
         },
+        auth,
+        rateLimit,
         abortControllerRef.current.signal
       );
       
-      // Increment usage after successful processing
-      await incrementUsage();
-      
       setResult(response);
     } catch (err) {
-      if (err instanceof APIError) {
+      const errorInfo = getErrorDisplayInfo(err);
+      
+      if (errorInfo.type === 'authentication') {
+        setShowSignInModal(true);
+      } else if (errorInfo.type === 'rateLimit') {
+        setShowQuotaExceeded(true);
+      } else if (err instanceof APIError) {
         if (err.details?.cancelled) {
           setError(t('errors.cancelled'));
         } else if (err.details?.offline) {
@@ -123,7 +133,7 @@ const UrlProcessor = () => {
           setError(t('errors.processingFailed'));
         }
       } else {
-        setError(t('errors.unexpected'));
+        setError(errorInfo.message || t('errors.unexpected'));
       }
     } finally {
       setIsLoading(false);
