@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import QuotaProgress from '../QuotaProgress';
 
 const UserMenu = () => {
   const { t } = useTranslation();
@@ -63,10 +64,11 @@ const UserMenu = () => {
             </p>
           </div>
           
-          <div className="py-2">
-            <div className="px-4 py-2 text-sm text-gray-500">
-              {t('auth.quotaStatus')}: 5 {t('auth.requestsRemaining')}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="text-xs text-gray-500 mb-2">
+              {t('auth.quotaStatus')}
             </div>
+            <QuotaProgress size="small" />
           </div>
 
           <div className="border-t border-gray-100 py-2">

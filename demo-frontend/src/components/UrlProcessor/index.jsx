@@ -1,12 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { processRecipeUrl, createRequestController, APIError } from '../../utils/api';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import QuotaExceeded from '../QuotaExceeded';
+import SignInModal from '../auth/SignInModal';
+import { useRateLimit } from '../../hooks/useRateLimit';
 
 // Import sub-components
 import UrlInput from './UrlInput';
@@ -15,9 +19,14 @@ import useUrlValidation from './useUrlValidation';
 const UrlProcessor = () => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const { hasQuota, incrementUsage } = useRateLimit();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [showQuotaExceeded, setShowQuotaExceeded] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [savedFormData, setSavedFormData] = useState(null);
   const urlInputRef = useRef(null);
   const abortControllerRef = useRef(null);
 
@@ -31,6 +40,27 @@ const UrlProcessor = () => {
     validateForSubmission 
   } = useUrlValidation(url);
 
+  // Restore form data after sign-in
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Check for saved form data in sessionStorage
+      const savedData = sessionStorage.getItem('urlProcessor_formData');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          setUrl(parsedData.url || '');
+          sessionStorage.removeItem('urlProcessor_formData');
+          // Focus the input after restoration
+          setTimeout(() => urlInputRef.current?.focus(), 100);
+        } catch (error) {
+          console.error('Error parsing saved form data:', error);
+        }
+      }
+      // Clear local state as well
+      setSavedFormData(null);
+    }
+  }, [isAuthenticated]);
+
   const handleUrlChange = (e) => {
     const newUrl = e.target.value;
     setUrl(newUrl);
@@ -40,6 +70,22 @@ const UrlProcessor = () => {
     e.preventDefault();
     
     if (!validateForSubmission()) {
+      return;
+    }
+
+    // Check authentication and show sign-in modal if needed
+    if (!isAuthenticated) {
+      // Save current form state to sessionStorage (persists across re-renders)
+      sessionStorage.setItem('urlProcessor_formData', JSON.stringify({ url }));
+      // Save that this card should be expanded after OAuth redirect
+      sessionStorage.setItem('app_expandedCard', 'url');
+      setSavedFormData({ url });
+      setShowSignInModal(true);
+      return;
+    }
+
+    if (!hasQuota) {
+      setShowQuotaExceeded(true);
       return;
     }
 
@@ -59,6 +105,9 @@ const UrlProcessor = () => {
         },
         abortControllerRef.current.signal
       );
+      
+      // Increment usage after successful processing
+      await incrementUsage();
       
       setResult(response);
     } catch (err) {
@@ -122,7 +171,20 @@ const UrlProcessor = () => {
       }}
       className="w-full"
     >
-      <Card>
+      {showQuotaExceeded && (
+        <QuotaExceeded onClose={() => setShowQuotaExceeded(false)} />
+      )}
+      
+      {showSignInModal && (
+        <SignInModal 
+          isOpen={showSignInModal}
+          onClose={() => setShowSignInModal(false)}
+          customMessage={t('auth.signInToProcess')}
+        />
+      )}
+      
+      {!showQuotaExceeded && (
+        <Card>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Header */}
           <div className={`text-center mb-6 ${isRTL ? 'text-right' : 'text-left'} sm:text-center`}>
@@ -221,7 +283,8 @@ const UrlProcessor = () => {
             </ul>
           </div>
         </form>
-      </Card>
+        </Card>
+      )}
     </motion.div>
   );
 };

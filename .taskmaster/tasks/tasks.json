@@ -200,7 +200,7 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -253,7 +253,7 @@
               4
             ],
             "details": "Create error handling for network failures, invalid credentials, expired sessions, and OAuth callback errors. Implement user-friendly error messages and recovery flows.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -268,7 +268,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -473,8 +473,28 @@
     ],
     "metadata": {
       "created": "2025-06-26T12:57:05.461Z",
-      "updated": "2025-06-28T19:52:45.076Z",
+      "updated": "2025-06-28T20:19:00.648Z",
       "description": "Tasks for demo-deployment context"
+    }
+  },
+  "demo-future-enhancement": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Enhanced OAuth Error Handling with Network Detection",
+        "description": "Implement comprehensive OAuth error handling including network connectivity detection, timeout protection, and graceful offline scenario management to prevent browser redirect failures.",
+        "details": "Implement network connectivity detection using navigator.onLine and periodic connectivity checks before initiating OAuth flows. Add timeout protection (30-45 seconds) for OAuth redirects using Promise.race with AbortController for cleanup. Create error categorization system distinguishing between network errors, OAuth provider errors, and timeout scenarios. Implement graceful offline handling that shows user-friendly messages instead of allowing browser 'no internet' pages. Add retry mechanisms with exponential backoff for transient network issues. Create recovery flows that allow users to retry authentication once connectivity is restored. Include proper error logging and user feedback for different failure scenarios. Ensure OAuth state parameters are properly cleaned up on failures to prevent stale authentication attempts.",
+        "testStrategy": "Test network detection accuracy by simulating offline/online states using browser dev tools. Verify timeout protection by mocking slow OAuth provider responses and confirming proper cleanup. Test offline scenarios by disconnecting network during OAuth flow and verifying user-friendly error messages appear instead of browser error pages. Validate error categorization by triggering different failure types (network, provider, timeout) and confirming appropriate user messaging. Test recovery flows by going offline during auth, then reconnecting and retrying. Verify OAuth state cleanup by checking localStorage/sessionStorage after failed attempts. Conduct cross-browser testing for network detection reliability.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-28T20:10:19.758Z",
+      "updated": "2025-06-28T20:12:34.038Z",
+      "description": "Future enhancements and nice-to-have features for the demo"
     }
   }
 }

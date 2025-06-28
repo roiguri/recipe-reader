@@ -280,6 +280,7 @@
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "signInDescription": "Sign in to start processing recipes with your personal quota",
+    "signInToProcess": "Please sign in to use the service. For each user, there are 5 free requests, for more access contact us.",
     "signInWith": "Continue with {{provider}}",
     "signedIn": "Signed In",
     "signingOut": "Signing out...",
@@ -287,6 +288,23 @@
     "settings": "Settings",
     "quotaStatus": "Quota",
     "requestsRemaining": "requests remaining",
-    "agreementText": "By signing in, you agree to our Terms of Service and Privacy Policy"
+    "agreementText": "By signing in, you agree to our Terms of Service and Privacy Policy",
+    "reselectFiles": "Please re-select your {{count}} image file(s) to continue processing."
+  },
+  "quota": {
+    "loading": "Loading quota...",
+    "error": "Quota error",
+    "unlimited": "Unlimited",
+    "exceededShort": "Quota exceeded",
+    "exceeded": {
+      "title": "Quota Exceeded",
+      "description": "You've used all 5 of your free recipe processing requests. Unfortunately, we're not offering more requests at the moment. Please contact us for more details.",
+      "used": "Used",
+      "remaining": "Remaining",
+      "contactUs": "Contact Us",
+      "close": "Close",
+      "resetInfo": "Demo quotas reset monthly, feel free to come back soon.",
+      "upgradeInfo": "For production use, contact us about API access plans."
+    }
   }
 }

@@ -1,11 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { processRecipeImage, createRequestController, APIError } from '../../utils/api';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
+import QuotaExceeded from '../QuotaExceeded';
+import SignInModal from '../auth/SignInModal';
+import { useRateLimit } from '../../hooks/useRateLimit';
 
 // Import sub-components
 import ImageFileInput from './ImageFileInput';
@@ -15,9 +19,13 @@ import { useImageValidation } from './useImageValidation';
 const ImageProcessor = () => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const { hasQuota, incrementUsage } = useRateLimit();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [showQuotaExceeded, setShowQuotaExceeded] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
   const [error, setError] = useState(null);
   const abortControllerRef = useRef(null);
 
@@ -29,6 +37,27 @@ const ImageProcessor = () => {
     getMaxFileSizeMB,
     getSupportedFormats
   } = useImageValidation();
+
+  // Restore form data after sign-in
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Check for saved form data in sessionStorage
+      const savedData = sessionStorage.getItem('imageProcessor_formData');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          // Note: Files cannot be fully restored from sessionStorage due to security restrictions
+          // We'll show a helpful message to the user about re-selecting files
+          if (parsedData.fileCount > 0) {
+            setError(t('auth.reselectFiles', { count: parsedData.fileCount }));
+          }
+          sessionStorage.removeItem('imageProcessor_formData');
+        } catch (error) {
+          console.error('Error parsing saved form data:', error);
+        }
+      }
+    }
+  }, [isAuthenticated, t]);
 
   const handleFilesSelected = (files, errors) => {
     if (errors && errors.length > 0) {
@@ -76,6 +105,24 @@ const ImageProcessor = () => {
       return;
     }
 
+    // Check authentication and show sign-in modal if needed
+    if (!isAuthenticated) {
+      // Save current form state to sessionStorage (can't save actual files, just metadata)
+      sessionStorage.setItem('imageProcessor_formData', JSON.stringify({ 
+        fileCount: selectedFiles.length,
+        fileNames: selectedFiles.map(f => f.name)
+      }));
+      // Save that this card should be expanded after OAuth redirect
+      sessionStorage.setItem('app_expandedCard', 'image');
+      setShowSignInModal(true);
+      return;
+    }
+
+    if (!hasQuota) {
+      setShowQuotaExceeded(true);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setResult(null);
@@ -106,6 +153,9 @@ const ImageProcessor = () => {
         },
         abortControllerRef.current.signal
       );
+      
+      // Increment usage after successful processing
+      await incrementUsage();
       
       setResult(response);
     } catch (err) {
@@ -162,7 +212,20 @@ const ImageProcessor = () => {
       }}
       className="w-full"
     >
-      <Card>
+      {showQuotaExceeded && (
+        <QuotaExceeded onClose={() => setShowQuotaExceeded(false)} />
+      )}
+      
+      {showSignInModal && (
+        <SignInModal 
+          isOpen={showSignInModal}
+          onClose={() => setShowSignInModal(false)}
+          customMessage={t('auth.signInToProcess')}
+        />
+      )}
+      
+      {!showQuotaExceeded && (
+        <Card>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Header */}
           <div className={`text-center mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -300,7 +363,8 @@ const ImageProcessor = () => {
             )}
           </div>
         </form>
-      </Card>
+        </Card>
+      )}
     </motion.div>
   );
 };
