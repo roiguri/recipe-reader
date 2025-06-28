@@ -275,5 +275,18 @@
     "removeImage": "Remove image {{index}}",
     "removeAllImages": "Remove all images",
     "optionCard": "{{title}}: {{description}}"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "signInDescription": "Sign in to start processing recipes with your personal quota",
+    "signInWith": "Continue with {{provider}}",
+    "signedIn": "Signed In",
+    "signingOut": "Signing out...",
+    "myAccount": "My Account",
+    "settings": "Settings",
+    "quotaStatus": "Quota",
+    "requestsRemaining": "requests remaining",
+    "agreementText": "By signing in, you agree to our Terms of Service and Privacy Policy"
   }
 }

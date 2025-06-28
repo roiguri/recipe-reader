@@ -275,5 +275,18 @@
     "removeImage": "הסר תמונה {{index}}",
     "removeAllImages": "הסר את כל התמונות",
     "optionCard": "{{title}}: {{description}}"
+  },
+  "auth": {
+    "signIn": "התחברות",
+    "signOut": "התנתקות",
+    "signInDescription": "התחבר כדי להתחיל לעבד מתכונים עם המכסה האישית שלך",
+    "signInWith": "המשך עם {{provider}}",
+    "signedIn": "מחובר",
+    "signingOut": "מתנתק...",
+    "myAccount": "החשבון שלי",
+    "settings": "הגדרות",
+    "quotaStatus": "מכסה",
+    "requestsRemaining": "בקשות נותרו",
+    "agreementText": "על ידי התחברות, אתה מסכים לתנאי השירות ומדיניות הפרטיות שלנו"
   }
 }
