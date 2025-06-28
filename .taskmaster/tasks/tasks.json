@@ -140,7 +140,7 @@
               1
             ],
             "details": "Create Google Cloud project, configure OAuth consent screen, generate client ID and secret, configure Google provider in Supabase Auth settings with proper scopes and redirect URLs",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -456,11 +456,24 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Configure Google OAuth for Production Domain",
+        "description": "Update Google Cloud Console OAuth credentials to include production JavaScript origins and redirect URIs for the deployed application.",
+        "details": "Access Google Cloud Console and navigate to the OAuth 2.0 Client IDs configuration for the Recipe Reader project. Add production domain origins to Authorized JavaScript origins list (e.g., https://recipe-reader.netlify.app, https://your-custom-domain.com). Update Authorized redirect URIs to include production callback URLs for Supabase authentication (typically https://your-supabase-project.supabase.co/auth/v1/callback). Verify that local development origins (http://localhost:3000, http://127.0.0.1:3000) remain configured for continued development workflow. Test OAuth flow in production environment by attempting Google sign-in and verifying successful authentication. Update Supabase Auth settings to ensure redirect URLs match Google OAuth configuration. Document the OAuth configuration changes for future reference and team members.",
+        "testStrategy": "Test Google OAuth sign-in flow from production domain to verify successful authentication. Confirm redirect URLs work correctly without CORS errors or invalid origin warnings. Test sign-in from multiple browsers and devices to ensure consistent behavior. Verify local development OAuth continues to work after production configuration updates. Test both sign-in and sign-up flows with Google OAuth. Validate that user data is correctly stored in Supabase after successful Google authentication in production.",
+        "status": "pending",
+        "dependencies": [
+          6
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-26T12:57:05.461Z",
-      "updated": "2025-06-28T07:54:58.681Z",
+      "updated": "2025-06-28T08:13:58.810Z",
       "description": "Tasks for demo-deployment context"
     }
   }

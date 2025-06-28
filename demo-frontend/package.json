@@ -24,7 +24,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "validate:locales": "node scripts/validate-locales.js",
-    "validate:env": "node scripts/validate-env.js"
+    "validate:env": "node scripts/validate-env.js",
+    "test:supabase": "node test/test-supabase.js",
+    "test:google-oauth": "node test/test-google-oauth.js"
   },
   "eslintConfig": {
     "extends": [
