@@ -392,17 +392,22 @@ const ExportOptions = ({ recipe }) => {
         </html>
       `;
 
-      // Create print window
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
-      printWindow.document.open();
-      printWindow.document.write(printHTML);
-      printWindow.document.close();
+      // Create a hidden iframe
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      // Write the print HTML to the iframe
+      iframe.contentDocument.open();
+      iframe.contentDocument.write(printHTML);
+      iframe.contentDocument.close();
 
       // Wait for content to load, then print
-      printWindow.onload = () => {
+      iframe.onload = () => {
         setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
+          iframe.contentWindow.print();
+          document.body.removeChild(iframe); // Clean up the iframe
+          setIsExporting(false);
         }, 250);
       };
 
