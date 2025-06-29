@@ -153,8 +153,8 @@ const UrlProcessor = () => {
   const handleCancel = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   const handleClear = () => {
@@ -257,7 +257,11 @@ const UrlProcessor = () => {
                 <Button
                   variant="cancel"
                   type="button"
-                  onClick={handleCancel}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCancel();
+                  }}
                   className="w-full"
                 >
                   {t('urlProcessor.buttons.cancel')}
