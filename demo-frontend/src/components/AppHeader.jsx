@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../contexts/LanguageContext';
 import Button from './ui/Button.jsx';
 import FlagLanguageSelector from './ui/FlagLanguageSelector.jsx';
+import AuthButton from './auth/AuthButton.jsx';
 
 const AppHeader = () => {
   const { t } = useTranslation();
@@ -28,10 +29,7 @@ const AppHeader = () => {
           <Button variant="ghost" size="sm">{t('appHeader.home')}</Button>
         </div>
         <div className="flex items-center gap-3">
-          <div
-            className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-            style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBbIfpMWhSd6CAkVr95L_T5GX26-ggLnottehurep1nJWHnRlOz7U2JGvphPY_5LcBAbPh3FWicsu2lfTncM1CRqn5Jo4BAEmR1vc9ZqNds6QI4QdqLRjMedD6KIFgYgSUFiJIm2ydNYgvq0R0haXVPBTirTs5P9lY7XtID6qhwzSiAL-bmqs7cR5DbRI8OF_zTSULaKvDSwnRfsxu3Xgi7mCptQFhrSEIISTMFyO6m0haZpT1zKX5Zy-Bat9jpG2legIJ6m-Klmmj3")'}}
-          ></div>
+          <AuthButton />
         </div>
       </div>
     </header>

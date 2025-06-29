@@ -1,11 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { processRecipeImage, createRequestController, APIError } from '../../utils/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { createRequestController, APIError } from '../../utils/api';
+import { secureProcessRecipeImage, checkRequestPermission, getErrorDisplayInfo } from '../../utils/secureApi';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
+import QuotaExceeded from '../QuotaExceeded';
+import SignInModal from '../auth/SignInModal';
+import { useRateLimit } from '../../hooks/useRateLimit';
 
 // Import sub-components
 import ImageFileInput from './ImageFileInput';
@@ -15,9 +20,13 @@ import { useImageValidation } from './useImageValidation';
 const ImageProcessor = () => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
+  const auth = useAuth();
+  const rateLimit = useRateLimit();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [showQuotaExceeded, setShowQuotaExceeded] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
   const [error, setError] = useState(null);
   const abortControllerRef = useRef(null);
 
@@ -29,6 +38,27 @@ const ImageProcessor = () => {
     getMaxFileSizeMB,
     getSupportedFormats
   } = useImageValidation();
+
+  // Restore form data after sign-in
+  useEffect(() => {
+    if (auth.isAuthenticated && typeof sessionStorage !== 'undefined') {
+      // Check for saved form data in sessionStorage
+      const savedData = sessionStorage.getItem('imageProcessor_formData');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          // Note: Files cannot be fully restored from sessionStorage due to security restrictions
+          // We'll show a helpful message to the user about re-selecting files
+          if (parsedData.fileCount > 0) {
+            setError(t('auth.reselectFiles', { count: parsedData.fileCount }));
+          }
+          sessionStorage.removeItem('imageProcessor_formData');
+        } catch (error) {
+          console.error('Error parsing saved form data:', error);
+        }
+      }
+    }
+  }, [auth.isAuthenticated, t]);
 
   const handleFilesSelected = (files, errors) => {
     if (errors && errors.length > 0) {
@@ -76,6 +106,30 @@ const ImageProcessor = () => {
       return;
     }
 
+    // Check authentication and rate limiting with secure API
+    const permission = checkRequestPermission(auth, rateLimit);
+    if (!permission.canMakeRequest) {
+      if (permission.errorType === 'AuthenticationError') {
+        // Save current form state to sessionStorage (can't save actual files, just metadata)
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('imageProcessor_formData', JSON.stringify({ 
+            fileCount: selectedFiles.length,
+            fileNames: selectedFiles.map(f => f.name)
+          }));
+          // Save that this card should be expanded after OAuth redirect
+          sessionStorage.setItem('app_expandedCard', 'image');
+        }
+        setShowSignInModal(true);
+        return;
+      } else if (permission.errorType === 'RateLimitError') {
+        setShowQuotaExceeded(true);
+        return;
+      } else {
+        setError(permission.reason);
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
     setResult(null);
@@ -96,20 +150,28 @@ const ImageProcessor = () => {
         ? conversionResult.data[0].base64  // Single image
         : conversionResult.data.map(item => item.base64); // Multiple images
 
-      // Process the images
-      const response = await processRecipeImage(
+      // Process the images using secure API
+      const response = await secureProcessRecipeImage(
         imageData,
         {
           format_type: 'structured', // Use structured format for better organization
           max_retries: 3,
           timeout: 60
         },
+        auth,
+        rateLimit,
         abortControllerRef.current.signal
       );
       
       setResult(response);
     } catch (err) {
-      if (err instanceof APIError) {
+      const errorInfo = getErrorDisplayInfo(err);
+      
+      if (errorInfo.type === 'authentication') {
+        setShowSignInModal(true);
+      } else if (errorInfo.type === 'rateLimit') {
+        setShowQuotaExceeded(true);
+      } else if (err instanceof APIError) {
         if (err.details?.cancelled) {
           setError(t('errors.cancelled'));
         } else if (err.details?.offline) {
@@ -120,7 +182,7 @@ const ImageProcessor = () => {
           setError(err.message);
         }
       } else {
-        setError(err.message || t('errors.unexpected'));
+        setError(errorInfo.message || err.message || t('errors.unexpected'));
       }
     } finally {
       setIsLoading(false);
@@ -162,7 +224,20 @@ const ImageProcessor = () => {
       }}
       className="w-full"
     >
-      <Card>
+      {showQuotaExceeded && (
+        <QuotaExceeded onClose={() => setShowQuotaExceeded(false)} />
+      )}
+      
+      {showSignInModal && (
+        <SignInModal 
+          isOpen={showSignInModal}
+          onClose={() => setShowSignInModal(false)}
+          customMessage={t('auth.signInToProcess')}
+        />
+      )}
+      
+      {!showQuotaExceeded && (
+        <Card>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Header */}
           <div className={`text-center mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -300,7 +375,8 @@ const ImageProcessor = () => {
             )}
           </div>
         </form>
-      </Card>
+        </Card>
+      )}
     </motion.div>
   );
 };

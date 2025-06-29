@@ -1,11 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { processRecipeText, createRequestController, APIError } from '../../utils/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { createRequestController, APIError } from '../../utils/api';
+import { secureProcessRecipeText, checkRequestPermission, getErrorDisplayInfo } from '../../utils/secureApi';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
+import QuotaExceeded from '../QuotaExceeded';
+import SignInModal from '../auth/SignInModal';
+import { useRateLimit } from '../../hooks/useRateLimit';
 
 // Import sub-components
 import RecipeTextarea from './RecipeTextarea';
@@ -16,9 +21,14 @@ import useFormValidation from './useFormValidation';
 const TextProcessor = () => {
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
+  const auth = useAuth();
+  const rateLimit = useRateLimit();
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [showQuotaExceeded, setShowQuotaExceeded] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [savedFormData, setSavedFormData] = useState(null);
   const textareaRef = useRef(null);
   const abortControllerRef = useRef(null);
 
@@ -36,6 +46,27 @@ const TextProcessor = () => {
     validateForSubmission 
   } = useFormValidation(text, MIN_CHARS, MAX_CHARS);
 
+  // Restore form data after sign-in
+  useEffect(() => {
+    if (auth.isAuthenticated && typeof sessionStorage !== 'undefined') {
+      // Check for saved form data in sessionStorage
+      const savedData = sessionStorage.getItem('textProcessor_formData');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          setText(parsedData.text || '');
+          sessionStorage.removeItem('textProcessor_formData');
+          // Focus the textarea after restoration
+          setTimeout(() => textareaRef.current?.focus(), 100);
+        } catch (error) {
+          console.error('Error parsing saved form data:', error);
+        }
+      }
+      // Clear local state as well
+      setSavedFormData(null);
+    }
+  }, [auth.isAuthenticated]);
+
   const handleTextChange = (e) => {
     const newText = e.target.value;
     setText(newText);
@@ -48,6 +79,28 @@ const TextProcessor = () => {
       return;
     }
 
+    // Check authentication and rate limiting with secure API
+    const permission = checkRequestPermission(auth, rateLimit);
+    if (!permission.canMakeRequest) {
+      if (permission.errorType === 'AuthenticationError') {
+        // Save current form state to sessionStorage (persists across re-renders)
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('textProcessor_formData', JSON.stringify({ text }));
+          // Save that this card should be expanded after OAuth redirect
+          sessionStorage.setItem('app_expandedCard', 'text');
+        }
+        setSavedFormData({ text });
+        setShowSignInModal(true);
+        return;
+      } else if (permission.errorType === 'RateLimitError') {
+        setShowQuotaExceeded(true);
+        return;
+      } else {
+        setError(permission.reason);
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
     setResult(null);
@@ -56,15 +109,23 @@ const TextProcessor = () => {
     abortControllerRef.current = createRequestController(30000);
 
     try {
-      const response = await processRecipeText(
+      const response = await secureProcessRecipeText(
         text,
         {},
+        auth,
+        rateLimit,
         abortControllerRef.current.signal
       );
       
       setResult(response);
     } catch (err) {
-      if (err instanceof APIError) {
+      const errorInfo = getErrorDisplayInfo(err);
+      
+      if (errorInfo.type === 'authentication') {
+        setShowSignInModal(true);
+      } else if (errorInfo.type === 'rateLimit') {
+        setShowQuotaExceeded(true);
+      } else if (err instanceof APIError) {
         if (err.details?.cancelled) {
           setError(t('errors.cancelled'));
         } else if (err.details?.offline) {
@@ -75,7 +136,7 @@ const TextProcessor = () => {
           setError(err.message);
         }
       } else {
-        setError(t('errors.unexpected'));
+        setError(errorInfo.message || t('errors.unexpected'));
       }
     } finally {
       setIsLoading(false);
@@ -123,7 +184,20 @@ const TextProcessor = () => {
       }}
       className="w-full"
     >
-      <Card>
+      {showQuotaExceeded && (
+        <QuotaExceeded onClose={() => setShowQuotaExceeded(false)} />
+      )}
+      
+      {showSignInModal && (
+        <SignInModal 
+          isOpen={showSignInModal}
+          onClose={() => setShowSignInModal(false)}
+          customMessage={t('auth.signInToProcess')}
+        />
+      )}
+      
+      {!showQuotaExceeded && (
+        <Card>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Header */}
           <div className={`text-center mb-6 ${isRTL ? 'text-right' : 'text-left'} sm:text-center`}>
@@ -189,7 +263,8 @@ const TextProcessor = () => {
             />
           </div>
         </form>
-      </Card>
+        </Card>
+      )}
     </motion.div>
   );
 };
