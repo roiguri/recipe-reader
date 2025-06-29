@@ -265,7 +265,8 @@
   },
   "appHeader": {
     "home": "Home",
-    "myRecipes": "My Recipes"
+    "myRecipes": "My Recipes",
+    "myRecipesSoon": "My Recipes - soon!"
   },
   "copyButton": {
     "title": "Copy to clipboard",

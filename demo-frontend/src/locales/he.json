@@ -265,7 +265,8 @@
   },
   "appHeader": {
     "home": "בית",
-    "myRecipes": "המתכונים שלי"
+    "myRecipes": "המתכונים שלי",
+    "myRecipesSoon": "המתכונים שלי - בקרוב!"
   },
   "copyButton": {
     "title": "העתק ללוח",

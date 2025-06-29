@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import QuotaProgress from '../QuotaProgress';
 
 const UserMenu = () => {
   const { t } = useTranslation();
   const { user, signOut, loading } = useAuth();
+  const { isRTL } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -69,6 +71,17 @@ const UserMenu = () => {
               {t('auth.quotaStatus')}
             </div>
             <QuotaProgress size="small" />
+          </div>
+
+          {/* Mobile navigation - My Recipes only show on mobile */}
+          <div className="md:hidden border-b border-gray-100 py-2">
+            <button
+              onClick={() => setIsOpen(false)}
+              disabled
+              className={`w-full px-4 py-2 ${isRTL ? 'text-right' : 'text-left'} text-sm text-gray-400 cursor-not-allowed transition-colors`}
+            >
+{t('appHeader.myRecipesSoon')}
+            </button>
           </div>
 
           <div className="border-t border-gray-100 py-2">

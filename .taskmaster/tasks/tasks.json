@@ -148,7 +148,7 @@
         "description": "The my recipes button is not visible in mobile",
         "details": "The my recipes button is not visible in mobile",
         "testStrategy": "Test authenticated access - verify unauthenticated users cannot access /my-recipes route. Test recipe storage after successful API processing calls. Verify RLS policies prevent cross-user access to recipes. Test search functionality with various keyword combinations. Validate filtering by date ranges, tags, and source types. Test sorting options maintain correct order. Verify recipe deletion removes from database and updates UI. Test recipe editing updates database and reflects changes immediately. Test empty state displays when user has no recipes. Validate pagination or infinite scroll loads additional recipes correctly. Test responsive design on mobile and desktop. Verify error handling for database operations.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": []
@@ -178,7 +178,7 @@
     ],
     "metadata": {
       "created": "2025-06-28T20:10:19.758Z",
-      "updated": "2025-06-29T19:19:52.883Z",
+      "updated": "2025-06-29T19:31:17.734Z",
       "description": "Future enhancements and nice-to-have features for the demo"
     }
   }
