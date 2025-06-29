@@ -2,8 +2,8 @@
  * API service for communicating with the FastAPI backend
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-const API_KEY = process.env.REACT_APP_API_KEY;
+const API_BASE_URL = import.meta.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_KEY = import.meta.env.REACT_APP_API_KEY;
 const API_VERSION = 'v1';
 
 class APIError extends Error {

@@ -544,6 +544,28 @@
         "dependencies": [],
         "priority": "high",
         "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Image Processing opens after sign in for no reason",
+        "description": "When the user signs in, the processing image component sometimes expands even if the user didn't click on it",
+        "details": "This happens because this was last card used, and the open state is persisted",
+        "testStrategy": "Test authenticated access - verify unauthenticated users cannot access /my-recipes route. Test recipe storage after successful API processing calls. Verify RLS policies prevent cross-user access to recipes. Test search functionality with various keyword combinations. Validate filtering by date ranges, tags, and source types. Test sorting options maintain correct order. Verify recipe deletion removes from database and updates UI. Test recipe editing updates database and reflects changes immediately. Test empty state displays when user has no recipes. Validate pagination or infinite scroll loads additional recipes correctly. Test responsive design on mobile and desktop. Verify error handling for database operations.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "My recipes button in navigation not visible in mobile",
+        "description": "The my recipes button is not visible in mobile",
+        "details": "The my recipes button is not visible in mobile",
+        "testStrategy": "Test authenticated access - verify unauthenticated users cannot access /my-recipes route. Test recipe storage after successful API processing calls. Verify RLS policies prevent cross-user access to recipes. Test search functionality with various keyword combinations. Validate filtering by date ranges, tags, and source types. Test sorting options maintain correct order. Verify recipe deletion removes from database and updates UI. Test recipe editing updates database and reflects changes immediately. Test empty state displays when user has no recipes. Validate pagination or infinite scroll loads additional recipes correctly. Test responsive design on mobile and desktop. Verify error handling for database operations.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {

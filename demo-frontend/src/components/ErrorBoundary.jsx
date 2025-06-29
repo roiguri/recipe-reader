@@ -71,7 +71,7 @@ class ErrorBoundary extends Component {
             </div>
             
             {/* Show error details in development */}
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.MODE === 'development' && (
               <div className={`mt-8 w-full ${isRTL ? 'text-right' : 'text-left'}`}>
                 <details className="bg-gray-50 p-4 rounded-lg text-sm">
                   <summary className={`cursor-pointer font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>

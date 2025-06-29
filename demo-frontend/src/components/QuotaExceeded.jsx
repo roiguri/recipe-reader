@@ -11,7 +11,7 @@ const QuotaExceeded = ({ onClose }) => {
 
   const handleContactUs = () => {
     // Get contact email from environment variable with fallback
-    const contactEmail = process.env.REACT_APP_CONTACT_EMAIL || 'contact@recipe-api.com';
+    const contactEmail = import.meta.env.REACT_APP_CONTACT_EMAIL || 'contact@recipe-api.com';
     const subject = encodeURIComponent('API Access Request');
     const body = encodeURIComponent('Hello, I would like to request API access for recipe processing.');
     

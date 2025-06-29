@@ -4,10 +4,6 @@
   "private": true,
   "dependencies": {
     "@supabase/supabase-js": "^2.50.2",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^13.5.0",
     "framer-motion": "^12.16.0",
     "i18next": "^25.2.1",
     "i18next-browser-languagedetector": "^8.2.0",
@@ -15,25 +11,18 @@
     "react-country-flag": "^3.1.0",
     "react-dom": "^19.1.0",
     "react-i18next": "^15.5.3",
-    "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "npm run validate:env && react-scripts start",
-    "build": "npm run validate:locales && npm run validate:env && react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "dev": "npm run validate:env && vite",
+    "start": "npm run dev",
+    "build": "npm run validate:locales && npm run validate:env && tsc && vite build",
+    "preview": "vite preview",
     "validate:locales": "node scripts/validate-locales.js",
     "validate:env": "node scripts/validate-env.js",
     "test:supabase": "node test/test-supabase.js",
     "test:google-oauth": "node test/test-google-oauth.js",
     "test:github-oauth": "node test/test-github-oauth.js"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [
@@ -48,9 +37,18 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.21",
     "dotenv": "^16.3.1",
     "postcss": "^8.5.4",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6"
   }
 }
