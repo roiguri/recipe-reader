@@ -16,12 +16,20 @@ function App() {
   useEffect(() => {
     if (typeof sessionStorage !== 'undefined') {
       const savedExpandedCard = sessionStorage.getItem('app_expandedCard');
-      if (savedExpandedCard && savedExpandedCard !== 'null') {
+      const manuallyClosed = sessionStorage.getItem('app_cardManuallyClosed');
+      
+      // Only restore if there's a saved card AND it wasn't manually closed by the user
+      if (savedExpandedCard && savedExpandedCard !== 'null' && savedExpandedCard !== manuallyClosed) {
         setExpandedCard(savedExpandedCard);
         // Clean up after restoration with delay to ensure processors have time to restore form data
         setTimeout(() => {
           sessionStorage.removeItem('app_expandedCard');
         }, 1000);
+      }
+      
+      // Clean up the manually closed flag after checking
+      if (manuallyClosed) {
+        sessionStorage.removeItem('app_cardManuallyClosed');
       }
     }
   }, []);
@@ -30,12 +38,13 @@ function App() {
     const newExpandedCard = expandedCard === cardId ? null : cardId;
     setExpandedCard(newExpandedCard);
     
-    // Save expanded card state when changing
     if (typeof sessionStorage !== 'undefined') {
       if (newExpandedCard) {
         sessionStorage.setItem('app_expandedCard', newExpandedCard);
+        sessionStorage.removeItem('app_cardManuallyClosed');
       } else {
         sessionStorage.removeItem('app_expandedCard');
+        sessionStorage.setItem('app_cardManuallyClosed', expandedCard);
       }
     }
   };
@@ -75,7 +84,14 @@ function App() {
             cardItems={cardItems}
             expandedCard={expandedCard}
             onCardClick={handleCardClick}
-            onBackClick={() => setExpandedCard(null)}
+            onBackClick={() => {
+              // When using back button, also mark as manually closed
+              if (typeof sessionStorage !== 'undefined' && expandedCard) {
+                sessionStorage.removeItem('app_expandedCard');
+                sessionStorage.setItem('app_cardManuallyClosed', expandedCard);
+              }
+              setExpandedCard(null);
+            }}
           />
         </ErrorBoundary>
       </div>

@@ -76,7 +76,7 @@
         "dependencies": [
           1
         ],
-        "priority": "medium",
+        "priority": "low",
         "subtasks": []
       },
       {
@@ -89,14 +89,14 @@
         "dependencies": [
           2
         ],
-        "priority": "medium",
+        "priority": "low",
         "subtasks": []
       },
       {
         "id": 4,
         "title": "When recipe extraction fails, show a message to the user",
         "description": "Implement basic error handling for recipe extraction failures to show clear error messages to users when the API request fails or when recipe extraction is unsuccessful.",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "details": "Implement error handling for two main failure scenarios:\n\n**Error Scenarios:**\n1. **API Request Failures** - Network errors, server errors, timeouts, or service unavailability\n2. **Recipe Extraction Failures** - API request succeeds but extraction fails, resulting in fallback content\n\n**Implementation Requirements:**\n- Display clear, user-friendly error messages for each scenario\n- Handle API request failures (network issues, server errors, timeouts)\n- Handle extraction failures when API returns fallback results\n- Provide actionable next steps to users\n- Maintain good user experience during error states\n\n**Error Message Strategy:**\n- API failures: \"Unable to connect to the recipe service. Please check your connection and try again.\"\n- Extraction failures: \"We couldn't extract the recipe properly. Please try a different URL or paste the recipe text directly.\"",
@@ -106,7 +106,7 @@
             "id": 1,
             "title": "Handle API request failures",
             "description": "Implement error handling for when the API request itself fails due to network or server issues",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "details": "Catch and handle API request failures including network errors, server errors, and timeouts. Display appropriate error message to user with suggestion to retry.",
             "testStrategy": ""
@@ -115,7 +115,7 @@
             "id": 2,
             "title": "Handle recipe extraction failures",
             "description": "Implement error handling for when API request succeeds but recipe extraction fails",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "details": "Detect when API returns fallback results due to extraction failures. Show error message indicating extraction didn't work properly and suggest alternative approaches.",
             "testStrategy": ""
@@ -124,7 +124,7 @@
             "id": 3,
             "title": "Add error message localization",
             "description": "Add localized error messages for both failure scenarios",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "details": "Create locale entries for API request failures and extraction failures. Ensure messages are user-friendly and provide actionable next steps.",
             "testStrategy": ""
@@ -137,7 +137,7 @@
         "description": "When the user signs in, the processing image component sometimes expands even if the user didn't click on it",
         "details": "This happens because this was last card used, and the open state is persisted",
         "testStrategy": "Test authenticated access - verify unauthenticated users cannot access /my-recipes route. Test recipe storage after successful API processing calls. Verify RLS policies prevent cross-user access to recipes. Test search functionality with various keyword combinations. Validate filtering by date ranges, tags, and source types. Test sorting options maintain correct order. Verify recipe deletion removes from database and updates UI. Test recipe editing updates database and reflects changes immediately. Test empty state displays when user has no recipes. Validate pagination or infinite scroll loads additional recipes correctly. Test responsive design on mobile and desktop. Verify error handling for database operations.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": []
@@ -178,7 +178,7 @@
     ],
     "metadata": {
       "created": "2025-06-28T20:10:19.758Z",
-      "updated": "2025-06-29T17:36:44.371Z",
+      "updated": "2025-06-29T19:19:52.883Z",
       "description": "Future enhancements and nice-to-have features for the demo"
     }
   }
