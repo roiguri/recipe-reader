@@ -142,7 +142,7 @@ const Button = forwardRef(({
         <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2 flex-shrink-0" />
       )}
       {leftIcon && !loading && (
-        <span className="mr-2 flex-shrink-0">{leftIcon}</span>
+        <span className="md:mr-2 flex-shrink-0">{leftIcon}</span>
       )}
       <span className={variant === 'export' ? '' : 'flex-1 text-center'}>{children}</span>
       {rightIcon && (

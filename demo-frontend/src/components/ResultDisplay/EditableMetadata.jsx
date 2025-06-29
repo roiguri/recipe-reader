@@ -79,7 +79,7 @@ const EditableMetadata = ({
     return (
       <div
         onClick={() => startEditing(field, value)}
-        className="cursor-pointer hover:bg-[#f3e7e8] rounded px-2 py-1 transition-colors"
+        className="w-full cursor-pointer hover:bg-[#f3e7e8] rounded px-2 py-1 transition-colors"
       >
         {value ? formatTime(value, t) : (
           <span className="text-gray-400 italic">{placeholder} min</span>
@@ -140,13 +140,13 @@ const EditableMetadata = ({
       // Special handling for category field - use select dropdown
       if (field === 'category') {
         return (
-          <div className="flex items-center gap-2" data-dropdown-container>
+          <div className="w-full flex items-center gap-2" data-dropdown-container>
             <select
               value={globalEditingState.tempValues[field] || ''}
               onChange={(e) => onUpdateEdit(field, e.target.value)}
               onKeyDown={(e) => handleKeyDown(e, field)}
               onBlur={() => saveField(field)}
-              className="flex-1 px-2 py-1 border border-[#994d51] rounded text-sm focus:outline-none focus:border-[#7a3c40]"
+              className="flex-1 min-w-0 px-2 py-1 border border-[#994d51] rounded text-sm focus:outline-none focus:border-[#7a3c40]"
               autoFocus
             >
               <option value="">{t('common.notSpecified')}</option>
@@ -170,13 +170,13 @@ const EditableMetadata = ({
       // Special handling for difficulty field - use select dropdown
       if (field === 'difficulty') {
         return (
-          <div className="flex items-center gap-2" data-dropdown-container>
+          <div className="w-full flex items-center gap-2" data-dropdown-container>
             <select
               value={globalEditingState.tempValues[field] || ''}
               onChange={(e) => onUpdateEdit(field, e.target.value)}
               onKeyDown={(e) => handleKeyDown(e, field)}
               onBlur={() => saveField(field)}
-              className="flex-1 px-2 py-1 border border-[#994d51] rounded text-sm focus:outline-none focus:border-[#7a3c40]"
+              className="flex-1 min-w-0 px-2 py-1 border border-[#994d51] rounded text-sm focus:outline-none focus:border-[#7a3c40]"
               autoFocus
               aria-label={t('resultDisplay.metadata.difficulty')}
             >
@@ -200,7 +200,7 @@ const EditableMetadata = ({
 
       const InputComponent = multiline ? 'textarea' : 'input';
       return (
-        <div className="flex items-center gap-2">
+        <div className="w-full flex items-center gap-2">
           <InputComponent
             type={type}
             value={globalEditingState.tempValues[field] || ''}
@@ -208,7 +208,7 @@ const EditableMetadata = ({
             onKeyDown={(e) => handleKeyDown(e, field)}
             onBlur={() => saveField(field)}
             placeholder={placeholder}
-            className="flex-1 px-2 py-1 border border-[#994d51] rounded text-sm focus:outline-none focus:border-[#7a3c40]"
+            className="flex-1 min-w-0 px-2 py-1 border border-[#994d51] rounded text-sm focus:outline-none focus:border-[#7a3c40]"
             rows={multiline ? 2 : undefined}
             dir="auto"
             autoFocus
@@ -227,7 +227,7 @@ const EditableMetadata = ({
     return (
       <div
         onClick={() => startEditing(field, value)}
-        className={`cursor-pointer p-1 rounded hover:bg-[#f3e7e8] transition-colors ${
+        className={`w-full cursor-pointer p-1 rounded hover:bg-[#f3e7e8] transition-colors ${
           isEmpty ? 'text-gray-400 italic' : ''
         }`}
         style={{ direction: multiline && isHebrew(displayValue) ? 'rtl' : 'ltr' }}
@@ -260,7 +260,7 @@ const EditableMetadata = ({
       </div>
       
       {/* First Row: Category, Difficulty, Servings */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="text-center">
           <div className="text-sm font-medium text-[#994d51] mb-1">
             {t('resultDisplay.metadata.category')}
@@ -303,7 +303,7 @@ const EditableMetadata = ({
       </div>
 
       {/* Second Row: All Time Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-[#f3e7e8]">
+      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#f3e7e8]">
         <div className="text-center">
           <div className="text-sm font-medium text-[#994d51] mb-1">
             {t('resultDisplay.metadata.prepTime')}
@@ -334,7 +334,7 @@ const EditableMetadata = ({
           <div className="text-sm font-medium text-[#994d51] mb-1">
             {t('resultDisplay.metadata.totalTime')}
           </div>
-          <div className="text-sm text-[#1b0e0e]">
+          <div className="text-sm py-1 text-[#1b0e0e]">
             {(prepTime || cookTime) ? formatTime(calculateTotalTime(), t) : (
               <span className="text-gray-400 italic">{t('common.notSpecified')}</span>
             )}

@@ -21,7 +21,7 @@ const Card = ({
 }) => {
   const baseStyles = "bg-white rounded-lg border border-[#f3e7e8]";
   const shadowStyles = noShadow ? '' : 'shadow-sm';
-  const paddingStyles = noPadding ? '' : 'p-6';
+  const paddingStyles = noPadding ? '' : 'p-3 md:p-6';
   const variantStyles = {
     default: '',
     highlight: 'bg-[#fcf8f8]',

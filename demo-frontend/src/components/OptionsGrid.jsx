@@ -38,15 +38,15 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
             {isExpanded ? (
               <motion.div
                 layoutId={item.id}
-                className="absolute inset-x-0 top-0 z-50 p-4"
+                className="absolute inset-x-0 top-0 z-50 p-2 md:p-4"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={`expanded-title-${item.id}`}
               >
-                <div className="bg-[#fcf8f8] rounded-lg border border-[#e7d0d1] p-6 min-h-0">
+                <div className="bg-[#fcf8f8] rounded-lg border border-[#e7d0d1] p-3 md:p-6 min-h-0">
                   {/* Header with blur effect */}
                   <motion.div
-                    className="flex items-center gap-3 mb-6"
+                    className="flex items-center gap-3 mb-3 md:mb-6"
                     animate={{
                       filter: showExpandedContent ? "blur(0px)" : "blur(4px)",
                       opacity: showExpandedContent ? 1 : 0.7
@@ -58,7 +58,7 @@ const OptionsGrid = ({ cardItems, expandedCard, onCardClick }) => {
                     </div>
                     <h2 
                       id={`expanded-title-${item.id}`}
-                      className="text-[#1b0e0e] text-lg sm:text-xl font-bold break-words"
+                      className="text-[#1b0e0e] text-base md:text-lg lg:text-xl font-bold break-words"
                     >
                       {item.preview.title}
                     </h2>

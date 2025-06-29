@@ -18,8 +18,8 @@ const IngredientsSection = ({ ingredients, onCopyToClipboard, copiedSection }) =
   
   return (
     <Card className="flex flex-col">
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
-        <h3 className="text-lg font-bold text-[#1b0e0e]">
+      <div className="flex items-center justify-between mb-2 md:mb-4 flex-shrink-0">
+        <h3 className="text-base md:text-lg font-bold text-[#1b0e0e]">
           {t('resultDisplay.sections.ingredients')}
         </h3>
         <CopyButton
@@ -34,7 +34,7 @@ const IngredientsSection = ({ ingredients, onCopyToClipboard, copiedSection }) =
         {ingredients.map((ingredient, idx) => (
           <div key={idx} className="flex items-center p-2 hover:bg-[#fcf8f8] rounded">
             <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
-            <span className="text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
+            <span className="text-xs md:text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
               <span className="font-medium">{ingredient.amount} {ingredient.unit}</span> {ingredient.item}
             </span>
           </div>

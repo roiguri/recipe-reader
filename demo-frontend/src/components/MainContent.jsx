@@ -15,12 +15,12 @@ const MainContent = ({
   const { t } = useTranslation();
   const { isRTL } = useLanguage();
   return (
-    <div className="px-4 sm:px-8 md:px-20 lg:px-40 flex flex-1 justify-center py-5">
+    <div className="px-2 sm:px-8 md:px-20 lg:px-40 flex flex-1 justify-center py-3 md:py-5">
       <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-        <div className="flex justify-between items-center gap-3 p-4 w-full">
+        <div className="flex justify-between items-center gap-3 p-2 md:p-4 w-full">
           {/* Title */}
           <div className="flex items-center gap-4">
-            <h1 className={`text-[#1b0e0e] tracking-light text-2xl md:text-[32px] font-bold leading-tight min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <h1 className={`text-[#1b0e0e] tracking-light text-xl md:text-2xl lg:text-[32px] font-bold leading-tight min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
               {t('header.title')}
             </h1>
           </div>

@@ -19,8 +19,8 @@ const InstructionsSection = ({ instructions, stages, onCopyToClipboard, copiedSe
   
   return (
     <Card className="flex flex-col">
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
-        <h3 className="text-lg font-bold text-[#1b0e0e]">{t('resultDisplay.sections.instructions')}</h3>
+      <div className="flex items-center justify-between mb-2 md:mb-4 flex-shrink-0">
+        <h3 className="text-base md:text-lg font-bold text-[#1b0e0e]">{t('resultDisplay.sections.instructions')}</h3>
         <CopyButton
           content={formatInstructions(instructions, stages)}
           sectionId="instructions"
@@ -31,10 +31,10 @@ const InstructionsSection = ({ instructions, stages, onCopyToClipboard, copiedSe
       </div>
       <div className="overflow-y-auto max-h-96">
         {stages ? (
-          <div className="space-y-4">
+          <div className="space-y-2 md:space-y-4">
             {stages.map((stage, stageIdx) => (
               <div key={stageIdx}>
-                <h4 className="font-semibold text-[#994d51] mb-2" style={{ direction: isHebrew(stage.title) ? 'rtl' : 'ltr' }}>
+                <h4 className="text-sm md:text-base font-semibold text-[#994d51] mb-1 md:mb-2" style={{ direction: isHebrew(stage.title) ? 'rtl' : 'ltr' }}>
                   {stage.title}
                 </h4>
                 <ol className="space-y-2">
@@ -43,7 +43,7 @@ const InstructionsSection = ({ instructions, stages, onCopyToClipboard, copiedSe
                       <span className={`flex-shrink-0 w-6 h-6 bg-[#994d51] text-white rounded-full text-xs flex items-center justify-center ${direction === 'rtl' ? 'ml-3' : 'mr-3'} mt-0.5`} aria-hidden="true">
                         {instIdx + 1}
                       </span>
-                      <span className="text-sm text-[#1b0e0e] flex-1" style={{ direction: isHebrew(instruction) ? 'rtl' : 'ltr' }}>
+                      <span className="text-xs md:text-sm text-[#1b0e0e] flex-1" style={{ direction: isHebrew(instruction) ? 'rtl' : 'ltr' }}>
                         {instruction}
                       </span>
                     </li>

@@ -190,7 +190,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
         duration: ANIMATION_CONFIG.CONTENT_FADE_IN / 1000,
         ease: ANIMATION_CONFIG.CONTENT_EASE 
       }}
-      className="w-full max-w-6xl mx-auto p-6"
+className="w-full max-w-6xl mx-auto p-2 md:p-6"
     >
       {/* Recipe header/metadata */}
       <RecipeInfoCard 
@@ -211,9 +211,9 @@ const ResultDisplay = ({ result, onStartOver }) => {
         />
 
         {/* Tab content */}
-        <div className="p-6 flex-1 overflow-hidden">
+        <div className="p-3 md:p-6 flex-1 overflow-hidden">
           {activeTab === 'recipe' && (
-            <div className="space-y-6 h-full overflow-y-auto">
+            <div className="space-y-3 md:space-y-6 h-full overflow-y-auto">
               {/* Recipe metadata */}
               <Metadata recipe={displayRecipe} />
               
@@ -245,7 +245,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
           )}
 
           {activeTab === 'edit' && (
-            <div className="space-y-6 h-full overflow-y-auto">
+            <div className="space-y-3 md:space-y-6 h-full overflow-y-auto">
               {/* Edit mode header with save/discard buttons */}
               {hasUnsavedChanges && (
                 <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -349,7 +349,7 @@ const ResultDisplay = ({ result, onStartOver }) => {
           )}
 
           {activeTab === 'export' && (
-            <div className="space-y-6 h-full overflow-y-auto">
+            <div className="space-y-3 md:space-y-6 h-full overflow-y-auto">
               <ExportOptions 
                 recipe={displayRecipe}
               />

@@ -12,7 +12,7 @@ const ExpandableCardGrid = ({
   showBackButton = true,
   onBackClick,
   enableKeyboardSupport = true,
-  gridClassName = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-4"
+  gridClassName = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-2 md:p-4"
 }) => {
   const { t } = useTranslation();
   
@@ -67,7 +67,7 @@ const ExpandableCardGrid = ({
               }}
               onClick={handleBackClick}
               aria-label={t('aria.goBack')}
-              className="absolute -top-16 sm:-top-12 right-0 z-60 px-2 py-1"
+              className="absolute -top-12 sm:-top-12 right-2 md:right-0 z-60 px-2 py-1 text-sm md:text-base"
               leftIcon={
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 

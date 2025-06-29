@@ -200,13 +200,13 @@ const TextProcessor = () => {
       
       {!showQuotaExceeded && (
         <Card>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-2 md:space-y-4">
           {/* Header */}
-          <div className={`text-center mb-6 ${isRTL ? 'text-right' : 'text-left'} sm:text-center`}>
-            <h2 className="text-xl font-bold text-[#1b0e0e] mb-2">
+          <div className={`text-center mb-3 md:mb-6 ${isRTL ? 'text-right' : 'text-left'} sm:text-center`}>
+            <h2 className="text-lg md:text-xl font-bold text-[#1b0e0e] mb-1 md:mb-2">
               {t('textProcessor.title')}
             </h2>
-            <p className="text-sm text-[#994d51] mb-4">
+            <p className="text-xs md:text-sm text-[#994d51] mb-2 md:mb-4">
               {t('textProcessor.description')}
             </p>
           </div>

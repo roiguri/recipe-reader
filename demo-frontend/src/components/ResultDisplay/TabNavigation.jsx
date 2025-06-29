@@ -15,7 +15,7 @@ const TabNavigation = ({ activeTab, setActiveTab, tabs }) => {
   const { direction } = useLanguage();
   
   return (
-    <div className="flex border-b border-[#f3e7e8] flex-shrink-0" role="tablist">
+    <div className="flex border-b border-[#f3e7e8] flex-shrink-0 overflow-x-auto scrollbar-hide" role="tablist">
       {tabs.map((tab, index, array) => {
         const getTabVariant = () => {
           if (array.length === 1) return 'tab'; // Single tab, use default
@@ -37,11 +37,11 @@ const TabNavigation = ({ activeTab, setActiveTab, tabs }) => {
             key={tab.id}
             variant={getTabVariant()}
             onClick={() => setActiveTab(tab.id)}
-            className={activeTab === tab.id
+            className={`flex-shrink-0 whitespace-nowrap text-sm md:text-base ${activeTab === tab.id
               ? 'bg-[#994d51] text-white'
               : 'text-[#994d51] hover:bg-[#f3e7e8]'
-            }
-            leftIcon={<span>{tab.icon}</span>}
+            }`}
+            leftIcon={<span className="hidden md:inline text-sm md:text-base">{tab.icon}</span>}
             role="tab"
             aria-selected={activeTab === tab.id}
           >

@@ -112,3 +112,12 @@ code {
   margin: 0.5in;
   size: A4;
 }
+
+/* Hide scrollbars for mobile tab navigation */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}

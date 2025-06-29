@@ -240,13 +240,13 @@ const ImageProcessor = () => {
       
       {!showQuotaExceeded && (
         <Card>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-6">
           {/* Header */}
-          <div className={`text-center mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
-            <h2 className="text-xl font-bold text-[#1b0e0e] mb-2">
+          <div className={`text-center mb-3 md:mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <h2 className="text-lg md:text-xl font-bold text-[#1b0e0e] mb-1 md:mb-2">
               {t('imageProcessor.title')}
             </h2>
-            <p className="text-sm text-[#994d51] mb-2">
+            <p className="text-xs md:text-sm text-[#994d51] mb-1 md:mb-2">
               {t('imageProcessor.description')}
             </p>
             <p className="text-xs text-gray-600">
