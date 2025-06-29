@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { createRequestController, APIError } from '../../utils/api';
-import { secureProcessRecipeUrl, checkRequestPermission, getErrorDisplayInfo } from '../../utils/secureApi';
+import { secureProcessRecipeUrl, checkRequestPermission, getErrorDisplayInfo, ExtractionError } from '../../utils/secureApi';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
@@ -74,6 +74,11 @@ const UrlProcessor = () => {
       return;
     }
 
+    // Prevent duplicate requests
+    if (isLoading) {
+      return;
+    }
+
     // Check authentication and rate limiting with secure API
     const permission = checkRequestPermission(auth, rateLimit);
     if (!permission.canMakeRequest) {
@@ -101,7 +106,7 @@ const UrlProcessor = () => {
     setResult(null);
 
     // Create abort controller for timeout and cancellation
-    abortControllerRef.current = createRequestController(45000); // Longer timeout for URL processing
+    abortControllerRef.current = createRequestController(60000); // 60 seconds for URL processing with retries
 
     try {
       const response = await secureProcessRecipeUrl(
@@ -123,6 +128,8 @@ const UrlProcessor = () => {
         setShowSignInModal(true);
       } else if (errorInfo.type === 'rateLimit') {
         setShowQuotaExceeded(true);
+      } else if (err instanceof ExtractionError) {
+        setError(t('errors.extractionFailed'));
       } else if (err instanceof APIError) {
         if (err.details?.cancelled) {
           setError(t('errors.cancelled'));

@@ -231,11 +231,14 @@
   "errors": {
     "networkError": "Cannot connect to the recipe processing service. Please make sure the server is running.",
     "offline": "No internet connection. Please check your network and try again.",
-    "cancelled": "Request was cancelled",
+    "cancelled": "Request was cancelled. You can try again with a different URL.",
     "timeout": "Request timed out. Please try again.",
     "invalidInput": "Invalid input provided",
     "processingFailed": "Failed to process recipe. Please try again.",
-    "unexpected": "An unexpected error occurred. Please try again."
+    "unexpected": "An unexpected error occurred. Please try again.",
+    "extractionFailed": "We couldn't extract the recipe properly. Please try a different URL or paste the recipe text directly.",
+    "extractionFailedText": "We couldn't extract the recipe from this text. Please try simpler formatting or paste from a different source.",
+    "extractionFailedImage": "We couldn't extract the recipe from this image. Please try a clearer image or enter the recipe text manually."
   },
   "language": {
     "english": "English",

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { createRequestController, APIError } from '../../utils/api';
-import { secureProcessRecipeImage, checkRequestPermission, getErrorDisplayInfo } from '../../utils/secureApi';
+import { secureProcessRecipeImage, checkRequestPermission, getErrorDisplayInfo, ExtractionError } from '../../utils/secureApi';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
@@ -171,6 +171,8 @@ const ImageProcessor = () => {
         setShowSignInModal(true);
       } else if (errorInfo.type === 'rateLimit') {
         setShowQuotaExceeded(true);
+      } else if (err instanceof ExtractionError) {
+        setError(t('errors.extractionFailedImage'));
       } else if (err instanceof APIError) {
         if (err.details?.cancelled) {
           setError(t('errors.cancelled'));

@@ -70,9 +70,11 @@ const useUrlValidation = (url) => {
     return true;
   };
 
-  // Clear error when URL changes and becomes valid
+  // Clear validation error when URL changes and becomes valid
+  // Only clear if it's a validation error, not a processing error
   useEffect(() => {
-    if (error && isValidUrl) {
+    if (error && isValidUrl && 
+        (error.includes('invalid URL') || error.includes('כתובת URL לא תקינה'))) {
       setError(null);
     }
   }, [url, isValidUrl, error]);

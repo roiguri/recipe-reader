@@ -3,7 +3,7 @@
  * This wraps the base API service with security guards
  */
 
-import { processRecipeText, processRecipeUrl, processRecipeImage, APIError } from './api';
+import { processRecipeText, processRecipeUrl, processRecipeImage, APIError, isFailedExtraction } from './api';
 
 class AuthenticationError extends Error {
   constructor(message) {
@@ -17,6 +17,14 @@ class RateLimitError extends Error {
     super(message);
     this.name = 'RateLimitError';
     this.remainingRequests = remainingRequests;
+  }
+}
+
+class ExtractionError extends Error {
+  constructor(message, processingType = 'generic') {
+    super(message);
+    this.name = 'ExtractionError';
+    this.processingType = processingType; // 'text', 'url', 'image'
   }
 }
 
@@ -135,13 +143,18 @@ export async function secureProcessRecipeText(text, options = {}, auth, rateLimi
     // Make the API request using existing service
     const result = await processRecipeText(text, options, signal);
     
+    // Check if extraction failed and throw appropriate error
+    if (isFailedExtraction(result)) {
+      throw new ExtractionError('Extraction failed', 'text');
+    }
+    
     // Increment usage quota after successful request
     await handleQuotaIncrement(rateLimit, rateLimit.incrementUsage);
     
     return result;
   } catch (error) {
-    // Re-throw API errors as-is, but wrap other errors
-    if (error instanceof APIError) {
+    // Re-throw specific error types as-is
+    if (error instanceof APIError || error instanceof ExtractionError) {
       throw error;
     }
     throw new Error(`Recipe processing failed: ${error.message}`);
@@ -165,13 +178,18 @@ export async function secureProcessRecipeUrl(url, options = {}, auth, rateLimit,
     // Make the API request using existing service
     const result = await processRecipeUrl(url, options, signal);
     
+    // Check if extraction failed and throw appropriate error
+    if (isFailedExtraction(result)) {
+      throw new ExtractionError('Extraction failed', 'url');
+    }
+    
     // Increment usage quota after successful request
     await handleQuotaIncrement(rateLimit, rateLimit.incrementUsage);
     
     return result;
   } catch (error) {
-    // Re-throw API errors as-is, but wrap other errors
-    if (error instanceof APIError) {
+    // Re-throw specific error types as-is
+    if (error instanceof APIError || error instanceof ExtractionError) {
       throw error;
     }
     throw new Error(`Recipe processing failed: ${error.message}`);
@@ -195,13 +213,18 @@ export async function secureProcessRecipeImage(imageData, options = {}, auth, ra
     // Make the API request using existing service
     const result = await processRecipeImage(imageData, options, signal);
     
+    // Check if extraction failed and throw appropriate error
+    if (isFailedExtraction(result)) {
+      throw new ExtractionError('Extraction failed', 'image');
+    }
+    
     // Increment usage quota after successful request
     await handleQuotaIncrement(rateLimit, rateLimit.incrementUsage);
     
     return result;
   } catch (error) {
-    // Re-throw API errors as-is, but wrap other errors
-    if (error instanceof APIError) {
+    // Re-throw specific error types as-is
+    if (error instanceof APIError || error instanceof ExtractionError) {
       throw error;
     }
     throw new Error(`Recipe processing failed: ${error.message}`);
@@ -257,6 +280,17 @@ export function getErrorDisplayInfo(error) {
     };
   }
 
+  if (error instanceof ExtractionError) {
+    return {
+      type: 'extraction',
+      title: 'Extraction Failed',
+      message: error.message,
+      processingType: error.processingType,
+      actionText: 'Try Again',
+      actionType: 'retry'
+    };
+  }
+
   if (error instanceof APIError) {
     return {
       type: 'api',
@@ -276,4 +310,4 @@ export function getErrorDisplayInfo(error) {
   };
 }
 
-export { AuthenticationError, RateLimitError };
+export { AuthenticationError, RateLimitError, ExtractionError };

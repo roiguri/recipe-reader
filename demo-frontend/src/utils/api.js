@@ -254,4 +254,47 @@ export async function checkAPICompatibility() {
   }
 }
 
+/**
+ * Check if an API response indicates failed recipe extraction
+ * @param {Object} response - API response object
+ * @returns {boolean} True if extraction failed and fallback result was returned
+ */
+export function isFailedExtraction(response) {
+  if (!response || !response.recipe) {
+    return false;
+  }
+
+  const { recipe, confidence_score } = response;
+  
+  // Primary check: extraction-failed tag
+  if (recipe.tags && recipe.tags.includes("extraction-failed")) {
+    return true;
+  }
+  
+  // Check for very low confidence score (0.2 or below indicates fallback)
+  if (confidence_score !== undefined && confidence_score <= 0.2) {
+    return true;
+  }
+  
+  // Check for empty ingredients array (common in fallback results)
+  if (recipe.ingredients && recipe.ingredients.length === 0) {
+    return true;
+  }
+  
+  // Check for specific fallback text patterns
+  if (recipe.name === "Recipe Extraction Failed" ||
+      (recipe.description && recipe.description.includes("extraction failed")) ||
+      (recipe.instructions && Array.isArray(recipe.instructions) && 
+       recipe.instructions.some(instruction => instruction.includes("processing failed")))) {
+    return true;
+  }
+  
+  // Check for null or empty name (common in pydantic validation failures)
+  if (!recipe.name || recipe.name === "null" || recipe.name.trim() === "") {
+    return true;
+  }
+  
+  return false;
+}
+
 export { APIError };
