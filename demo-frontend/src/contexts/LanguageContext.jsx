@@ -14,7 +14,12 @@ export const useLanguage = () => {
 
 export const LanguageProvider = ({ children }) => {
   const { i18n } = useTranslation();
-  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const normalizeLanguage = (lng) => {
+    const baseLng = lng?.split('-')[0] || 'en';
+    return ['en', 'he'].includes(baseLng) ? baseLng : 'en';
+  };
+  
+  const [currentLanguage, setCurrentLanguage] = useState(normalizeLanguage(i18n.language));
   const [direction, setDirection] = useState(getDirection());
 
   const changeLanguage = async (language) => {
@@ -35,7 +40,7 @@ export const LanguageProvider = ({ children }) => {
 
   useEffect(() => {
     const handleLanguageChange = (lng) => {
-      setCurrentLanguage(lng);
+      setCurrentLanguage(normalizeLanguage(lng));
       setDirection(getDirection());
     };
 

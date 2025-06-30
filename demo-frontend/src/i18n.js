@@ -25,7 +25,13 @@ i18n
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
-      lookupLocalStorage: 'i18nextLng'
+      lookupLocalStorage: 'i18nextLng',
+      // Normalize detected languages to supported ones
+      convertDetectedLanguage: (lng) => {
+        // Extract base language code (e.g., 'en-US' -> 'en')
+        const baseLng = lng.split('-')[0];
+        return ['en', 'he'].includes(baseLng) ? baseLng : 'en';
+      }
     },
 
     interpolation: {
@@ -42,7 +48,7 @@ i18n
 
     // RTL languages
     supportedLngs: ['en', 'he'],
-    nonExplicitSupportedLngs: true
+    nonExplicitSupportedLngs: false
   });
 
 // Function to check if current language is RTL

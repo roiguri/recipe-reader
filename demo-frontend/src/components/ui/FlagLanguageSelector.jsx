@@ -13,7 +13,7 @@ const FlagLanguageSelector = ({ className = '' }) => {
   const { currentLanguage, changeLanguage, isRTL } = useLanguage();
   const { t } = useTranslation();
 
-  const currentLang = SUPPORTED_LANGUAGES[currentLanguage];
+  const currentLang = SUPPORTED_LANGUAGES[currentLanguage] || SUPPORTED_LANGUAGES.en;
 
   // Close dropdown when clicking outside and handle positioning
   useEffect(() => {
