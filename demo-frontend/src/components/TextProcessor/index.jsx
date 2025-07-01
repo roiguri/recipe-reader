@@ -167,6 +167,8 @@ const TextProcessor = () => {
     return (
       <ResultDisplay 
         result={result} 
+        sourceType="text"
+        sourceData={text}
         onStartOver={() => {
           setResult(null);
           setError(null);

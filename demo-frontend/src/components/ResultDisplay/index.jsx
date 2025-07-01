@@ -23,7 +23,7 @@ import EditableInstructionsSection from './EditableInstructionsSection';
 import EditableCommentsSection from './EditableCommentsSection';
 import EditableTagList from './EditableTagList';
 
-const ResultDisplay = ({ result, onStartOver }) => {
+const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = '', showActionButtons = true }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('recipe');
   const [copyToClipboard, copiedSection] = useClipboard();
@@ -198,6 +198,9 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
         confidenceScore={confidence_score}
         processingTime={processing_time}
         onStartOver={onStartOver}
+        sourceType={sourceType}
+        sourceData={sourceData}
+        showActionButtons={showActionButtons}
       />
 
       {/* Tabs container */}

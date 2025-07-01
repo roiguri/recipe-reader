@@ -25,6 +25,7 @@ const ImageProcessor = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [processedImageData, setProcessedImageData] = useState(null);
   const [showQuotaExceeded, setShowQuotaExceeded] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [error, setError] = useState(null);
@@ -150,6 +151,9 @@ const ImageProcessor = () => {
         ? conversionResult.data[0].base64  // Single image
         : conversionResult.data.map(item => item.base64); // Multiple images
 
+      // Store the base64 data for saving purposes
+      setProcessedImageData(imageData);
+
       // Process the images using secure API
       const response = await secureProcessRecipeImage(
         imageData,
@@ -203,6 +207,7 @@ const ImageProcessor = () => {
     setResult(null);
     setError(null);
     setSelectedFiles([]);
+    setProcessedImageData(null);
     clearErrors();
   };
 
@@ -211,6 +216,8 @@ const ImageProcessor = () => {
     return (
       <ResultDisplay 
         result={result} 
+        sourceType="image"
+        sourceData={Array.isArray(processedImageData) ? processedImageData.join(',') : processedImageData || ''}
         onStartOver={handleStartOver}
       />
     );

@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import QuotaProgress from '../QuotaProgress';
 
-const UserMenu = () => {
+const UserMenu = ({ onNavigateToMyRecipes }) => {
   const { t } = useTranslation();
   const { user, signOut, loading } = useAuth();
   const { isRTL } = useLanguage();
@@ -76,11 +76,13 @@ const UserMenu = () => {
           {/* Mobile navigation - My Recipes only show on mobile */}
           <div className="md:hidden border-b border-gray-100 py-2">
             <button
-              onClick={() => setIsOpen(false)}
-              disabled
-              className={`w-full px-4 py-2 ${isRTL ? 'text-right' : 'text-left'} text-sm text-gray-400 cursor-not-allowed transition-colors`}
+              onClick={() => {
+                setIsOpen(false);
+                onNavigateToMyRecipes?.();
+              }}
+              className={`w-full px-4 py-2 ${isRTL ? 'text-right' : 'text-left'} text-sm text-gray-700 hover:bg-gray-50 transition-colors`}
             >
-{t('appHeader.myRecipesSoon')}
+              {t('appHeader.myRecipes')}
             </button>
           </div>
 

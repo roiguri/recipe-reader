@@ -5,7 +5,7 @@ import Button from '../ui/Button';
 import SignInModal from './SignInModal';
 import UserMenu from './UserMenu';
 
-const AuthButton = () => {
+const AuthButton = ({ onNavigateToMyRecipes }) => {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
   const [showSignInModal, setShowSignInModal] = useState(false);
@@ -21,7 +21,7 @@ const AuthButton = () => {
   }
 
   if (user) {
-    return <UserMenu />;
+    return <UserMenu onNavigateToMyRecipes={onNavigateToMyRecipes} />;
   }
 
   return (

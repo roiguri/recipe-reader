@@ -22,9 +22,12 @@ export const useRateLimit = () => {
     try {
       setRateLimit(prev => ({ ...prev, loading: true, error: null }));
 
+      // Get admin status from secure app_metadata (JWT)
+      const isAdmin = user.app_metadata?.is_admin === true;
+
       const { data, error } = await supabase
         .from('demo_rate_limits')
-        .select('requests_used, requests_limit, is_admin')
+        .select('requests_used, requests_limit')
         .eq('user_id', user.id)
         .single();
 
@@ -34,7 +37,7 @@ export const useRateLimit = () => {
         setRateLimit({
           requestsUsed: 0,
           requestsLimit: 5,
-          isAdmin: false,
+          isAdmin,
           loading: false,
           error: error.message
         });
@@ -44,7 +47,7 @@ export const useRateLimit = () => {
       setRateLimit({
         requestsUsed: data.requests_used,
         requestsLimit: data.requests_limit,
-        isAdmin: data.is_admin,
+        isAdmin,
         loading: false,
         error: null
       });
@@ -54,12 +57,12 @@ export const useRateLimit = () => {
       setRateLimit({
         requestsUsed: 0,
         requestsLimit: 5,
-        isAdmin: false,
+        isAdmin: user.app_metadata?.is_admin === true,
         loading: false,
         error: error.message
       });
     }
-  }, [user?.id, isAuthenticated]);
+  }, [user?.id, user?.app_metadata?.is_admin, isAuthenticated]);
 
   // Mock increment usage (temporary until backend Task 4)
   const incrementUsage = useCallback(async () => {
@@ -148,7 +151,7 @@ export const useRateLimit = () => {
           setRateLimit({
             requestsUsed: newData.requests_used,
             requestsLimit: newData.requests_limit,
-            isAdmin: newData.is_admin,
+            isAdmin: user.app_metadata?.is_admin === true,
             loading: false,
             error: null
           });
@@ -159,7 +162,7 @@ export const useRateLimit = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, isAuthenticated]);
+  }, [user?.id, user?.app_metadata?.is_admin, isAuthenticated]);
 
   return {
     // State

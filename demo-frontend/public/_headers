@@ -4,8 +4,19 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-XSS-Protection: 1; mode=block
 
+# Ensure correct MIME types for JavaScript modules
+/assets/*.js
+  Content-Type: application/javascript
+
+# Ensure correct MIME types for JavaScript modules with hash
+/assets/*-*.js
+  Content-Type: application/javascript
+
 # Cache static assets for 1 year
 /static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
   Cache-Control: public, max-age=31536000, immutable
 
 # Cache service worker for 0 seconds

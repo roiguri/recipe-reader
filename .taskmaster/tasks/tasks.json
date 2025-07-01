@@ -159,7 +159,7 @@
         "description": "Add PWA support to the application",
         "details": "Add PWA support to the application - include app logo and name, and add a manifest.json file",
         "testStrategy": "Test PWA support by installing the app on a mobile device and verifying it works correctly. Verify the app icon and name are displayed correctly. Verify the manifest.json file is correctly configured. Verify the app works correctly in offline mode. Verify the app works correctly in the home screen.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": []
@@ -174,11 +174,50 @@
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Add \"My Recipes\" page functionality with Supabase integration",
+        "description": "Implement a complete \"My Recipes\" page with Supabase database integration for storing and managing user recipes, including authentication-based visibility, saving mechanism, and recipe management features.",
+        "details": "Implementation should include: 1) **Supabase Database Schema**: Create a 'user_recipes' table with fields for user_id (foreign key to auth.users), recipe_data (JSONB for extracted recipe content), created_at timestamp, updated_at timestamp, and recipe_title. Implement Row Level Security (RLS) policies to ensure users can only access their own recipes. 2) **Authentication-Based UI**: Show/hide \"My Recipes\" button in navigation based on authentication status using Supabase auth state. Update mobile navigation to properly display the button for authenticated users. 3) **Recipe Saving Mechanism**: Add a \"Save Recipe\" button to the recipe extraction results that appears after successful API processing. Create a service function to save extracted recipe data to the user's collection in Supabase. Handle saving errors gracefully with user feedback. 4) **My Recipes Page Implementation**: Create a dedicated /my-recipes route with authentication guard. Display saved recipes using existing card components and result display patterns for consistency. Implement loading states while fetching user recipes from Supabase. 5) **Recipe Management Features**: Implement view functionality to display full recipe details in a modal or expanded view. Add delete functionality with confirmation dialog to remove recipes from user's collection. Include search/filter capabilities to find recipes by title or ingredients. Add sorting options by date saved or recipe title. 6) **Performance Optimizations**: Implement pagination or infinite scroll for large recipe collections. Use Supabase real-time subscriptions for automatic updates when recipes are added/deleted.",
+        "testStrategy": "Create comprehensive test coverage including: 1) **Authentication Tests**: Verify unauthenticated users cannot access /my-recipes route and are redirected to sign-in. Test that \"My Recipes\" button only appears for authenticated users in both desktop and mobile navigation. 2) **Database Integration Tests**: Test recipe saving functionality with valid recipe data after successful API processing. Verify RLS policies prevent cross-user access to recipes by attempting to access other users' data. Test database constraints and data validation for recipe storage. 3) **Recipe Management Tests**: Test recipe viewing functionality with various recipe data formats and edge cases. Verify delete functionality with confirmation dialog and proper removal from database. Test search functionality with various keyword combinations and verify results accuracy. 4) **UI/UX Tests**: Validate that saved recipes display correctly using existing card components and maintain visual consistency. Test loading states during recipe fetching and saving operations. Verify error handling for failed save operations and network issues. Test responsive design on mobile and desktop devices. 5) **Performance Tests**: Test page performance with large numbers of saved recipes (50+ recipes). Verify pagination or infinite scroll works correctly. Test real-time updates when recipes are added/deleted from other sessions.",
+        "status": "pending",
+        "dependencies": [
+          6
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Implement advanced recipe management features for My Recipes page",
+        "description": "Add comprehensive recipe management functionality including view/details modal, delete with confirmation, search by title/ingredients, sorting options, pagination, and real-time updates using Supabase subscriptions.",
+        "details": "Implementation should include: 1) **Recipe Details View**: Create a RecipeDetailsModal component that displays full recipe information in a readable format with ingredients list, instructions, nutritional info, and metadata (created date, processing source). Include edit capability for recipe title and notes. 2) **Delete Functionality**: Implement delete recipe feature with confirmation dialog, optimistic UI updates, and proper error handling. Add bulk delete option with checkbox selection. 3) **Search & Filter**: Create search functionality that filters recipes by title, ingredients, or description using real-time text input. Add filter options for date ranges, recipe source (text/URL/image), and custom tags. 4) **Sorting Options**: Implement sorting by created date (newest/oldest), recipe title (A-Z/Z-A), and last modified date. Add sort direction toggle with visual indicators. 5) **Pagination**: Implement pagination with configurable page size (10/25/50 recipes per page), page navigation controls, and URL state persistence. Show total count and current page info. 6) **Real-time Updates**: Implement Supabase real-time subscriptions to automatically update the recipes list when changes occur from other sessions/devices. Handle insert, update, and delete events with smooth UI transitions. 7) **Loading States**: Add skeleton loading for initial page load, search results, and pagination changes. Implement optimistic updates for delete actions. 8) **Responsive Design**: Ensure all features work seamlessly on mobile and desktop with appropriate touch interactions and responsive layouts.",
+        "testStrategy": "Create comprehensive test coverage including: 1) **Recipe Details Tests**: Verify modal opens with correct recipe data, edit functionality saves changes to database, and modal closes properly. Test with recipes containing various data structures (with/without images, long ingredient lists). 2) **Delete Functionality Tests**: Test single recipe deletion with confirmation dialog, verify database record removal and UI update. Test bulk delete with multiple selections and proper cleanup. Test delete error handling when database operation fails. 3) **Search & Filter Tests**: Test search functionality with various queries (partial matches, ingredient names, recipe titles). Verify real-time search updates and empty state handling. Test date range filters and source type filters. 4) **Sorting Tests**: Verify all sorting options work correctly with different data sets. Test sort direction toggles and persistent sort state across page reloads. Test sorting with paginated results. 5) **Pagination Tests**: Test page navigation with different page sizes, verify correct record counts and ranges. Test URL state persistence and browser back/forward navigation. Test pagination with filtered/searched results. 6) **Real-time Updates Tests**: Test real-time subscriptions by making changes in one browser tab and verifying updates appear in another. Test subscription cleanup on component unmount. Test handling of connection drops and reconnection. 7) **Performance Tests**: Verify component performance with large recipe datasets (100+ recipes). Test search performance and pagination response times. Validate memory usage during real-time subscriptions.",
+        "status": "pending",
+        "dependencies": [
+          9
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Fix Supabase security and performance issues",
+        "description": "Comprehensive review and optimization of Supabase implementation including Row Level Security policies, database query optimization, proper indexing, and security vulnerability remediation.",
+        "details": "Implementation should include: 1) **Security Audit & RLS Review**: Conduct thorough review of existing Row Level Security policies on user_recipes and demo_rate_limits tables. Verify policies prevent unauthorized access and data leakage. Test edge cases like user impersonation, policy bypass attempts, and cross-tenant data access. Update policies to use more restrictive conditions and proper user context validation. 2) **Database Query Optimization**: Analyze slow queries using Supabase dashboard and pg_stat_statements. Optimize queries in authentication context, recipe fetching, and rate limiting checks. Implement query result caching where appropriate. Replace N+1 query patterns with batch operations. 3) **Indexing Strategy**: Create composite indexes on frequently queried columns (user_id + created_at on user_recipes, user_id + date on demo_rate_limits). Add partial indexes for common filter conditions. Analyze query execution plans to identify missing indexes. 4) **Security Vulnerability Assessment**: Review authentication flow for JWT token validation, session management, and CSRF protection. Audit API endpoints for proper authorization checks. Implement rate limiting at database level. Check for SQL injection vulnerabilities and sensitive data exposure. 5) **Connection Pool Optimization**: Configure appropriate connection pooling settings for production load. Implement connection retry logic with exponential backoff. Monitor connection usage and implement connection leak detection.",
+        "testStrategy": "Test security improvements by attempting unauthorized access scenarios including JWT token manipulation, cross-user data access attempts, and policy bypass testing. Verify RLS policies using different user contexts and edge cases. Performance test database queries under load using realistic data volumes (1000+ users, 10000+ recipes). Measure query execution times before and after optimization, targeting <100ms for common operations. Test indexing effectiveness by running EXPLAIN ANALYZE on critical queries. Security test authentication flows by attempting session hijacking, CSRF attacks, and privilege escalation. Load test the application with concurrent users to verify connection pooling and rate limiting work correctly. Validate that optimizations don't break existing functionality by running full regression tests.",
+        "status": "pending",
+        "dependencies": [
+          9
+        ],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-28T20:10:19.758Z",
-      "updated": "2025-06-29T19:31:17.734Z",
+      "updated": "2025-06-30T23:14:09.279Z",
       "description": "Future enhancements and nice-to-have features for the demo"
     }
   }

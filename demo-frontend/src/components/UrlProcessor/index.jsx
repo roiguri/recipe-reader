@@ -171,6 +171,8 @@ const UrlProcessor = () => {
     return (
       <ResultDisplay 
         result={result} 
+        sourceType="url"
+        sourceData={url}
         onStartOver={() => {
           setResult(null);
           setError(null);

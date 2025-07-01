@@ -5,11 +5,13 @@ import ComingSoonContent from './components/ComingSoonContent.jsx';
 import TextProcessor from './components/TextProcessor/index';
 import UrlProcessor from './components/UrlProcessor/index';
 import ImageProcessor from './components/ImageProcessor/index';
+import MyRecipesPage from './components/MyRecipesPage.jsx';
 import { useCardConfigs } from './config/cardConfigs.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const [expandedCard, setExpandedCard] = useState(null);
+  const [currentView, setCurrentView] = useState('home'); // 'home' or 'my-recipes'
   const cardConfigs = useCardConfigs();
 
   // Restore expanded card state on page load (after OAuth redirect)
@@ -75,24 +77,42 @@ function App() {
     }));
   }, [cardConfigs]);
 
+  const handleNavigateToMyRecipes = () => {
+    setCurrentView('my-recipes');
+    setExpandedCard(null); // Close any expanded cards
+  };
+
+  const handleNavigateHome = () => {
+    setCurrentView('home');
+    setExpandedCard(null);
+  };
+
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-[#fcf8f8]" style={{fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif'}}>
       <div className="layout-container flex min-h-screen grow flex-col">
         <ErrorBoundary>
-          <AppHeader />
-          <MainContent 
-            cardItems={cardItems}
-            expandedCard={expandedCard}
-            onCardClick={handleCardClick}
-            onBackClick={() => {
-              // When using back button, also mark as manually closed
-              if (typeof sessionStorage !== 'undefined' && expandedCard) {
-                sessionStorage.removeItem('app_expandedCard');
-                sessionStorage.setItem('app_cardManuallyClosed', expandedCard);
-              }
-              setExpandedCard(null);
-            }}
+          <AppHeader 
+            currentView={currentView}
+            onNavigateToMyRecipes={handleNavigateToMyRecipes}
+            onNavigateHome={handleNavigateHome}
           />
+          {currentView === 'home' ? (
+            <MainContent 
+              cardItems={cardItems}
+              expandedCard={expandedCard}
+              onCardClick={handleCardClick}
+              onBackClick={() => {
+                // When using back button, also mark as manually closed
+                if (typeof sessionStorage !== 'undefined' && expandedCard) {
+                  sessionStorage.removeItem('app_expandedCard');
+                  sessionStorage.setItem('app_cardManuallyClosed', expandedCard);
+                }
+                setExpandedCard(null);
+              }}
+            />
+          ) : (
+            <MyRecipesPage onNavigateHome={handleNavigateHome} />
+          )}
         </ErrorBoundary>
       </div>
     </div>
