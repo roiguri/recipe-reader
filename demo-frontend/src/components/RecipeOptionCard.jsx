@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { formatTime } from '../utils/formatters';
+import { formatTime, getTotalTime } from '../utils/formatters';
 
 /**
  * RecipeOptionCard component - styled like OptionCard but for recipes
@@ -23,9 +23,9 @@ const RecipeOptionCard = ({
     const recipeData = recipe.processed_recipe;
     if (!recipeData) return t('myRecipes.timeUnknown');
     
-    // Use the totalTime field directly with formatTime
-    if (recipeData.totalTime != null) {
-      return formatTime(recipeData.totalTime, t);
+    const totalTime = getTotalTime(recipeData);
+    if (totalTime != null) {
+      return formatTime(totalTime, t);
     }
     
     return t('myRecipes.timeUnknown');

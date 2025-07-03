@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { isHebrew, formatTime, generatePdfFilename, detectBrowserPrintCapabilities } from '../../utils/formatters';
+import { isHebrew, formatTime, generatePdfFilename, detectBrowserPrintCapabilities, getTotalTime } from '../../utils/formatters';
 import Card from '../ui/Card';
 
 /**
@@ -13,6 +13,19 @@ const ExportOptions = ({ recipe }) => {
   const { t } = useTranslation();
   const { direction } = useLanguage();
   const [isExporting, setIsExporting] = useState(false);
+  
+  const totalTime = getTotalTime(recipe);
+  
+  // Helper function to get appropriate grid class based on time field count
+  const getTimeGridClass = () => {
+    const timeFieldsCount = [recipe.prepTime, recipe.cookTime, totalTime].filter(time => time != null).length;
+    switch (timeFieldsCount) {
+      case 1: return 'grid-cols-1';
+      case 2: return 'grid-cols-2';
+      case 3: return 'grid-cols-3';
+      default: return 'grid-cols-1';
+    }
+  };
   
   const browserInfo = detectBrowserPrintCapabilities();
   
@@ -489,7 +502,7 @@ const ExportOptions = ({ recipe }) => {
             </div>
 
             {/* Recipe Metadata */}
-            {(recipe.difficulty || recipe.servings || recipe.prepTime || recipe.cookTime || recipe.totalTime) && (
+            {(recipe.difficulty || recipe.servings || recipe.prepTime || recipe.cookTime || totalTime) && (
               <div className={`mb-8 text-center ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                 {/* First row: difficulty and servings */}
                 {(recipe.difficulty || recipe.servings) && (
@@ -510,40 +523,24 @@ const ExportOptions = ({ recipe }) => {
                 )}
                 
                 {/* Second row: all time fields */}
-                {(recipe.prepTime || recipe.cookTime || recipe.totalTime) && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(recipe.prepTime || recipe.cookTime || totalTime) && (
+                  <div className={`grid ${getTimeGridClass()} gap-4`}>
                     {recipe.prepTime && (
-                      <div className={`border border-gray-200 rounded-lg p-3 ${(() => {
-                        const timeFieldsCount = [recipe.prepTime, recipe.cookTime, recipe.totalTime].filter(Boolean).length;
-                        if (timeFieldsCount === 1) return 'md:col-span-3';
-                        if (timeFieldsCount === 2) return 'md:col-span-1';
-                        return '';
-                      })()}`}>
+                      <div className="border border-gray-200 rounded-lg p-3">
                         <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.prepTime')}</div>
                         <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.prepTime, t)}</div>
                       </div>
                     )}
                     {recipe.cookTime && (
-                      <div className={`border border-gray-200 rounded-lg p-3 ${(() => {
-                        const timeFieldsCount = [recipe.prepTime, recipe.cookTime, recipe.totalTime].filter(Boolean).length;
-                        if (timeFieldsCount === 1) return 'md:col-span-3';
-                        if (timeFieldsCount === 2 && !recipe.prepTime) return 'md:col-span-2';
-                        if (timeFieldsCount === 2 && !recipe.totalTime) return 'md:col-span-2';
-                        return '';
-                      })()}`}>
+                      <div className="border border-gray-200 rounded-lg p-3">
                         <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.cookTime')}</div>
                         <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.cookTime, t)}</div>
                       </div>
                     )}
-                    {recipe.totalTime && (
-                      <div className={`border border-gray-200 rounded-lg p-3 ${(() => {
-                        const timeFieldsCount = [recipe.prepTime, recipe.cookTime, recipe.totalTime].filter(Boolean).length;
-                        if (timeFieldsCount === 1) return 'md:col-span-3';
-                        if (timeFieldsCount === 2) return 'md:col-span-2';
-                        return '';
-                      })()}`}>
+                    {totalTime != null && (
+                      <div className="border border-gray-200 rounded-lg p-3">
                         <div className="text-sm text-gray-500 mb-1">{t('resultDisplay.metadata.totalTime')}</div>
-                        <div className="font-semibold text-[#1b0e0e]">{formatTime(recipe.totalTime, t)}</div>
+                        <div className="font-semibold text-[#1b0e0e]">{formatTime(totalTime, t)}</div>
                       </div>
                     )}
                   </div>

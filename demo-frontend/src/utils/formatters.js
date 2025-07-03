@@ -60,6 +60,23 @@ export const formatInstructions = (instructions, stages) => {
 };
 
 /**
+ * Get total time by always calculating from prepTime + cookTime
+ * @param {Object} recipe - Recipe object with timing fields
+ * @returns {number|null} - Calculated total time in minutes or null if both components are undefined
+ */
+export const getTotalTime = (recipe) => {
+  const { prepTime, cookTime } = recipe;
+  
+  // If both are undefined/null, return null (show "Not specified")
+  if (prepTime == null && cookTime == null) {
+    return null;
+  }
+  
+  // Otherwise, calculate sum (treating null/undefined as 0)
+  return (prepTime || 0) + (cookTime || 0);
+};
+
+/**
  * Check if text contains Hebrew characters
  * @param {string} text - Text to check
  * @returns {boolean} - True if text contains Hebrew characters

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '../ui/Card';
-import { isHebrew, formatTime } from '../../utils/formatters';
+import { isHebrew, formatTime, getTotalTime } from '../../utils/formatters';
 
 /**
  * EditableMetadata component displays and allows editing of recipe metadata
@@ -48,12 +48,7 @@ const EditableMetadata = ({
     'hard'
   ];
 
-  // Calculate total time from current prepTime and cookTime
-  const calculateTotalTime = () => {
-    const prep = prepTime || 0;
-    const cook = cookTime || 0;
-    return prep + cook;
-  };
+  const totalTime = getTotalTime(recipe);
 
   // Custom TimeField component that shows numbers when editing, formatted when not
   const TimeField = ({ field, value, placeholder }) => {
@@ -82,7 +77,7 @@ const EditableMetadata = ({
         className="w-full cursor-pointer hover:bg-[#f3e7e8] rounded px-2 py-1 transition-colors"
       >
         {value ? formatTime(value, t) : (
-          <span className="text-gray-400 italic">{placeholder} min</span>
+          <span className="text-gray-400 italic">{formatTime(parseInt(placeholder), t)}</span>
         )}
       </div>
     );
@@ -335,7 +330,7 @@ const EditableMetadata = ({
             {t('resultDisplay.metadata.totalTime')}
           </div>
           <div className="text-sm py-1 text-[#1b0e0e]">
-            {(prepTime || cookTime) ? formatTime(calculateTotalTime(), t) : (
+            {totalTime != null ? formatTime(totalTime, t) : (
               <span className="text-gray-400 italic">{t('common.notSpecified')}</span>
             )}
           </div>

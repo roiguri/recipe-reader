@@ -6,6 +6,7 @@ import useClipboard from '../../hooks/useClipboard';
 import Card from '../ui/Card';
 import CopyButton from '../ui/CopyButton';
 import { RecipesService } from '../../services/recipesService';
+import { getTotalTime } from '../../utils/formatters';
 
 // Import sub-components
 import TabNavigation from './TabNavigation';
@@ -39,6 +40,12 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
 
   // Use edited recipe if available, otherwise use original
   const displayRecipe = editedRecipe || recipe;
+
+  // Create normalized recipe for raw display with calculated totalTime
+  const normalizedRecipe = {
+    ...displayRecipe,
+    totalTime: getTotalTime(displayRecipe)
+  };
 
   // Initialize edited recipe when edit tab is first accessed
   const handleTabChange = (tabId) => {
@@ -394,11 +401,11 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
                   dir="ltr" 
                   style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'embed' }}
                 >
-                  {JSON.stringify(displayRecipe, null, 2)}
+                  {JSON.stringify(normalizedRecipe, null, 2)}
                 </pre>
                 <div className="absolute top-2 right-2">
                   <CopyButton
-                    content={JSON.stringify(displayRecipe, null, 2)}
+                    content={JSON.stringify(normalizedRecipe, null, 2)}
                     sectionId="raw"
                     copiedSection={copiedSection}
                     onCopy={copyToClipboard}

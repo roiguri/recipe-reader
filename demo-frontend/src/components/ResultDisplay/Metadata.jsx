@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { isHebrew, formatTime } from '../../utils/formatters';
+import { isHebrew, formatTime, getTotalTime } from '../../utils/formatters';
 import Card from '../ui/Card';
 
 /**
@@ -10,7 +10,20 @@ import Card from '../ui/Card';
  */
 const Metadata = ({ recipe }) => {
   const { t, i18n } = useTranslation();
-  const { description, servings, prepTime, cookTime, totalTime, difficulty } = recipe;
+  const { description, servings, prepTime, cookTime, difficulty } = recipe;
+  
+  const totalTime = getTotalTime(recipe);
+  
+  // Helper function to get appropriate grid class based on time field count
+  const getTimeGridClass = () => {
+    const timeFieldsCount = [prepTime, cookTime, totalTime].filter(time => time != null).length;
+    switch (timeFieldsCount) {
+      case 1: return 'grid-cols-1';
+      case 2: return 'grid-cols-2';
+      case 3: return 'grid-cols-3';
+      default: return 'grid-cols-1';
+    }
+  };
   
   // If there are no metadata items to display, return null
   if (!description && !servings && !prepTime && !cookTime && !totalTime && !difficulty) {
@@ -49,37 +62,21 @@ const Metadata = ({ recipe }) => {
           
           {/* Second row: all time fields */}
           {(prepTime || cookTime || totalTime) && (
-            <div className={`grid grid-cols-3 gap-4 ${(difficulty || servings) ? 'pt-4 border-t border-[#f3e7e8]' : ''}`}>
+            <div className={`grid ${getTimeGridClass()} gap-4 ${(difficulty || servings) ? 'pt-4 border-t border-[#f3e7e8]' : ''}`}>
               {prepTime && (
-                <div className={`text-center ${(() => {
-                  const timeFieldsCount = [prepTime, cookTime, totalTime].filter(Boolean).length;
-                  if (timeFieldsCount === 1) return 'col-span-3';
-                  if (timeFieldsCount === 2) return 'col-span-1';
-                  return '';
-                })()}`}>
+                <div className="text-center">
                   <div className="text-sm font-medium text-[#994d51] mb-1">{t('resultDisplay.metadata.prepTime')}</div>
                   <div className="text-sm text-[#1b0e0e]">{formatTime(prepTime, t)}</div>
                 </div>
               )}
               {cookTime && (
-                <div className={`text-center ${(() => {
-                  const timeFieldsCount = [prepTime, cookTime, totalTime].filter(Boolean).length;
-                  if (timeFieldsCount === 1) return 'col-span-3';
-                  if (timeFieldsCount === 2 && !prepTime) return 'col-span-2';
-                  if (timeFieldsCount === 2 && !totalTime) return 'col-span-2';
-                  return '';
-                })()}`}>
+                <div className="text-center">
                   <div className="text-sm font-medium text-[#994d51] mb-1">{t('resultDisplay.metadata.cookTime')}</div>
                   <div className="text-sm text-[#1b0e0e]">{formatTime(cookTime, t)}</div>
                 </div>
               )}
-              {totalTime && (
-                <div className={`text-center ${(() => {
-                  const timeFieldsCount = [prepTime, cookTime, totalTime].filter(Boolean).length;
-                  if (timeFieldsCount === 1) return 'col-span-3';
-                  if (timeFieldsCount === 2) return 'col-span-2';
-                  return '';
-                })()}`}>
+              {totalTime != null && (
+                <div className="text-center">
                   <div className="text-sm font-medium text-[#994d51] mb-1">{t('resultDisplay.metadata.totalTime')}</div>
                   <div className="text-sm text-[#1b0e0e]">{formatTime(totalTime, t)}</div>
                 </div>
