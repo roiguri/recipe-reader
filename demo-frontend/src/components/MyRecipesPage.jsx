@@ -363,6 +363,13 @@ const MyRecipesPage = ({ onNavigateHome }) => {
                             sourceData={recipe.source_data}
                             onStartOver={() => handleCardClick(recipe.id)} // Collapse the card
                             showActionButtons={false} // Hide process another/save buttons for saved recipes
+                            recipeId={recipe.id}
+                            onRecipeUpdated={(updatedRecipe) => {
+                              // Update the recipe in local state
+                              setRecipes(prev => prev.map(r => 
+                                r.id === recipe.id ? updatedRecipe : r
+                              ));
+                            }}
                           />
                         </motion.div>
                       </div>

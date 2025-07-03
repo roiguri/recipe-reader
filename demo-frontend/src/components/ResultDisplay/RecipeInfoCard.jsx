@@ -13,6 +13,7 @@ import SaveRecipeButton from '../ui/SaveRecipeButton';
  * @param {string} props.sourceType - Source type: 'text', 'url', or 'image'
  * @param {string} props.sourceData - Original input data
  * @param {boolean} props.showActionButtons - Whether to show process another/save buttons (default: true)
+ * @param {Function} props.onRecipeSaved - Callback when recipe is saved successfully
  */
 const RecipeInfoCard = ({ 
   recipe, 
@@ -21,7 +22,8 @@ const RecipeInfoCard = ({
   onStartOver,
   sourceType = 'text',
   sourceData = '',
-  showActionButtons = true
+  showActionButtons = true,
+  onRecipeSaved = null
 }) => {
   const { t } = useTranslation();
   const [saveMessage, setSaveMessage] = useState('');
@@ -33,6 +35,12 @@ const RecipeInfoCard = ({
   const handleSaveSuccess = (data) => {
     setSaveMessage(t('saveRecipe.saveSuccess'));
     setSaveMessageType('success');
+    
+    // Notify parent component with saved recipe data
+    if (onRecipeSaved && data && data[0]) {
+      onRecipeSaved(data[0]);
+    }
+    
     setTimeout(() => {
       setSaveMessage('');
       setSaveMessageType('');

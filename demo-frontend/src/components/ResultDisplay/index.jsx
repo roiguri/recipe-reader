@@ -5,6 +5,7 @@ import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import useClipboard from '../../hooks/useClipboard';
 import Card from '../ui/Card';
 import CopyButton from '../ui/CopyButton';
+import { RecipesService } from '../../services/recipesService';
 
 // Import sub-components
 import TabNavigation from './TabNavigation';
@@ -23,13 +24,16 @@ import EditableInstructionsSection from './EditableInstructionsSection';
 import EditableCommentsSection from './EditableCommentsSection';
 import EditableTagList from './EditableTagList';
 
-const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = '', showActionButtons = true }) => {
+const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = '', showActionButtons = true, recipeId = null, onRecipeUpdated = null }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('recipe');
   const [copyToClipboard, copiedSection] = useClipboard();
   const [editedRecipe, setEditedRecipe] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [globalEditingState, setGlobalEditingState] = useState({ component: null, field: null, tempValues: {} });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [savedRecipeId, setSavedRecipeId] = useState(recipeId);
 
   const { recipe, confidence_score, processing_time } = result;
 
@@ -50,11 +54,49 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
     setHasUnsavedChanges(true);
   }, []);
 
+  // Handle recipe save success from SaveRecipeButton
+  const handleRecipeSaved = useCallback((savedRecipe) => {
+    setSavedRecipeId(savedRecipe.id);
+    // Notify parent component if callback provided
+    if (onRecipeUpdated) {
+      onRecipeUpdated(savedRecipe);
+    }
+  }, [onRecipeUpdated]);
+
   // Save changes (apply edited recipe as new recipe)
-  const saveChanges = () => {
-    // In a real app, this would save to backend
-    setHasUnsavedChanges(false);
-    // For now, we keep the edited recipe as the display recipe
+  const saveChanges = async () => {
+    if (!editedRecipe) return;
+    
+    // Clear any previous error
+    setSaveError(null);
+    
+    // If we have a savedRecipeId, persist to database
+    if (savedRecipeId) {
+      setIsSaving(true);
+      try {
+        const { data, error } = await RecipesService.updateRecipe(savedRecipeId, editedRecipe);
+        
+        if (error) {
+          setSaveError(error.message || t('resultDisplay.edit.saveError'));
+          return;
+        }
+        
+        // Notify parent component about the update
+        if (onRecipeUpdated && data && data[0]) {
+          onRecipeUpdated(data[0]);
+        }
+        
+        setHasUnsavedChanges(false);
+      } catch (err) {
+        console.error('Error saving recipe edits:', err);
+        setSaveError(t('resultDisplay.edit.saveError'));
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      // For new recipes without recipeId, just clear the unsaved changes flag
+      setHasUnsavedChanges(false);
+    }
   };
 
   // Discard changes (reset to original recipe)
@@ -201,6 +243,7 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
         sourceType={sourceType}
         sourceData={sourceData}
         showActionButtons={showActionButtons}
+        onRecipeSaved={handleRecipeSaved}
       />
 
       {/* Tabs container */}
@@ -262,11 +305,26 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
                     </button>
                     <button
                       onClick={saveChanges}
-                      className="px-3 py-1 text-sm bg-[#994d51] text-white rounded hover:bg-[#7a3c40]"
+                      disabled={isSaving}
+                      className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-2 ${
+                        isSaving 
+                          ? 'bg-gray-400 text-white cursor-not-allowed' 
+                          : 'bg-[#994d51] text-white hover:bg-[#7a3c40]'
+                      }`}
                     >
-                      {t('common.save')}
+                      {isSaving && (
+                        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                      )}
+                      {isSaving ? t('common.saving') : t('common.save')}
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* Save error display */}
+              {saveError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <span className="text-sm text-red-800">{saveError}</span>
                 </div>
               )}
 
