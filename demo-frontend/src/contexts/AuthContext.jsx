@@ -96,8 +96,6 @@ export const AuthProvider = ({ children }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-
-      console.log('Auth state changed:', event, session?.user?.email);
       
       switch (event) {
         case 'SIGNED_IN':
@@ -179,8 +177,6 @@ export const AuthProvider = ({ children }) => {
     // Refresh 5 minutes before expiry or immediately if less than 5 minutes
     const refreshTime = Math.max(MIN_REFRESH_DELAY_MS, (timeRemaining - TOKEN_REFRESH_BUFFER_SECONDS) * 1000);
 
-    console.log(`Scheduling token refresh in ${Math.round(refreshTime / 1000)} seconds`);
-
     refreshTimerRef.current = setTimeout(async () => {
       try {
         dispatch({ type: 'SET_SESSION_STATUS', payload: 'refreshing' });
@@ -192,10 +188,8 @@ export const AuthProvider = ({ children }) => {
           dispatch({ type: 'SET_ERROR', payload: 'Session expired. Please sign in again.' });
           await signOut();
         } else {
-          console.log('Token refreshed successfully');
           dispatch({ type: 'SET_SESSION', payload: data.session });
           dispatch({ type: 'SET_SESSION_STATUS', payload: 'valid' });
-          // Schedule next refresh
           scheduleTokenRefresh(data.session);
         }
       } catch (error) {
@@ -222,7 +216,6 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (isSessionExpired(session)) {
-        console.log('Session expired, attempting refresh...');
         dispatch({ type: 'SET_SESSION_STATUS', payload: 'expired' });
         
         const { data, error: refreshError } = await supabase.auth.refreshSession();

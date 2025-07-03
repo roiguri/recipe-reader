@@ -64,41 +64,6 @@ export const useRateLimit = () => {
     }
   }, [user?.id, user?.app_metadata?.is_admin, isAuthenticated]);
 
-  // Mock increment usage (temporary until backend Task 4)
-  const incrementUsage = useCallback(async () => {
-    if (!isAuthenticated || !user?.id || rateLimit.isAdmin) {
-      return { success: true }; // Admins have unlimited usage
-    }
-
-    try {
-      const newUsage = Math.min(rateLimit.requestsUsed + 1, rateLimit.requestsLimit);
-      
-      const { error } = await supabase
-        .from('demo_rate_limits')
-        .update({ 
-          requests_used: newUsage,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error incrementing usage:', error);
-        return { success: false, error: error.message };
-      }
-
-      // Update local state
-      setRateLimit(prev => ({
-        ...prev,
-        requestsUsed: newUsage
-      }));
-
-      return { success: true };
-    } catch (error) {
-      console.error('Usage increment error:', error);
-      return { success: false, error: error.message };
-    }
-  }, [user?.id, isAuthenticated, rateLimit.requestsUsed, rateLimit.requestsLimit, rateLimit.isAdmin]);
-
   // Check if user has remaining quota
   const hasQuota = useCallback(() => {
     if (rateLimit.isAdmin) return true;
@@ -146,7 +111,7 @@ export const useRateLimit = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Rate limit updated:', payload);
+          // Rate limist updated via real-time subscription
           const newData = payload.new;
           setRateLimit({
             requestsUsed: newData.requests_used,
@@ -179,7 +144,6 @@ export const useRateLimit = () => {
     usageColor: getUsageColor(),
     
     // Actions
-    incrementUsage,
     refreshRateLimit: fetchRateLimit
   };
 };

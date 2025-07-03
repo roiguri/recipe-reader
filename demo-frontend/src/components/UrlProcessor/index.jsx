@@ -43,7 +43,7 @@ const UrlProcessor = () => {
 
   // Restore form data after sign-in
   useEffect(() => {
-    if (auth.isAuthenticated && typeof sessionStorage !== 'undefined') {
+    if (auth?.isAuthenticated && typeof sessionStorage !== 'undefined') {
       // Check for saved form data in sessionStorage
       const savedData = sessionStorage.getItem('urlProcessor_formData');
       if (savedData) {
@@ -60,7 +60,7 @@ const UrlProcessor = () => {
       // Clear local state as well
       setSavedFormData(null);
     }
-  }, [auth.isAuthenticated]);
+  }, [auth?.isAuthenticated]);
 
   const handleUrlChange = (e) => {
     const newUrl = e.target.value;

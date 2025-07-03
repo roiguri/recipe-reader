@@ -3,8 +3,10 @@
  */
 
 const API_BASE_URL = import.meta.env.REACT_APP_API_URL || 'http://localhost:8000';
-const API_KEY = import.meta.env.REACT_APP_API_KEY;
 const API_VERSION = 'v1';
+
+// Supabase configuration for Edge Functions
+const SUPABASE_URL = import.meta.env.REACT_APP_SUPABASE_URL;
 
 class APIError extends Error {
   constructor(message, status, details) {
@@ -45,26 +47,37 @@ function handleRequestError(error) {
 }
 
 /**
- * Process recipe text using the FastAPI backend
+ * Process recipe text using the secure Edge Function proxy
  * @param {string} text - Recipe text to process
  * @param {Object} options - Optional processing parameters
  * @param {AbortSignal} signal - Optional abort signal for cancellation
+ * @param {string} accessToken - JWT access token for authentication
  * @returns {Promise<Object>} Processed recipe response
  */
-export async function processRecipeText(text, options = {}, signal = null) {
-  const url = `${API_BASE_URL}/api/${API_VERSION}/recipe/text`;
+export async function processRecipeText(text, options = {}, signal = null, accessToken = null) {
+  if (!SUPABASE_URL) {
+    throw new APIError('Supabase URL not configured. Please set REACT_APP_SUPABASE_URL environment variable.', 500, { configError: true });
+  }
+  
+  const url = `${SUPABASE_URL}/functions/v1/recipe-proxy/text`;
   
   const requestBody = {
     text: text.trim(),
     options: options
   };
 
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  // Add authentication if token provided
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
   const requestOptions = {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': API_KEY,
-    },
+    headers,
     body: JSON.stringify(requestBody),
     signal
   };
@@ -78,7 +91,7 @@ export async function processRecipeText(text, options = {}, signal = null) {
       
       try {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorData.detail || errorMessage;
+        errorMessage = errorData.error || errorData.message || errorData.detail || errorMessage;
         errorDetails = errorData;
       } catch (parseError) {
         // If we can't parse the error response, use the status text
@@ -96,26 +109,37 @@ export async function processRecipeText(text, options = {}, signal = null) {
 }
 
 /**
- * Process recipe URL using the FastAPI backend
+ * Process recipe URL using the secure Edge Function proxy
  * @param {string} url - Recipe URL to process
  * @param {Object} options - Optional processing parameters
  * @param {AbortSignal} signal - Optional abort signal for cancellation
+ * @param {string} accessToken - JWT access token for authentication
  * @returns {Promise<Object>} Processed recipe response
  */
-export async function processRecipeUrl(url, options = {}, signal = null) {
-  const apiUrl = `${API_BASE_URL}/api/${API_VERSION}/recipe/url`;
+export async function processRecipeUrl(url, options = {}, signal = null, accessToken = null) {
+  if (!SUPABASE_URL) {
+    throw new APIError('Supabase URL not configured. Please set REACT_APP_SUPABASE_URL environment variable.', 500, { configError: true });
+  }
+  
+  const apiUrl = `${SUPABASE_URL}/functions/v1/recipe-proxy/url`;
   
   const requestBody = {
     url: url.trim(),
     options: options
   };
 
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  // Add authentication if token provided
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
   const requestOptions = {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': API_KEY,
-    },
+    headers,
     body: JSON.stringify(requestBody),
     signal
   };
@@ -129,7 +153,7 @@ export async function processRecipeUrl(url, options = {}, signal = null) {
       
       try {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorData.detail || errorMessage;
+        errorMessage = errorData.error || errorData.message || errorData.detail || errorMessage;
         errorDetails = errorData;
       } catch (parseError) {
         // If we can't parse the error response, use the status text
@@ -147,26 +171,37 @@ export async function processRecipeUrl(url, options = {}, signal = null) {
 }
 
 /**
- * Process recipe image(s) using the FastAPI backend
+ * Process recipe image(s) using the secure Edge Function proxy
  * @param {string|Array<string>} imageData - Base64 encoded image data (single string or array of strings)
  * @param {Object} options - Optional processing parameters
  * @param {AbortSignal} signal - Optional abort signal for cancellation
+ * @param {string} accessToken - JWT access token for authentication
  * @returns {Promise<Object>} Processed recipe response
  */
-export async function processRecipeImage(imageData, options = {}, signal = null) {
-  const apiUrl = `${API_BASE_URL}/api/${API_VERSION}/recipe/image`;
+export async function processRecipeImage(imageData, options = {}, signal = null, accessToken = null) {
+  if (!SUPABASE_URL) {
+    throw new APIError('Supabase URL not configured. Please set REACT_APP_SUPABASE_URL environment variable.', 500, { configError: true });
+  }
+  
+  const apiUrl = `${SUPABASE_URL}/functions/v1/recipe-proxy/image`;
   
   const requestBody = {
     image_data: imageData,
     options: options
   };
 
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  // Add authentication if token provided
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
   const requestOptions = {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': API_KEY,
-    },
+    headers,
     body: JSON.stringify(requestBody),
     signal
   };

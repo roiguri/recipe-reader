@@ -38,6 +38,10 @@ function validateAuthentication(auth) {
     throw new AuthenticationError('Authentication context not available');
   }
 
+  if (auth.loading || auth.sessionStatus === 'checking') {
+    throw new AuthenticationError('Checking authentication status...');
+  }
+
   if (!auth.isAuthenticated) {
     throw new AuthenticationError('Please sign in to process recipes');
   }
@@ -54,79 +58,6 @@ function validateAuthentication(auth) {
 }
 
 /**
- * Check if user has available quota for requests
- * @param {Object} rateLimit - Rate limit context object
- * @returns {boolean} True if user has quota or is admin
- */
-function validateRateLimit(rateLimit) {
-  if (!rateLimit) {
-    throw new RateLimitError('Rate limiting service not available');
-  }
-
-  if (rateLimit.loading) {
-    throw new RateLimitError('Checking usage quota...');
-  }
-
-  if (rateLimit.error) {
-    throw new RateLimitError(`Rate limiting error: ${rateLimit.error}`);
-  }
-
-  // Admin users have unlimited access
-  if (rateLimit.isAdmin) {
-    return true;
-  }
-
-  // Check if user has remaining quota
-  if (!rateLimit.hasQuota) {
-    throw new RateLimitError(
-      `You have reached your limit of ${rateLimit.requestsLimit} requests. Contact us for API access.`,
-      rateLimit.remainingRequests
-    );
-  }
-
-  return true;
-}
-
-/**
- * Perform pre-request security checks
- * @param {Object} auth - Auth context
- * @param {Object} rateLimit - Rate limit context
- * @throws {AuthenticationError|RateLimitError} If security checks fail
- */
-function performSecurityChecks(auth, rateLimit) {
-  // Check authentication first
-  validateAuthentication(auth);
-  
-  // Then check rate limiting
-  validateRateLimit(rateLimit);
-}
-
-/**
- * Handle post-request quota increment
- * @param {Object} rateLimit - Rate limit context
- * @param {Function} incrementUsage - Function to increment usage
- * @returns {Promise<void>}
- */
-async function handleQuotaIncrement(rateLimit, incrementUsage) {
-  // Skip increment for admin users
-  if (rateLimit.isAdmin) {
-    return;
-  }
-
-  try {
-    const result = await incrementUsage();
-    if (!result.success) {
-      console.error('Failed to increment usage:', result.error);
-      // Don't throw error here as the API request already succeeded
-      // Just log for monitoring purposes
-    }
-  } catch (error) {
-    console.error('Error incrementing usage:', error);
-    // Don't throw error here as the API request already succeeded
-  }
-}
-
-/**
  * Secure wrapper for processRecipeText with authentication and rate limiting
  * @param {string} text - Recipe text to process
  * @param {Object} options - Processing options
@@ -136,21 +67,15 @@ async function handleQuotaIncrement(rateLimit, incrementUsage) {
  * @returns {Promise<Object>} Processed recipe response
  */
 export async function secureProcessRecipeText(text, options = {}, auth, rateLimit, signal = null) {
-  // Perform security checks before making request
-  performSecurityChecks(auth, rateLimit);
+  validateAuthentication(auth);
 
   try {
-    // Make the API request using existing service
-    const result = await processRecipeText(text, options, signal);
+    const result = await processRecipeText(text, options, signal, auth.session.access_token);
     
     // Check if extraction failed and throw appropriate error
     if (isFailedExtraction(result)) {
       throw new ExtractionError('Extraction failed', 'text');
     }
-    
-    // Increment usage quota after successful request
-    await handleQuotaIncrement(rateLimit, rateLimit.incrementUsage);
-    
     return result;
   } catch (error) {
     // Re-throw specific error types as-is
@@ -171,21 +96,15 @@ export async function secureProcessRecipeText(text, options = {}, auth, rateLimi
  * @returns {Promise<Object>} Processed recipe response
  */
 export async function secureProcessRecipeUrl(url, options = {}, auth, rateLimit, signal = null) {
-  // Perform security checks before making request
-  performSecurityChecks(auth, rateLimit);
+  validateAuthentication(auth);
 
   try {
-    // Make the API request using existing service
-    const result = await processRecipeUrl(url, options, signal);
+    const result = await processRecipeUrl(url, options, signal, auth.session.access_token);
     
     // Check if extraction failed and throw appropriate error
     if (isFailedExtraction(result)) {
       throw new ExtractionError('Extraction failed', 'url');
     }
-    
-    // Increment usage quota after successful request
-    await handleQuotaIncrement(rateLimit, rateLimit.incrementUsage);
-    
     return result;
   } catch (error) {
     // Re-throw specific error types as-is
@@ -206,21 +125,16 @@ export async function secureProcessRecipeUrl(url, options = {}, auth, rateLimit,
  * @returns {Promise<Object>} Processed recipe response
  */
 export async function secureProcessRecipeImage(imageData, options = {}, auth, rateLimit, signal = null) {
-  // Perform security checks before making request
-  performSecurityChecks(auth, rateLimit);
+  // Validate authentication (server handles rate limiting)
+  validateAuthentication(auth);
 
   try {
-    // Make the API request using existing service
-    const result = await processRecipeImage(imageData, options, signal);
+    const result = await processRecipeImage(imageData, options, signal, auth?.session?.access_token);
     
     // Check if extraction failed and throw appropriate error
     if (isFailedExtraction(result)) {
       throw new ExtractionError('Extraction failed', 'image');
-    }
-    
-    // Increment usage quota after successful request
-    await handleQuotaIncrement(rateLimit, rateLimit.incrementUsage);
-    
+    }    
     return result;
   } catch (error) {
     // Re-throw specific error types as-is
@@ -239,7 +153,7 @@ export async function secureProcessRecipeImage(imageData, options = {}, auth, ra
  */
 export function checkRequestPermission(auth, rateLimit) {
   try {
-    performSecurityChecks(auth, rateLimit);
+    validateAuthentication(auth);
     return {
       canMakeRequest: true,
       reason: null

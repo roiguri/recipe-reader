@@ -1,6 +1,8 @@
 {
-  "currentTag": "demo-future-enhancement",
-  "lastSwitched": "2025-06-29T17:24:17.287Z",
-  "branchTagMapping": {},
+  "currentTag": "security",
+  "lastSwitched": "2025-07-03T06:49:52.165Z",
+  "branchTagMapping": {
+    "feature/security-fix": "feature-security-fix"
+  },
   "migrationNoticeShown": true
 }

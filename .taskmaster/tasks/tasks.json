@@ -101,35 +101,7 @@
         "priority": "high",
         "details": "Implement error handling for two main failure scenarios:\n\n**Error Scenarios:**\n1. **API Request Failures** - Network errors, server errors, timeouts, or service unavailability\n2. **Recipe Extraction Failures** - API request succeeds but extraction fails, resulting in fallback content\n\n**Implementation Requirements:**\n- Display clear, user-friendly error messages for each scenario\n- Handle API request failures (network issues, server errors, timeouts)\n- Handle extraction failures when API returns fallback results\n- Provide actionable next steps to users\n- Maintain good user experience during error states\n\n**Error Message Strategy:**\n- API failures: \"Unable to connect to the recipe service. Please check your connection and try again.\"\n- Extraction failures: \"We couldn't extract the recipe properly. Please try a different URL or paste the recipe text directly.\"",
         "testStrategy": "Test error handling for API request failures (simulate network errors, server errors, timeouts). Test extraction failure handling when API returns fallback results. Verify appropriate error messages display for each scenario. Test that error states don't break the main application flow. Validate users can take suggested actions after errors occur. Test error message display on mobile and desktop.",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Handle API request failures",
-            "description": "Implement error handling for when the API request itself fails due to network or server issues",
-            "status": "done",
-            "dependencies": [],
-            "details": "Catch and handle API request failures including network errors, server errors, and timeouts. Display appropriate error message to user with suggestion to retry.",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Handle recipe extraction failures",
-            "description": "Implement error handling for when API request succeeds but recipe extraction fails",
-            "status": "done",
-            "dependencies": [],
-            "details": "Detect when API returns fallback results due to extraction failures. Show error message indicating extraction didn't work properly and suggest alternative approaches.",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Add error message localization",
-            "description": "Add localized error messages for both failure scenarios",
-            "status": "done",
-            "dependencies": [],
-            "details": "Create locale entries for API request failures and extraction failures. Ensure messages are user-friendly and provide actionable next steps.",
-            "testStrategy": ""
-          }
-        ]
+        "subtasks": []
       },
       {
         "id": 5,
@@ -213,12 +185,56 @@
         ],
         "priority": "high",
         "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Improve service worker caching strategy",
+        "description": "Enhance service worker caching strategy to improve performance and reliability - enable feature rollouts",
+        "details": "Implementation should include: 1) **Cache Invalidation Strategy**: Implement cache invalidation logic to ensure fresh content is always served. Use cache busting techniques like query parameters or versioning. Implement proper cache expiration policies based on content freshness requirements. 2) **Content Caching**: Implement proper caching for static assets (HTML, CSS, JS, images) using HTTP headers. Set appropriate cache control directives (max-age, stale-while-revalidate, immutable). 3) **Offline Support**: Implement proper offline support using Service Worker's `fetch` event handler. Handle network errors and provide fallback content. Implement proper caching for offline use cases. 4) **Performance Metrics**: Implement performance metrics collection using web vitals or custom metrics. Monitor cache hit rates, cache size, and cache efficiency. 5) **Security Considerations**: Implement proper security measures to prevent cache poisoning and cache busting attacks. Implement proper cache busting techniques to prevent cache poisoning. Implement proper cache busting techniques to prevent cache busting attacks.",
+        "testStrategy": "Test cache invalidation logic by making changes to content and verifying cache is updated. Test offline support by simulating network disconnects and verifying fallback content is served. Test performance metrics collection by monitoring cache hit rates, cache size, and cache efficiency. Test security measures by attempting cache poisoning and cache busting attacks.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-28T20:10:19.758Z",
       "updated": "2025-06-30T23:14:09.279Z",
       "description": "Future enhancements and nice-to-have features for the demo"
+    }
+  },
+  "security": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Fix Race Condition Vulnerability in Edge Function Rate Limiting",
+        "description": "Implement atomic database operations to prevent concurrent requests from bypassing rate limits by using FOR UPDATE locking or stored procedures for thread-safe rate limit checking and incrementing.",
+        "details": "Current implementation has a race condition where multiple concurrent requests can read the same usage count before any updates are committed, allowing all requests to pass rate limiting checks. This creates a security vulnerability where users can exceed their rate limits by making simultaneous requests.\n\nImplementation Options:\n\n1. **FOR UPDATE Locking Approach:**\n   - Use `SELECT ... FOR UPDATE` to lock the rate limit row during transaction\n   - Check current usage against limit\n   - Increment usage count within same transaction\n   - Commit or rollback based on rate limit check\n\n2. **Stored Procedure Approach:**\n   - Create PostgreSQL function that atomically checks and increments\n   - Return success/failure status and updated count\n   - Single database call reduces network overhead\n\n3. **Upsert with Conflict Resolution:**\n   - Use INSERT ... ON CONFLICT DO UPDATE\n   - Increment usage count atomically\n   - Check limit within database constraint or trigger\n\n**Implementation Considerations:**\n- **Security vs Performance:** Atomic operations may increase latency but prevent bypass\n- **Increment Timing:** Consider incrementing before API call (fail-safe) vs after (accurate billing)\n- **Deadlock Prevention:** Use consistent locking order if multiple resources involved\n- **Error Handling:** Distinguish between rate limit exceeded vs database errors\n- **Transaction Isolation:** Ensure appropriate isolation level for consistency\n\n**Code Example (FOR UPDATE approach):**\n```sql\nBEGIN;\nSELECT requests_used, requests_limit \nFROM demo_rate_limits \nWHERE user_id = $1 \nFOR UPDATE;\n-- Check limit in application logic\nUPDATE demo_rate_limits \nSET requests_used = requests_used + 1, updated_at = NOW() \nWHERE user_id = $1;\nCOMMIT;\n```",
+        "testStrategy": "1. **Concurrency Testing:** Create test that makes 10 simultaneous requests from same user with 5-request limit - verify only 5 succeed\n2. **Race Condition Simulation:** Use load testing tool (k6, Artillery) to generate concurrent requests and verify no rate limit bypass\n3. **Database Locking Verification:** Monitor database locks during concurrent access to ensure proper locking behavior\n4. **Performance Baseline:** Measure Edge Function response times before and after implementation to quantify performance impact\n5. **Edge Cases:** Test with zero-limit users, non-existent users, and database connection failures\n6. **Admin Bypass Testing:** Verify admin users still bypass rate limits correctly under concurrent load\n7. **Rollback Testing:** Verify failed rate limit checks don't increment usage counters\n8. **Database Deadlock Testing:** Generate high-concurrency scenarios to test deadlock prevention\n9. **Integration Testing:** Verify rate limiting works correctly with all three endpoints (text, URL, image) under concurrent load",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Add Sentry Deno SDK to Supabase Edge Functions for Enhanced Monitoring",
+        "description": "Implement Sentry integration in Supabase Edge Functions to track exceptions, performance issues, and provide real-time error notifications via email/Slack, addressing monitoring gaps in the free tier.",
+        "details": "**Implementation Steps:**\n\n1. **Sentry Setup:**\n   - Create Sentry project for recipe-reader Edge Functions\n   - Configure Sentry DSN in Edge Function environment variables\n   - Set up email and Slack notifications for critical errors\n\n2. **Deno SDK Integration:**\n   - Install Sentry Deno SDK in Edge Function dependencies\n   - Initialize Sentry client in recipe-proxy function with proper configuration\n   - Configure sampling rates for performance monitoring (10% for production)\n\n3. **Error Tracking Implementation:**\n   - Wrap all API calls in try-catch blocks with Sentry error capture\n   - Track authentication failures with user context\n   - Monitor rate limiting violations and database errors\n   - Capture external Recipe API failures with request/response context\n\n4. **Performance Monitoring:**\n   - Add Sentry performance transactions for each endpoint (text, URL, image)\n   - Monitor database query performance and Edge Function execution time\n   - Track external API response times\n   - Set up custom spans for rate limit checks and authentication\n\n5. **Custom Metrics:**\n   - Track successful vs failed requests by endpoint type\n   - Monitor rate limit hit rates and admin bypass usage\n   - Create custom tags for user roles (admin/regular)\n   - Track geographic distribution of requests\n\n6. **Alert Configuration:**\n   - Set up alerts for error rates >5% over 5 minutes\n   - Configure performance alerts for response times >2 seconds\n   - Create alerts for authentication failure spikes\n   - Set up daily/weekly summary reports\n\n**Environment Variables:**\n```\nSENTRY_DSN=https://your-dsn@sentry.io/project-id\nSENTRY_ENVIRONMENT=production\nSENTRY_RELEASE=recipe-reader-v1.0.0\n```\n\n**Code Structure:**\n- Initialize Sentry at function startup\n- Create reusable error handling wrapper functions\n- Add breadcrumbs for request flow tracking\n- Implement custom fingerprinting for similar errors",
+        "testStrategy": "1. **Error Tracking Verification:**\n   - Intentionally trigger various error scenarios (invalid auth, rate limit exceeded, API failures)\n   - Verify errors appear in Sentry dashboard with proper context and user information\n   - Test email/Slack notifications are received for critical errors\n\n2. **Performance Monitoring Validation:**\n   - Execute normal requests and verify performance transactions are recorded\n   - Check that database queries and external API calls are tracked as spans\n   - Validate response time metrics match actual measured latency\n\n3. **Alert Testing:**\n   - Generate error rates above threshold and verify alerts trigger\n   - Test performance degradation alerts with artificially slow responses\n   - Verify alert notifications reach configured channels (email/Slack)\n\n4. **Custom Metrics Verification:**\n   - Test requests from admin vs regular users show proper tagging\n   - Verify endpoint-specific metrics are tracked correctly\n   - Check rate limit events are properly categorized\n\n5. **Production Monitoring:**\n   - Deploy to staging environment and monitor for 24 hours\n   - Verify no performance impact from Sentry integration\n   - Test dashboard accessibility and metric accuracy\n   - Validate proper error grouping and deduplication",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-03T06:21:57.762Z",
+      "updated": "2025-07-03T06:50:42.930Z",
+      "description": "Security improvements and vulnerability fixes"
     }
   }
 }

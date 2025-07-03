@@ -1,44 +1,121 @@
 # Recipe Box Demo
 
-React demonstration interface for the Recipe Auto-Creation Service.
+**Modern React application for AI-powered recipe extraction from text, URLs, and images with secure authentication and multi-language support.**
 
-## Getting Started
+## 🚀 Live Demo
 
-### 1. Environment Setup
+**Try it now: [https://recipe-reader-demo.netlify.app](https://recipe-reader-demo.netlify.app)**
 
-Copy the example environment file and configure your API settings:
+Experience recipe processing with intelligent AI extraction, real-time rate limiting, and seamless user management.
 
-```bash
-cp .env.example .env.local
+## ✨ Features
+
+### **Recipe Processing** (3 Types Supported)
+- **📝 Text Processing**: Paste recipe text for instant structured extraction
+- **🔗 URL Processing**: Extract recipes directly from cooking websites  
+- **📸 Image Processing**: Upload recipe images (single/multiple pages) for OCR extraction
+
+### **User Experience**
+- **🔐 Secure Authentication**: Google & GitHub OAuth via Supabase
+- **🌐 Multi-language**: English/Hebrew with full RTL support
+- **⚡ Real-time Updates**: Live quota tracking and recipe management
+- **📱 Responsive Design**: Mobile-first Tailwind CSS interface
+- **💾 Recipe Management**: Save, edit, search, and export your recipes
+
+### **Security & Performance**
+- **🛡️ Secure API Proxy**: No exposed API keys in frontend
+- **📊 Rate Limiting**: Server-side enforcement with real-time UI updates
+- **👥 Admin Features**: Unlimited access for admin users
+- **🔒 JWT Authentication**: Comprehensive session management
+
+## 🛠️ Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| **Frontend** | React 19, TypeScript, Vite |
+| **Styling** | Tailwind CSS 3, Framer Motion |
+| **Backend** | Supabase (Auth, Database, Edge Functions) |
+| **Internationalization** | React i18next (EN/HE) |
+| **Build Tools** | Vite, PostCSS, Environment Validation |
+
+## 🎯 How to Use
+
+1. **Visit the Demo**: [https://recipe-reader-demo.netlify.app](https://recipe-reader-demo.netlify.app)
+2. **Sign In**: Use Google or GitHub OAuth (secure authentication)
+3. **Choose Input Type**: Text, URL, or Image upload
+4. **Process Recipe**: AI extracts structured data with confidence scoring
+5. **Save & Manage**: Store recipes in your personal collection
+
+### 🔑 Demo Account
+- **Rate Limit**: 5 requests per user
+- **Admin Access**: Contact us for unlimited demo access
+- **Data Persistence**: Recipes saved to your account
+
+## 🏗️ Architecture
+
+```
+Frontend (React/Vite)
+    ↓ JWT Authentication
+Supabase Edge Function (Secure Proxy)
+    ↓ API Key + Rate Limiting
+External Recipe API (FastAPI)
+    ↓ AI Processing
+Structured Recipe Data
 ```
 
-Edit `.env.local` with your actual values:
+### **Security Implementation**
+- **Zero API Key Exposure**: All keys secured in Edge Functions
+- **Server-side Rate Limiting**: 5 requests/user, admin bypass
+- **JWT Validation**: Every request authenticated
+- **CORS Protection**: Dynamic origin validation
 
-```env
-REACT_APP_API_URL=http://localhost:8000
-REACT_APP_API_KEY=your_demo_api_key_here
-REACT_APP_ENV=development
-```
+### **Database Schema**
+- **`demo_rate_limits`**: User quotas and usage tracking
+- **`user_recipes`**: Recipe storage with metadata
+- **Real-time subscriptions**: Live UI updates
 
-### 2. Start Development Server
+## 📱 User Interface
 
-```bash
-npm start
-```
+### **Processing Flow**
+1. **Choose Input Type**: Text, URL, or Image upload
+2. **AI Processing**: Intelligent extraction with confidence scoring
+3. **Review Results**: Editable recipe with structured data
+4. **Save & Manage**: Store in personal recipe collection
 
-Runs the app in development mode at [http://localhost:3000](http://localhost:3000).
+### **Admin Features**
+- **Unlimited Processing**: No rate limits for admin users
+- **Full Access**: All features available without restrictions
+- **Admin Detection**: Automatic via JWT `app_metadata.is_admin`
 
-The environment validation will run automatically and ensure all required variables are configured.
+## 🌍 Internationalization
 
-## Features
+- **Languages**: English (en), Hebrew (he)
+- **RTL Support**: Complete right-to-left layout for Hebrew
+- **Dynamic Switching**: Real-time language toggle
+- **Validation**: Built-in locale consistency checking
 
-- ✅ **Text Processing**: Working interface that connects to FastAPI backend
-- 🚧 **URL Processing**: Coming soon interface 
-- 🚧 **Image Processing**: Coming soon interface
-- 🚧 **Form Processing**: Coming soon interface
+## 🔒 Authentication Providers
 
-## Tech Stack
+| Provider | Status | Features |
+|----------|--------|----------|
+| **Google** | ✅ Active | Primary OAuth provider |
+| **GitHub** | ✅ Active | Secondary OAuth option |
 
-- React 18
-- Tailwind CSS (via CDN)
-- FastAPI backend integration
+## 🔧 For Developers
+
+This is a production demo application. For API integration or custom development:
+
+### **Development Setup**
+- See [Recipe API Documentation](../README.md) for backend setup
+- Contact us for development access and API keys
+- Review [Contributing Guidelines](../contributing.md) for contribution process
+
+### **Technical Implementation**
+- **TypeScript**: Mixed JS/TS codebase with gradual migration
+- **Error Boundaries**: Comprehensive error handling and recovery
+- **Performance**: Lazy loading, code splitting, and optimization
+- **Accessibility**: ARIA labels, keyboard navigation, screen reader support
+
+---
+
+**🔗 Related**: [Recipe API Documentation](../README.md) | [Contributing Guidelines](../contributing.md)

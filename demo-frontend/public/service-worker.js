@@ -38,9 +38,15 @@ self.addEventListener('activate', (event) => {
 // Fetch event - handle requests with content type validation
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  
+
   // Skip non-GET requests and external URLs
-  if (event.request.method !== 'GET' || !url.origin === self.location.origin) {
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Bypass cache for API calls to ensure fresh data
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/rest/v1/') || url.pathname.startsWith('/functions/v1/')) {
+    event.respondWith(fetch(event.request));
     return;
   }
 
