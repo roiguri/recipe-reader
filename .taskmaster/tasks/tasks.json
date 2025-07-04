@@ -236,5 +236,115 @@
       "updated": "2025-07-03T06:50:42.930Z",
       "description": "Security improvements and vulnerability fixes"
     }
+  },
+  "share-target": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Implement Recipe Page UI Foundation with Sectioned Layout",
+        "description": "Restructure the existing 'My Recipes' page into a sectioned layout with reusable components, starting with a 'Saved Recipes' section as the foundation for the sharing workflow.",
+        "details": "Create a sectioned recipe page layout by implementing: 1) RecipeSection component with props for title, recipes, and actions 2) Extract RecipeCard component with consistent styling 3) Create RecipeList component with filtering/sorting capabilities 4) Implement section-based navigation 5) Add loading states and empty states 6) Ensure responsive design for mobile/desktop. Use React functional components with hooks, implement proper prop-types or TypeScript interfaces, and follow existing design patterns in the codebase. Focus on mobile-first responsive design with touch-friendly interactions. Structure: RecipeSection({ title, recipes, actions, emptyState, loading }), RecipeCard({ recipe, actions, status }), RecipeList({ recipes, filter, sort, onAction }).",
+        "testStrategy": "Unit tests for RecipeSection, RecipeCard, and RecipeList components. Integration tests for section navigation and responsive behavior. Visual regression tests for mobile/desktop layouts. Test empty states, loading states, and error handling. Verify accessibility compliance and keyboard navigation.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Extend Database Schema for Recipe Status and Sharing",
+        "description": "Add recipe status tracking, sharing metadata, and performance indexes to the existing user_recipes table to support the complete sharing workflow.",
+        "details": "Execute database migration to add: 1) recipe_status field (TEXT DEFAULT 'saved') with values: 'saved', 'processed', 'shared', 'processing', 'failed' 2) processed_at timestamp (TIMESTAMP DEFAULT NOW()) 3) extraction_error field (TEXT) for storing error messages 4) shared_url field (TEXT) for preserving original URLs 5) retry_count field (INTEGER DEFAULT 0) for tracking retry attempts. Create indexes: idx_user_recipes_status ON user_recipes(user_id, recipe_status), idx_user_recipes_processed_at ON user_recipes(user_id, processed_at DESC), idx_user_recipes_shared_url ON user_recipes(shared_url) WHERE shared_url IS NOT NULL. Update existing records: UPDATE user_recipes SET recipe_status = 'saved' WHERE recipe_status IS NULL. Use Supabase migrations or direct SQL with proper rollback strategy.",
+        "testStrategy": "Database migration testing with rollback scenarios. Verify all existing recipes are properly updated. Test index performance with sample data. Validate field constraints and default values. Test concurrent access during migration. Verify data integrity after migration completion.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Enhance Recipe Service Layer for Status Management",
+        "description": "Extend the RecipesService to handle status-based recipe filtering, sharing workflow operations, and integration with the new database schema.",
+        "details": "Update RecipesService.js to add: 1) getSavedRecipes(userId) - filter recipes by 'saved' status 2) getRecipesByStatus(userId, status) - flexible status filtering 3) getAllRecipesWithHistory(userId) - get all recipes for history view 4) saveSharedUrl(url, userId) - immediately save shared URLs 5) updateProcessingStatus(recipeId, status, error) - manage status transitions 6) retryExtraction(recipeId) - increment retry count and reprocess 7) promoteToSaved(recipeId) - change status from 'processed' to 'saved' 8) incrementRetryCount(recipeId). Maintain backward compatibility with existing methods. Add proper error handling, validation, and real-time subscription updates. Use async/await patterns and proper error propagation. Implement optimistic UI updates where appropriate.",
+        "testStrategy": "Unit tests for all new service methods. Integration tests with Supabase database. Mock API responses for error scenarios. Test status transitions and retry logic. Verify real-time subscription updates. Test concurrent operations and race conditions. Performance tests for filtering operations.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement History Section with Time-Based Recipe Organization",
+        "description": "Create a 'History' section that displays all user recipes organized by processing time, with clear status indicators and save-to-collection functionality.",
+        "details": "Implement History section UI: 1) Add 'History' tab to recipe sections 2) Group recipes by time periods: Today, Yesterday, This Week, Older 3) Display recipe status indicators (saved/processed/failed) 4) Show processing timestamps 5) Add 'Save to Collection' action for non-saved recipes 6) Implement time-based sorting (newest first) 7) Add visual differentiation for different statuses 8) Integrate with existing RecipeSection component. Use date-fns or similar library for date grouping. Implement proper loading states and empty states. Add real-time updates for status changes. Ensure mobile-optimized touch interactions and responsive design.",
+        "testStrategy": "Unit tests for time-based grouping logic. Integration tests for save-to-collection functionality. Test real-time updates when recipe statuses change. Test sorting and filtering with various data sets. Mobile UI testing for touch interactions. Test empty states and loading states. Verify status indicator accuracy.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement PWA Share Target and Share Handler Route",
+        "description": "Configure the PWA manifest for Web Share Target API and create a dedicated share handler route to process incoming shared URLs from mobile devices.",
+        "details": "Update PWA configuration: 1) Add share_target to manifest.json: { action: '/share', method: 'POST', params: { url: 'url' } } 2) Create /share route in React Router 3) Implement ShareHandler component to process URL parameters 4) Add URL validation and sanitization 5) Handle authentication state during share flow 6) Redirect unauthenticated users to login with return URL 7) Auto-populate URL in processing interface 8) Handle non-recipe URLs gracefully with user feedback. Test across iOS Safari and Android Chrome. Implement proper error handling for malformed URLs. Add loading states during URL processing. Ensure proper analytics tracking for shared URLs.",
+        "testStrategy": "Test PWA share target registration on iOS Safari and Android Chrome. Test share handler route with various URL formats. Test authentication flow during sharing. Test error handling for invalid URLs. Test offline behavior and edge cases. Verify manifest.json validation. Test share menu appearance and functionality.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Create Shared Recipes Section with Status-Based Organization",
+        "description": "Implement a comprehensive 'Shared Recipes' section that organizes recipes by processing status and provides management actions for each state.",
+        "details": "Create Shared Recipes section with subsections: 1) Ready to Save (status = 'processed') - successfully extracted recipes 2) Processing (status = 'processing') - currently being processed 3) Failed Extractions (status = 'failed') - failed with retry options 4) Recently Shared (status = 'shared') - newly shared, pending processing. Implement user actions: Save to Collection, Retry Extraction, View Original URL, Remove from Shared. Add real-time status updates using Supabase subscriptions. Implement batch operations for multiple recipe management. Add progress indicators for processing status. Ensure mobile-optimized interface with swipe gestures where appropriate. Integrate with existing RecipeSection component architecture.",
+        "testStrategy": "Unit tests for status-based filtering and organization. Integration tests for all user actions (save, retry, remove). Test real-time status updates and WebSocket connections. Test batch operations and bulk actions. Mobile UI testing for touch interactions and swipe gestures. Test error handling and edge cases. Performance tests with large numbers of shared recipes.",
+        "priority": "high",
+        "dependencies": [
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Enhance Recipe Processing Pipeline for Sharing Integration",
+        "description": "Update the existing recipe processing pipeline to support the sharing workflow, including immediate URL preservation, status tracking, and retry mechanisms.",
+        "details": "Enhance the recipe processing pipeline: 1) Update secureProcessRecipeUrl to immediately save shared URLs with 'shared' status 2) Add status transitions: shared → processing → processed/failed 3) Implement retry mechanism with exponential backoff 4) Add comprehensive error capture and logging 5) Preserve original URLs even on processing failure 6) Update rate limiting to work with shared recipes 7) Add batch processing capabilities for multiple shared URLs 8) Implement processing queue management 9) Add real-time status updates to UI. Integrate with existing Supabase Edge Function proxy. Maintain compatibility with existing rate limiting system. Add proper error handling and user feedback.",
+        "testStrategy": "Integration tests for complete sharing workflow. Test status transitions and retry mechanisms. Test rate limiting with shared recipes. Test error handling and recovery scenarios. Test batch processing and queue management. Performance tests for processing pipeline. Test real-time updates and WebSocket functionality. Test edge cases and failure scenarios.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Optimize Mobile Experience and Add Offline Support",
+        "description": "Implement mobile-first optimizations for the sharing workflow, including offline support, progressive enhancement, and mobile-specific UX improvements.",
+        "details": "Optimize mobile experience: 1) Implement offline support with IndexedDB for queuing shared URLs 2) Add service worker for offline functionality 3) Implement progressive enhancement for devices without Web Share API 4) Add touch-friendly interactions and swipe gestures 5) Optimize for one-handed operation 6) Add haptic feedback where supported 7) Implement auto-sync when connection is restored 8) Add clear offline status indicators 9) Optimize performance for mobile devices 10) Add mobile-specific animations and transitions. Use workbox for service worker management. Implement proper cache strategies for offline resources. Add network status detection and handling. Ensure graceful degradation for older browsers.",
+        "testStrategy": "Test offline functionality and URL queuing. Test auto-sync when connection is restored. Test progressive enhancement fallbacks. Mobile device testing across iOS and Android. Test touch interactions and swipe gestures. Test performance on low-end devices. Test network connectivity edge cases. Test service worker registration and updates. User acceptance testing for mobile workflow.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-04T13:13:30.558Z",
+      "updated": "2025-07-04T13:14:56.227Z",
+      "description": "Tasks for share-target context"
+    }
   }
 }

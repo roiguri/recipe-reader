@@ -1,6 +1,6 @@
 {
-  "currentTag": "security",
-  "lastSwitched": "2025-07-03T06:49:52.165Z",
+  "currentTag": "share-target",
+  "lastSwitched": "2025-07-04T13:13:38.057Z",
   "branchTagMapping": {
     "feature/security-fix": "feature-security-fix"
   },
