@@ -260,7 +260,7 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -343,7 +343,7 @@
     ],
     "metadata": {
       "created": "2025-07-04T13:13:30.558Z",
-      "updated": "2025-07-04T14:09:48.526Z",
+      "updated": "2025-07-04T21:06:00.986Z",
       "description": "Tasks for share-target context"
     }
   }
