@@ -309,7 +309,25 @@
     "uncategorized": "Uncategorized",
     "minutes": "min",
     "timeUnknown": "Time unknown",
-    "viewSource": "View source"
+    "viewSource": "View source",
+    "noResultsFound": "No recipes found",
+    "tryDifferentFilter": "Try adjusting your search or filter criteria",
+    "savedRecipes": "Saved Recipes",
+    "searchPlaceholder": "Search recipes...",
+    "filterLabels": {
+      "search": "Search",
+      "category": "Category",
+      "source": "Source",
+      "sortBy": "Sort by"
+    },
+    "filterOptions": {
+      "allCategories": "All categories",
+      "allSources": "All sources",
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "nameAZ": "Name A-Z",
+      "category": "Category"
+    }
   },
   "sourceView": {
     "title": "Original Source",

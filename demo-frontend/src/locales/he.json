@@ -309,7 +309,25 @@
     "uncategorized": "ללא קטגוריה",
     "minutes": "דק'",
     "timeUnknown": "זמן לא ידוע",
-    "viewSource": "צפה במקור"
+    "viewSource": "צפה במקור",
+    "noResultsFound": "לא נמצאו מתכונים",
+    "tryDifferentFilter": "נסה לשנות את הקריטריונים של החיפוש או הסינון",
+    "savedRecipes": "מתכונים שמורים",
+    "searchPlaceholder": "חפש מתכונים...",
+    "filterLabels": {
+      "search": "חיפוש",
+      "category": "קטגוריה",
+      "source": "מקור",
+      "sortBy": "מיין לפי"
+    },
+    "filterOptions": {
+      "allCategories": "כל הקטגוריות",
+      "allSources": "כל המקורות",
+      "newest": "החדשים ביותר",
+      "oldest": "הישנים ביותר",
+      "nameAZ": "שם א-ת",
+      "category": "קטגוריה"
+    }
   },
   "sourceView": {
     "title": "מקור מקורי",
