@@ -228,7 +228,7 @@ const EditableIngredientsSection = ({
         </h3>
       </div>
       
-      <div className="grid grid-cols-1 gap-2 overflow-y-auto max-h-80" onClick={handleClickOutside}>
+      <div className="grid grid-cols-1 gap-2 overflow-y-auto overflow-x-auto max-h-80" onClick={handleClickOutside}>
         {ingredientsWithIds.map((ingredient, index) => {
           const isEmpty = !ingredient.item && !ingredient.amount && !ingredient.unit;
           
@@ -240,7 +240,7 @@ const EditableIngredientsSection = ({
             return (
               <div 
                 key={ingredient.id} 
-                className="flex items-center gap-2 p-2 border border-[#994d51] rounded bg-[#fcf8f8]" 
+                className="flex items-center gap-2 p-2 border border-[#994d51] rounded bg-[#fcf8f8] min-w-max" 
                 data-editing-ingredient={index}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -285,7 +285,7 @@ const EditableIngredientsSection = ({
                   onKeyDown={(e) => handleKeyDown(e, index, 'item')}
                   onClick={(e) => handleInputClick(e, index)}
                   placeholder={t('resultDisplay.edit.placeholders.ingredient')}
-                  className="flex-1 px-2 py-1 border border-[#994d51] focus:border-[#7a3c40] rounded text-sm focus:outline-none"
+                  className="flex-1 min-w-32 px-2 py-1 border border-[#994d51] focus:border-[#7a3c40] rounded text-sm focus:outline-none"
                   data-ingredient={index}
                   data-field="item"
                   style={{ 

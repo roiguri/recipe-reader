@@ -274,10 +274,10 @@ const EditableInstructionsSection = ({
         </div>
       </div>
       
-      <div className="overflow-y-auto max-h-96">
+      <div className="overflow-y-auto overflow-x-auto max-h-96 -mx-3 md:-mx-6">
         {isStructured ? (
           // Structured stages view
-          <div className="space-y-4">
+          <div className="space-y-4 px-3 md:px-6">
             {displayData.map((stage, stageIdx) => (
               <div key={stageIdx} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -331,7 +331,7 @@ const EditableInstructionsSection = ({
                   )}
                 </div>
                 
-                <ol className="space-y-2">
+                <ol className="space-y-2 instructions-list">
                   {(stage.instructions || ['']).map((instruction, instIdx) => {
                     const instructionId = getStageId(stageIdx, instIdx);
                     const isEditing = globalEditingState.component === componentName && globalEditingState.field === instructionId;
@@ -448,7 +448,7 @@ const EditableInstructionsSection = ({
           </div>
         ) : (
           // Flat instructions view
-          <ol className="space-y-3">
+          <ol className="space-y-3 px-3 md:px-6 instructions-list">
             {displayData.map((instruction, idx) => {
               const instructionId = getInstructionId(idx);
               const isEditing = globalEditingState.component === componentName && globalEditingState.field === instructionId;

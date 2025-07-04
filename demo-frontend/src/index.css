@@ -39,12 +39,6 @@ body {
   unicode-bidi: plaintext;
 }
 
-/* RTL-aware list styles */
-[dir="rtl"] ul, [dir="rtl"] ol {
-  padding-right: 1.5rem;
-  padding-left: 0;
-}
-
 [dir="rtl"] .list-disc {
   list-style-position: inside;
 }
