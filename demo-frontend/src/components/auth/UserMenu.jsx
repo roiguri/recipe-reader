@@ -4,6 +4,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import QuotaProgress from '../QuotaProgress';
 
+// Simple cache to avoid repeated avatar requests
+const avatarCache = new Map();
+
 const UserMenu = ({ onNavigateToMyRecipes }) => {
   const { t } = useTranslation();
   const { user, signOut, loading } = useAuth();
@@ -33,7 +36,28 @@ const UserMenu = ({ onNavigateToMyRecipes }) => {
   };
 
   const getAvatarUrl = () => {
-    return user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+    const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+    
+    if (!avatarUrl) return null;
+    
+    // Check cache first
+    if (avatarCache.has(avatarUrl)) {
+      return avatarCache.get(avatarUrl);
+    }
+    
+    let processedUrl = avatarUrl;
+    
+    // Fix Google avatar URLs to prevent 429 errors
+    if (avatarUrl.includes('googleusercontent.com')) {
+      // Remove existing size parameters and add our own to ensure consistency
+      const baseUrl = avatarUrl.split('=')[0];
+      processedUrl = `${baseUrl}=s80-c`; // s80 = 80px size, c = crop to square
+    }
+    
+    // Cache the processed URL
+    avatarCache.set(avatarUrl, processedUrl);
+    
+    return processedUrl;
   };
 
   return (
@@ -48,10 +72,24 @@ const UserMenu = ({ onNavigateToMyRecipes }) => {
               src={getAvatarUrl()} 
               alt={user?.email}
               className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                console.warn('UserMenu: Profile image failed to load:', e.target.src);
+                // Hide the image on error and show initials instead
+                e.target.style.display = 'none';
+                if (e.target.nextSibling) {
+                  e.target.nextSibling.style.display = 'flex';
+                }
+              }}
             />
-          ) : (
-            getUserInitials()
-          )}
+          ) : null}
+          <div 
+            className="w-full h-full flex items-center justify-center"
+            style={{ display: getAvatarUrl() ? 'none' : 'flex' }}
+          >
+            {getUserInitials()}
+          </div>
         </div>
       </button>
 

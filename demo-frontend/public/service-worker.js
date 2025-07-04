@@ -69,14 +69,17 @@ self.addEventListener('fetch', (event) => {
         
         // Check for JS files being served as HTML (the race condition issue)
         if (requestUrl.includes('.js') && !contentType.includes('javascript')) {
-          console.warn('Service Worker: Rejecting non-JS content for JS request:', requestUrl);
           return networkResponse; // Don't cache, but return to browser
         }
         
         // Check for CSS files being served as HTML
         if (requestUrl.includes('.css') && !contentType.includes('css')) {
-          console.warn('Service Worker: Rejecting non-CSS content for CSS request:', requestUrl);
           return networkResponse; // Don't cache, but return to browser
+        }
+        
+        // Skip content-type validation for manifest.json and other non-JS/CSS files
+        if (requestUrl.includes('manifest.json') || requestUrl.includes('.json')) {
+          // Allow manifest and JSON files to be cached normally
         }
 
         // Clone response for caching (response can only be read once)
