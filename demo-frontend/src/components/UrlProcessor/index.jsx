@@ -5,6 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { createRequestController, APIError } from '../../utils/api';
 import { secureProcessRecipeUrl, checkRequestPermission, getErrorDisplayInfo, ExtractionError } from '../../utils/secureApi';
+import { RecipesService } from '../../services/recipesService';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
@@ -121,6 +122,14 @@ const UrlProcessor = () => {
       );
       
       setResult(response);
+      
+      // Automatically save processed recipe to history with 'processed' status
+      try {
+        await RecipesService.saveRecipe(response.recipe, 'url', url, null, 'processed');
+      } catch (saveError) {
+        console.error('Failed to auto-save processed recipe:', saveError);
+        // Don't show error to user as the main processing succeeded
+      }
     } catch (err) {
       const errorInfo = getErrorDisplayInfo(err);
       

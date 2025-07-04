@@ -327,7 +327,29 @@
       "oldest": "Oldest first",
       "nameAZ": "Name A-Z",
       "category": "Category"
-    }
+    },
+    "tabs": {
+      "saved": "Saved",
+      "history": "History"
+    },
+    "history": {
+      "empty": "No recipe history yet",
+      "emptyDesc": "Your recipe processing history will appear here.",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This Week",
+      "older": "Older",
+      "saveToCollection": "Save to Collection"
+    },
+    "status": {
+      "saved": "Saved",
+      "processed": "Processed",
+      "processing": "Processing",
+      "failed": "Failed",
+      "shared": "Shared",
+      "unknown": "Unknown"
+    },
+    "saveError": "Failed to save recipe to collection. Please try again."
   },
   "sourceView": {
     "title": "Original Source",
