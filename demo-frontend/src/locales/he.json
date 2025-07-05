@@ -309,7 +309,47 @@
     "uncategorized": "ללא קטגוריה",
     "minutes": "דק'",
     "timeUnknown": "זמן לא ידוע",
-    "viewSource": "צפה במקור"
+    "viewSource": "צפה במקור",
+    "noResultsFound": "לא נמצאו מתכונים",
+    "tryDifferentFilter": "נסה לשנות את הקריטריונים של החיפוש או הסינון",
+    "savedRecipes": "מתכונים שמורים",
+    "searchPlaceholder": "חפש מתכונים...",
+    "filterLabels": {
+      "search": "חיפוש",
+      "category": "קטגוריה",
+      "source": "מקור",
+      "sortBy": "מיין לפי"
+    },
+    "filterOptions": {
+      "allCategories": "כל הקטגוריות",
+      "allSources": "כל המקורות",
+      "newest": "החדשים ביותר",
+      "oldest": "הישנים ביותר",
+      "nameAZ": "שם א-ת",
+      "category": "קטגוריה"
+    },
+    "tabs": {
+      "saved": "שמורים",
+      "history": "היסטוריה"
+    },
+    "history": {
+      "empty": "אין היסטוריית מתכונים עדיין",
+      "emptyDesc": "היסטוריית עיבוד המתכונים שלך תופיע כאן.",
+      "today": "היום",
+      "yesterday": "אתמול",
+      "thisWeek": "השבוע",
+      "older": "ישן יותר",
+      "saveToCollection": "שמור לאוסף"
+    },
+    "status": {
+      "saved": "שמור",
+      "processed": "מעובד",
+      "processing": "מעבד",
+      "failed": "נכשל",
+      "shared": "משותף",
+      "unknown": "לא ידוע"
+    },
+    "saveError": "שגיאה בשמירת המתכון לאוסף. אנא נסה שוב."
   },
   "sourceView": {
     "title": "מקור מקורי",

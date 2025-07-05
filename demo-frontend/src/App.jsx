@@ -5,7 +5,7 @@ import ComingSoonContent from './components/ComingSoonContent.jsx';
 import TextProcessor from './components/TextProcessor/index';
 import UrlProcessor from './components/UrlProcessor/index';
 import ImageProcessor from './components/ImageProcessor/index';
-import MyRecipesPage from './components/MyRecipesPage.jsx';
+import { MyRecipesPage } from './components/my-recipes';
 import { useCardConfigs } from './config/cardConfigs.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
 

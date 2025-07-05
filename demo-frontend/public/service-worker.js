@@ -1,4 +1,4 @@
-const CACHE_NAME = 'recipe-box-cache-v2';
+const CACHE_NAME = 'recipe-box-cache-v3';
 
 // Install event - cache essential files
 self.addEventListener('install', (event) => {

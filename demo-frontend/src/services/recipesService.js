@@ -12,9 +12,10 @@ export class RecipesService {
    * @param {string} sourceType - Source type: 'text', 'url', or 'image'
    * @param {string} sourceData - Original input data (text, URL, or image path)
    * @param {string} userId - User ID (optional, will use current user if not provided)
+   * @param {string} status - Recipe status (optional, defaults to 'processed')
    * @returns {Promise<{data: Object, error: Object}>}
    */
-  static async saveRecipe(recipeData, sourceType = 'text', sourceData = '', userId = null) {
+  static async saveRecipe(recipeData, sourceType = 'text', sourceData = '', userId = null, status = 'processed') {
     try {
       // Get current user if userId not provided
       const currentUser = userId || (await supabase.auth.getUser()).data.user;
@@ -50,7 +51,9 @@ export class RecipesService {
             source_data: sourceData,
             processed_recipe: recipeData,
             title: recipeData.name || 'Untitled Recipe',
-            confidence_score: recipeData.confidence_score || null
+            confidence_score: recipeData.confidence_score || null,
+            recipe_status: status,
+            processed_at: new Date().toISOString()
           }
         ])
         .select();
@@ -145,6 +148,246 @@ export class RecipesService {
       return { 
         data: null, 
         error: { message: 'Failed to update recipe. Please try again.' } 
+      };
+    }
+  }
+
+  /**
+   * Get saved recipes for the current user (status = 'saved')
+   * @param {string} userId - User ID (optional, will use current user if not provided)
+   * @returns {Promise<{data: Array, error: Object}>}
+   */
+  static async getSavedRecipes(userId = null) {
+    return this.getRecipesByStatus(userId, 'saved');
+  }
+
+  /**
+   * Get recipes filtered by status
+   * @param {string} userId - User ID (optional, will use current user if not provided)
+   * @param {string} status - Recipe status to filter by
+   * @returns {Promise<{data: Array, error: Object}>}
+   */
+  static async getRecipesByStatus(userId = null, status = 'saved') {
+    try {
+      // Get current user if userId not provided
+      const currentUser = userId || (await supabase.auth.getUser()).data.user;
+      
+      if (!currentUser) {
+        return { 
+          data: [], 
+          error: { message: 'User must be authenticated to view recipes' } 
+        };
+      }
+
+      const { data, error } = await supabase
+        .from('user_recipes')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .eq('recipe_status', status)
+        .order('created_at', { ascending: false });
+
+      return { data, error };
+    } catch (error) {
+      console.error('Error fetching recipes by status:', error);
+      return { 
+        data: [], 
+        error: { message: 'Failed to load recipes. Please try again.' } 
+      };
+    }
+  }
+
+  /**
+   * Get all recipes with full history for the current user
+   * @param {string} userId - User ID (optional, will use current user if not provided)
+   * @returns {Promise<{data: Array, error: Object}>}
+   */
+  static async getAllRecipesWithHistory(userId = null) {
+    try {
+      // Get current user if userId not provided
+      const currentUser = userId || (await supabase.auth.getUser()).data.user;
+      
+      if (!currentUser) {
+        return { 
+          data: [], 
+          error: { message: 'User must be authenticated to view recipes' } 
+        };
+      }
+
+      const { data, error } = await supabase
+        .from('user_recipes')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      return { data, error };
+    } catch (error) {
+      console.error('Error fetching all recipes:', error);
+      return { 
+        data: [], 
+        error: { message: 'Failed to load recipes. Please try again.' } 
+      };
+    }
+  }
+
+  /**
+   * Save a shared URL immediately without processing
+   * @param {string} url - The shared URL
+   * @param {string} userId - User ID (optional, will use current user if not provided)
+   * @returns {Promise<{data: Object, error: Object}>}
+   */
+  static async saveSharedUrl(url, userId = null) {
+    try {
+      // Get current user if userId not provided
+      const currentUser = userId || (await supabase.auth.getUser()).data.user;
+      
+      if (!currentUser) {
+        return { 
+          data: null, 
+          error: { message: 'User must be authenticated to save shared URLs' } 
+        };
+      }
+
+      if (!url) {
+        return {
+          data: null,
+          error: { message: 'URL is required.' }
+        };
+      }
+
+      const { data, error } = await supabase
+        .from('user_recipes')
+        .insert([
+          {
+            user_id: currentUser.id,
+            source_type: 'url',
+            source_data: url,
+            processed_recipe: { name: 'Processing...' },
+            title: 'Processing shared URL...',
+            recipe_status: 'processing',
+            processed_at: new Date().toISOString()
+          }
+        ])
+        .select();
+
+      return { data, error };
+    } catch (error) {
+      console.error('Error saving shared URL:', error);
+      return { 
+        data: null, 
+        error: { message: 'Failed to save shared URL. Please try again.' } 
+      };
+    }
+  }
+
+  /**
+   * Update processing status of a recipe
+   * @param {string} recipeId - The ID of the recipe to update
+   * @param {string} status - New status ('processing', 'processed', 'failed', etc.)
+   * @param {string} error - Error message if status is 'failed'
+   * @returns {Promise<{data: Object, error: Object}>}
+   */
+  static async updateProcessingStatus(recipeId, status, error = null) {
+    try {
+      const updateData = {
+        recipe_status: status,
+        processed_at: new Date().toISOString()
+      };
+
+      if (error) {
+        updateData.extraction_error = error;
+      }
+
+      const { data, error: dbError } = await supabase
+        .from('user_recipes')
+        .update(updateData)
+        .eq('id', recipeId)
+        .select();
+
+      return { data, error: dbError };
+    } catch (error) {
+      console.error('Error updating processing status:', error);
+      return { 
+        data: null, 
+        error: { message: 'Failed to update processing status. Please try again.' } 
+      };
+    }
+  }
+
+  /**
+   * Increment retry count and set status to processing for retry
+   * @param {string} recipeId - The ID of the recipe to retry
+   * @returns {Promise<{data: Object, error: Object}>}
+   */
+  static async retryExtraction(recipeId) {
+    try {
+      const { data, error } = await supabase
+        .from('user_recipes')
+        .update({
+          retry_count: supabase.raw('retry_count + 1'),
+          recipe_status: 'processing',
+          extraction_error: null,
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', recipeId)
+        .select();
+
+      return { data, error };
+    } catch (error) {
+      console.error('Error retrying extraction:', error);
+      return { 
+        data: null, 
+        error: { message: 'Failed to retry extraction. Please try again.' } 
+      };
+    }
+  }
+
+  /**
+   * Promote a recipe from 'processed' to 'saved' status
+   * @param {string} recipeId - The ID of the recipe to promote
+   * @returns {Promise<{data: Object, error: Object}>}
+   */
+  static async promoteToSaved(recipeId) {
+    try {
+      const { data, error } = await supabase
+        .from('user_recipes')
+        .update({
+          recipe_status: 'saved',
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', recipeId)
+        .select();
+
+      return { data, error };
+    } catch (error) {
+      console.error('Error promoting recipe to saved:', error);
+      return { 
+        data: null, 
+        error: { message: 'Failed to save recipe. Please try again.' } 
+      };
+    }
+  }
+
+  /**
+   * Increment retry count for a recipe
+   * @param {string} recipeId - The ID of the recipe
+   * @returns {Promise<{data: Object, error: Object}>}
+   */
+  static async incrementRetryCount(recipeId) {
+    try {
+      const { data, error } = await supabase
+        .from('user_recipes')
+        .update({
+          retry_count: supabase.raw('retry_count + 1')
+        })
+        .eq('id', recipeId)
+        .select();
+
+      return { data, error };
+    } catch (error) {
+      console.error('Error incrementing retry count:', error);
+      return { 
+        data: null, 
+        error: { message: 'Failed to update retry count. Please try again.' } 
       };
     }
   }

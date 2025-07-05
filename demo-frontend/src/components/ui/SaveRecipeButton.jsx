@@ -40,7 +40,28 @@ const SaveRecipeButton = ({
     setIsSaving(true);
 
     try {
-      const { data, error } = await RecipesService.saveRecipe(recipe, sourceType, sourceData);
+      // First check if a recipe with this source data already exists
+      const { data: allRecipes, error: fetchError } = await RecipesService.getAllRecipesWithHistory();
+      
+      if (fetchError) {
+        throw new Error(fetchError.message);
+      }
+
+      // Find existing recipe with matching source data
+      const existingRecipe = allRecipes?.find(r => 
+        r.source_type === sourceType && r.source_data === sourceData
+      );
+
+      let result;
+      if (existingRecipe) {
+        // Promote existing recipe to saved
+        result = await RecipesService.promoteToSaved(existingRecipe.id);
+      } else {
+        // Create new recipe with saved status
+        result = await RecipesService.saveRecipe(recipe, sourceType, sourceData, null, 'saved');
+      }
+
+      const { data, error } = result;
 
       if (error) {
         console.error('Error saving recipe:', error);

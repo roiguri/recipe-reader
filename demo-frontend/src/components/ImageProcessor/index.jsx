@@ -5,6 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { createRequestController, APIError } from '../../utils/api';
 import { secureProcessRecipeImage, checkRequestPermission, getErrorDisplayInfo, ExtractionError } from '../../utils/secureApi';
+import { RecipesService } from '../../services/recipesService';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
@@ -168,6 +169,16 @@ const ImageProcessor = () => {
       );
       
       setResult(response);
+      
+      // Automatically save processed recipe to history with 'processed' status
+      try {
+        // Convert images to base64 strings for storage
+        const imageStrings = imageData.map(img => img.base64);
+        await RecipesService.saveRecipe(response.recipe, 'image', JSON.stringify(imageStrings), null, 'processed');
+      } catch (saveError) {
+        console.error('Failed to auto-save processed recipe:', saveError);
+        // Don't show error to user as the main processing succeeded
+      }
     } catch (err) {
       const errorInfo = getErrorDisplayInfo(err);
       
