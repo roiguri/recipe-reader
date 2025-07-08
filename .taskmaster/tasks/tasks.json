@@ -346,5 +346,116 @@
       "updated": "2025-07-04T21:17:54.047Z",
       "description": "Tasks for share-target context"
     }
+  },
+  "demo-image-support": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Configure Supabase Storage Infrastructure",
+        "description": "Set up Supabase storage bucket with proper RLS policies and file size limits for recipe image uploads",
+        "details": "Create migration file `20250706000001_create_recipe_images_bucket.sql` to establish `recipe-images` bucket with 50MB file size limit and MIME type restrictions (JPEG, PNG, PDF). Configure RLS policies allowing authenticated users to upload/read their own images. Update `supabase/config.toml` to enable storage bucket with appropriate security settings. Use Supabase CLI v1.127+ for migration deployment. Set up bucket structure: `{user-id}/uploads/` and `{user-id}/processed/` directories. Implement auto-cleanup policies for temporary files older than 24 hours.",
+        "testStrategy": "Verify bucket creation through Supabase dashboard, test RLS policies with authenticated/unauthenticated users, validate file size limits by attempting uploads beyond 50MB, confirm MIME type restrictions block invalid file types. Test local development setup with Supabase CLI.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Implement Image Processing Services",
+        "description": "Create core image validation, compression, and upload services with error handling and retry logic",
+        "details": "Build `imageService.js` using Supabase Storage API v2 with functions: `validateImageFile()` checking file type/size/dimensions, `compressImage()` using Canvas API or sharp.js alternative for client-side compression (target 80% quality, max 1920px width), `uploadRecipeImage()` with exponential backoff retry (3 attempts), `getImageUrl()` for secure URL generation, `deleteImage()` for cleanup. Create `imageValidation.js` with MIME type checking (['image/jpeg', 'image/png', 'application/pdf']), dimension validation (min 100x100px), and file size limits. Implement `imageUtils.js` for Base64 conversion and progress tracking using XMLHttpRequest.upload.onprogress.",
+        "testStrategy": "Unit test each service function with valid/invalid inputs, mock Supabase storage responses, test compression quality and file size reduction, verify retry logic with network failures, validate progress tracking callbacks. Test with various image formats and sizes.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Build Image Upload UI Components",
+        "description": "Create drag & drop upload interface with multi-file support, progress indicators, and mobile-responsive design",
+        "details": "Develop `ImageUploadArea.jsx` using React 18+ with drag & drop API (ondragover, ondrop events), file input fallback for mobile. Implement `ImagePreview.jsx` with thumbnail grid using CSS Grid, delete functionality, and loading states. Create `UploadProgress.jsx` with progress bars using CSS transitions and React state. Build reusable `FileDropZone.jsx` component following existing UI patterns. Ensure RTL support with CSS logical properties (margin-inline-start), use Tailwind CSS classes consistent with project styling. Add accessibility features: keyboard navigation, ARIA labels, screen reader support. Implement responsive design with breakpoints: mobile (320px+), tablet (768px+), desktop (1024px+).",
+        "testStrategy": "Test drag & drop functionality across browsers (Chrome, Firefox, Safari, Edge), verify mobile file selection, validate multi-file handling, test progress indicators with mock upload delays, verify RTL layout in Hebrew locale, test accessibility with screen reader tools (NVDA, JAWS), validate responsive design on various screen sizes.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Integrate Images with Recipe Data Model",
+        "description": "Extend recipe schema to include images and update display components to show uploaded images",
+        "details": "Create migration `20250706000002_add_images_to_recipes.sql` adding `images` JSONB field to existing recipe tables with structure: `{\"uploaded\": [{\"id\": \"uuid\", \"url\": \"string\", \"thumbnail\": \"string\", \"filename\": \"string\", \"uploadedAt\": \"timestamp\"}]}`. Update `ResultDisplay/index.jsx` to handle image data, create `RecipeImageGallery.jsx` using Swiper.js v8+ for carousel functionality with lazy loading. Modify `FormattedRecipeDisplay.jsx` to include image section above recipe text. Implement image lazy loading with Intersection Observer API. Update recipe state management to persist images with recipe data in localStorage and Supabase database.",
+        "testStrategy": "Test database migration rollback/forward, verify image data persists with saved recipes, validate image gallery navigation and lazy loading, test image display across all result tabs (raw/formatted/edit), verify responsive image behavior on mobile devices.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Image Processing API Integration",
+        "description": "Update API calls to handle image uploads and integrate with main recipe processing flow",
+        "details": "Modify `processRecipeImage()` in `api.js` to handle multiple image uploads, convert images to base64 or form data for API transmission. Update function signature to accept image array and process sequentially or in parallel based on API limitations. Integrate with existing `secureProcessRecipeImage()` flow in `secureApi.js`, ensuring proper authentication token handling. Update `InputTypeSelector.jsx` to include image option alongside text/URL, modify `RecipeInputForm.jsx` to conditionally render image upload component. Implement proper error handling for image processing failures with fallback to manual text input. Update rate limiting logic to account for image processing requests.",
+        "testStrategy": "Test API integration with single and multiple images, verify proper base64 encoding/decoding, test authentication token passing, validate error handling for API failures, test rate limiting with image requests, verify consistent UX flow compared to text/URL processing.",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement Comprehensive Error Handling",
+        "description": "Add robust error handling for upload failures, processing errors, and user-friendly error messages",
+        "details": "Enhance `imageService.js` with specific error types: `UploadError`, `ValidationError`, `ProcessingError`, `StorageError`. Implement exponential backoff retry mechanism with max 3 attempts for transient failures. Create comprehensive validation in `imageValidation.js`: file type checking, image quality detection using Canvas API, recipe content detection heuristics. Add multilingual error messages to `translation.json` files for both English and Hebrew locales. Implement fallback mechanisms: temporary local storage for failed uploads, manual text input option when OCR fails, graceful degradation when storage is unavailable. Add user-friendly error UI components with retry buttons and clear action steps.",
+        "testStrategy": "Test all error scenarios: network failures, file size exceeded, invalid file types, storage quota exceeded, OCR processing failures. Verify error messages display in correct language, test retry mechanisms with simulated failures, validate fallback workflows, test error recovery and user guidance.",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Create Testing Suite and Documentation",
+        "description": "Develop comprehensive test coverage for image functionality and create user/developer documentation",
+        "details": "Build test suite using Jest v29+ and React Testing Library v13+: unit tests for `imageService.test.js` covering all service functions with mocked Supabase responses, integration tests for `ImageUpload.test.js` testing complete upload flow, error scenario testing with network mocks. Create `imageProcessing.test.js` for end-to-end testing using Cypress or Playwright. Implement visual regression testing for image gallery components. Update `README.md` with image processing features section, API documentation for image endpoints, troubleshooting guide. Create `image-processing.md` with user guide for image uploads, developer setup instructions, architecture overview. Add JSDoc comments to all image-related functions.",
+        "testStrategy": "Achieve 90%+ test coverage for image-related code, verify all test scenarios pass in CI/CD pipeline, validate documentation accuracy through peer review, test setup instructions on clean development environment, verify API documentation matches implementation.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Production Optimization and Security Hardening",
+        "description": "Configure production environment with CDN optimization, rate limiting, and security measures",
+        "details": "Configure production Supabase storage with CDN (Cloudflare/AWS CloudFront) for image delivery optimization. Implement rate limiting for uploads using Supabase Edge Functions: 10 images per hour for regular users, unlimited for admin users. Add file scanning integration using ClamAV or similar for malware detection. Configure image optimization pipeline: WebP conversion for supported browsers, automatic thumbnail generation (150x150px), progressive JPEG encoding. Implement monitoring with Sentry.js for error tracking, performance metrics collection. Set up automated backup strategy for user images. Configure CSP headers to prevent XSS attacks through uploaded images. Add usage analytics tracking for storage costs and user behavior.",
+        "testStrategy": "Load test image uploads under production conditions, verify CDN caching behavior, test rate limiting enforcement, validate malware scanning with test files, measure performance improvements with WebP conversion, verify security headers and CSP policies, test backup and recovery procedures.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-08T05:36:13.254Z",
+      "updated": "2025-07-08T05:56:16.887Z",
+      "description": "Tasks for demo-image-support context"
+    }
   }
 }
