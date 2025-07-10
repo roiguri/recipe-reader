@@ -102,19 +102,16 @@ const EditableImagesSection = ({
       
       const uploadedImages = await Promise.all(uploadPromises);
       
-      // Update working images with new uploaded images
-      setWorkingImages(prev => ({
-        ...prev,
-        uploaded: [...(prev.uploaded || []), ...uploadedImages]
-      }));
-      
-      // Update the recipe with new working images
-      const updatedImages = {
-        ...workingImages,
-        uploaded: [...(workingImages.uploaded || []), ...uploadedImages]
-      };
-      
-      onUpdate({ images: updatedImages });
+      setWorkingImages(prev => {
+        const updatedImages = {
+          ...prev,
+          uploaded: [...(prev.uploaded || []), ...uploadedImages]
+        };
+        
+        onUpdate({ images: updatedImages });
+        
+        return updatedImages;
+      });
       
     } catch (error) {
       console.error('Image upload failed:', error);
@@ -134,18 +131,20 @@ const EditableImagesSection = ({
   // Handle removing an image
   const handleRemoveImage = useCallback((imageId, imageType) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[EditableImagesSection] Removing image:', { imageId, imageType, workingImages });
+      console.log('[EditableImagesSection] Removing image:', { imageId, imageType });
     }
     
-    const updatedImages = {
-      ...workingImages,
-      [imageType]: workingImages[imageType].filter(img => img.id !== imageId)
-    };
-    
-    setWorkingImages(updatedImages);
-    
-    onUpdate({ images: updatedImages });
-  }, [workingImages, onUpdate]);
+    setWorkingImages(prev => {
+      const updatedImages = {
+        ...prev,
+        [imageType]: prev[imageType].filter(img => img.id !== imageId)
+      };
+      
+      onUpdate({ images: updatedImages });
+      
+      return updatedImages;
+    });
+  }, [onUpdate]);
   
   const hasImages = (displayImages.uploaded?.length > 0) || (displayImages.processed?.length > 0);
   const isUploading = uploadingImages.length > 0;
