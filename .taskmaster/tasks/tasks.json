@@ -237,78 +237,80 @@
       "description": "Security improvements and vulnerability fixes"
     }
   },
-  "share-target": {
+  "image-support": {
     "tasks": [
       {
         "id": 1,
-        "title": "Implement Recipe Page UI Foundation with Sectioned Layout",
-        "description": "Restructure the existing 'My Recipes' page into a sectioned layout with reusable components, starting with a 'Saved Recipes' section as the foundation for the sharing workflow.",
-        "status": "done",
-        "dependencies": [],
-        "priority": "high",
-        "details": "✅ COMPLETED: Created a comprehensive sectioned recipe page layout with three reusable components:\n\n1. **RecipeSection** (`/src/components/ui/RecipeSection.jsx`): Container component for recipe sections with title, count, actions, loading states, and empty states. Features proper motion animations and responsive design.\n\n2. **RecipeCard** (`/src/components/ui/RecipeCard.jsx`): Extracted and enhanced from RecipeOptionCard with consistent styling, flexible action system, status indicators, and accessibility support. Follows existing design patterns.\n\n3. **RecipeList** (`/src/components/ui/RecipeList.jsx`): Handles filtering, sorting, and display of recipe collections with search, category, and source type filters. Includes empty state handling and maintains all animation logic.\n\n4. **MyRecipesPageSectioned** (`/src/components/MyRecipesPageSectioned.jsx`): Complete sectioned version of My Recipes page using the new components. Features search/filter controls, maintains all existing functionality including expanded view and animations.\n\n**Key Features Implemented:**\n- Mobile-first responsive design with touch-friendly interactions\n- Comprehensive filtering (search, category, source type) and sorting\n- Consistent design patterns following existing UI component library\n- Proper internationalization with new locale keys added\n- Full accessibility compliance with ARIA labels and keyboard navigation\n- Smooth animations using Framer Motion\n- Loading states, empty states, and error handling\n- Action system for recipe cards (view source, delete)\n\n**Integration:** Updated App.jsx to use the new sectioned layout. All locale files validated and synchronized.\n\nThe foundation is now ready for the sharing workflow implementation!",
-        "testStrategy": "✅ COMPLETED: All components have been thoroughly tested during implementation:\n- Unit tests verified for RecipeSection, RecipeCard, and RecipeList components\n- Integration tests confirmed section navigation and responsive behavior\n- Visual regression tests validated mobile/desktop layouts\n- Empty states, loading states, and error handling tested\n- Accessibility compliance verified with ARIA labels and keyboard navigation\n- Locale synchronization validated using validate-locales.js script\n- Cross-browser compatibility confirmed\n\nThe sectioned layout foundation is fully functional and ready for production use.",
-        "subtasks": []
-      },
-      {
-        "id": 2,
-        "title": "Extend Database Schema for Recipe Status and Sharing",
-        "description": "Add recipe status tracking, sharing metadata, and performance indexes to the existing user_recipes table to support the complete sharing workflow.",
-        "details": "Execute database migration to add: 1) recipe_status field (TEXT DEFAULT 'saved') with values: 'saved', 'processed', 'shared', 'processing', 'failed' 2) processed_at timestamp (TIMESTAMP DEFAULT NOW()) 3) extraction_error field (TEXT) for storing error messages 4) shared_url field (TEXT) for preserving original URLs 5) retry_count field (INTEGER DEFAULT 0) for tracking retry attempts. Create indexes: idx_user_recipes_status ON user_recipes(user_id, recipe_status), idx_user_recipes_processed_at ON user_recipes(user_id, processed_at DESC), idx_user_recipes_shared_url ON user_recipes(shared_url) WHERE shared_url IS NOT NULL. Update existing records: UPDATE user_recipes SET recipe_status = 'saved' WHERE recipe_status IS NULL. Use Supabase migrations or direct SQL with proper rollback strategy.",
-        "testStrategy": "Database migration testing with rollback scenarios. Verify all existing recipes are properly updated. Test index performance with sample data. Validate field constraints and default values. Test concurrent access during migration. Verify data integrity after migration completion.",
-        "priority": "high",
-        "dependencies": [
-          1
-        ],
-        "status": "done",
-        "subtasks": []
-      },
-      {
-        "id": 3,
-        "title": "Enhance Recipe Service Layer for Status Management",
-        "description": "Extend the RecipesService to handle status-based recipe filtering, sharing workflow operations, and integration with the new database schema.",
-        "details": "Update RecipesService.js to add: 1) getSavedRecipes(userId) - filter recipes by 'saved' status 2) getRecipesByStatus(userId, status) - flexible status filtering 3) getAllRecipesWithHistory(userId) - get all recipes for history view 4) saveSharedUrl(url, userId) - immediately save shared URLs 5) updateProcessingStatus(recipeId, status, error) - manage status transitions 6) retryExtraction(recipeId) - increment retry count and reprocess 7) promoteToSaved(recipeId) - change status from 'processed' to 'saved' 8) incrementRetryCount(recipeId). Maintain backward compatibility with existing methods. Add proper error handling, validation, and real-time subscription updates. Use async/await patterns and proper error propagation. Implement optimistic UI updates where appropriate.",
-        "testStrategy": "Unit tests for all new service methods. Integration tests with Supabase database. Mock API responses for error scenarios. Test status transitions and retry logic. Verify real-time subscription updates. Test concurrent operations and race conditions. Performance tests for filtering operations.",
-        "priority": "high",
-        "dependencies": [
-          2
-        ],
-        "status": "done",
-        "subtasks": []
-      },
-      {
-        "id": 4,
-        "title": "Implement History Section with Time-Based Recipe Organization",
-        "description": "Create a 'History' section that displays all user recipes organized by processing time, with clear status indicators and save-to-collection functionality.",
-        "details": "Implement History section UI: 1) Add 'History' tab to recipe sections 2) Group recipes by time periods: Today, Yesterday, This Week, Older 3) Display recipe status indicators (saved/processed/failed) 4) Show processing timestamps 5) Add 'Save to Collection' action for non-saved recipes 6) Implement time-based sorting (newest first) 7) Add visual differentiation for different statuses 8) Integrate with existing RecipeSection component. Use date-fns or similar library for date grouping. Implement proper loading states and empty states. Add real-time updates for status changes. Ensure mobile-optimized touch interactions and responsive design.",
-        "testStrategy": "Unit tests for time-based grouping logic. Integration tests for save-to-collection functionality. Test real-time updates when recipe statuses change. Test sorting and filtering with various data sets. Mobile UI testing for touch interactions. Test empty states and loading states. Verify status indicator accuracy.",
-        "priority": "high",
-        "dependencies": [
-          3
-        ],
-        "status": "in-progress",
-        "subtasks": []
-      },
-      {
-        "id": 5,
-        "title": "Implement PWA Share Target and Share Handler Route",
-        "description": "Configure the PWA manifest for Web Share Target API and create a dedicated share handler route to process incoming shared URLs from mobile devices.",
-        "details": "Update PWA configuration: 1) Add share_target to manifest.json: { action: '/share', method: 'POST', params: { url: 'url' } } 2) Create /share route in React Router 3) Implement ShareHandler component to process URL parameters 4) Add URL validation and sanitization 5) Handle authentication state during share flow 6) Redirect unauthenticated users to login with return URL 7) Auto-populate URL in processing interface 8) Handle non-recipe URLs gracefully with user feedback. Test across iOS Safari and Android Chrome. Implement proper error handling for malformed URLs. Add loading states during URL processing. Ensure proper analytics tracking for shared URLs.",
-        "testStrategy": "Test PWA share target registration on iOS Safari and Android Chrome. Test share handler route with various URL formats. Test authentication flow during sharing. Test error handling for invalid URLs. Test offline behavior and edge cases. Verify manifest.json validation. Test share menu appearance and functionality.",
+        "title": "Create Image Service Infrastructure",
+        "description": "Implement core image management service with Supabase storage operations and file validation utilities",
+        "details": "Create imageManagementService.js with functions: uploadImage(file, userId, recipeId) returning storage URL, deleteImage(url) for cleanup, batchUpload(files, userId, recipeId) for multiple files, batchDelete(urls) for bulk deletion. Implement imageValidation.js with validateFile(file) checking file type (JPEG/PNG/WebP), size (max 5MB), and returning {isValid, error}. Use Supabase storage client v2.5+ with proper error handling and path structure: recipe-images/{user-id}/{recipe-id}/filename. Include retry logic for network failures and proper cleanup on errors.",
+        "testStrategy": "Unit tests for each service function with mocked Supabase client. Test file validation with various file types and sizes. Integration tests with actual Supabase storage in development environment. Verify proper error handling for network failures and invalid files.",
         "priority": "high",
         "dependencies": [],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 6,
-        "title": "Create Shared Recipes Section with Status-Based Organization",
-        "description": "Implement a comprehensive 'Shared Recipes' section that organizes recipes by processing status and provides management actions for each state.",
-        "details": "Create Shared Recipes section with subsections: 1) Ready to Save (status = 'processed') - successfully extracted recipes 2) Processing (status = 'processing') - currently being processed 3) Failed Extractions (status = 'failed') - failed with retry options 4) Recently Shared (status = 'shared') - newly shared, pending processing. Implement user actions: Save to Collection, Retry Extraction, View Original URL, Remove from Shared. Add real-time status updates using Supabase subscriptions. Implement batch operations for multiple recipe management. Add progress indicators for processing status. Ensure mobile-optimized interface with swipe gestures where appropriate. Integrate with existing RecipeSection component architecture.",
-        "testStrategy": "Unit tests for status-based filtering and organization. Integration tests for all user actions (save, retry, remove). Test real-time status updates and WebSocket connections. Test batch operations and bulk actions. Mobile UI testing for touch interactions and swipe gestures. Test error handling and edge cases. Performance tests with large numbers of shared recipes.",
+        "id": 2,
+        "title": "Build Image Display Component",
+        "description": "Create read-only image gallery component for Recipe tab with responsive grid and carousel layouts",
+        "details": "Implement ImageDisplay.jsx as main gallery component accepting images prop (array of URLs). Create ImageCarousel.jsx for mobile using Swiper.js v10+ with touch gestures, lazy loading, and navigation dots. Desktop layout uses CSS Grid with responsive breakpoints. Include loading states, error handling for broken images, and fallback UI for no images. Add zoom functionality on click using react-image-gallery v1.3+ or similar. Implement proper accessibility with ARIA labels and keyboard navigation.",
+        "testStrategy": "Component testing with React Testing Library. Test responsive behavior across device sizes. Verify image loading states and error handling. Test accessibility with screen readers and keyboard navigation. Visual regression testing for layout consistency.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Develop Image Editor Component",
+        "description": "Create image upload and management interface for Edit tab with drag-and-drop functionality",
+        "details": "Build ImageEditor.jsx with state management for existingImages, newImages, and imagesToDelete arrays. Implement drag-and-drop using react-dropzone v14+ with file validation hooks. Create ImageUploadArea.jsx with visual feedback for drag states. Add file input fallback and preview thumbnails with delete buttons. Implement image reordering with react-beautiful-dnd v13+. Include progress indicators for uploads and compression using browser-image-compression v2+ to optimize file sizes before upload. Limit to 5 images total with clear UI feedback.",
+        "testStrategy": "Component testing for upload flow and state management. Test drag-and-drop functionality across browsers. Verify file validation and size limits. Test image compression and preview generation. Integration testing with image service functions.",
         "priority": "high",
         "dependencies": [
-          4,
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Integrate Image Components with ResultDisplay",
+        "description": "Add image display and editing capabilities to existing Recipe and Edit tabs",
+        "details": "Modify ResultDisplay/index.jsx to include ImageDisplay in Recipe tab with conditional rendering based on recipe.images existence. Add ImageEditor to Edit tab with proper state management using onImagesChange callback. Update tab layout to accommodate images without breaking existing UI. Ensure proper component mounting/unmounting and state cleanup. Add loading states during image operations and proper error boundaries to prevent crashes from image-related errors.",
+        "testStrategy": "Integration testing of image components within existing tabs. Test state management and data flow between components. Verify UI layout remains intact with and without images. Test error boundaries and loading states.",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Save Logic with Image Operations",
+        "description": "Extend recipe save functionality to handle image uploads, updates, and deletions",
+        "details": "Modify handleSave function in ResultDisplay to process image changes before saving recipe. Implement sequence: 1) Upload new images using batchUpload and collect URLs, 2) Update recipe.images array with new URLs while preserving existing ones, 3) Save updated recipe to database, 4) Clean up deleted images using batchDelete only after successful save. Add proper error handling with rollback capability if any step fails. Include progress indicators and user feedback during save operations. Implement optimistic updates for better UX.",
+        "testStrategy": "Integration tests for complete save flow with image operations. Test error scenarios and rollback mechanisms. Verify database consistency after save operations. Test concurrent save operations and race conditions.",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Add Mobile Optimization and Touch Gestures",
+        "description": "Optimize image components for mobile devices with touch interactions and responsive design",
+        "details": "Implement touch gestures for image carousel using hammer.js v2.0+ or native touch events. Add swipe navigation, pinch-to-zoom, and double-tap gestures. Optimize image loading for mobile with lazy loading and progressive enhancement using intersection-observer-api. Implement responsive image sizing with srcset and sizes attributes. Add mobile-specific upload flow with camera integration using HTML5 capture attribute. Include haptic feedback for supported devices.",
+        "testStrategy": "Device testing across iOS and Android platforms. Test touch gestures and responsive behavior. Verify performance with large images on mobile devices. Test camera integration and file selection.",
+        "priority": "medium",
+        "dependencies": [
           5
         ],
         "status": "pending",
@@ -316,10 +318,10 @@
       },
       {
         "id": 7,
-        "title": "Enhance Recipe Processing Pipeline for Sharing Integration",
-        "description": "Update the existing recipe processing pipeline to support the sharing workflow, including immediate URL preservation, status tracking, and retry mechanisms.",
-        "details": "Enhance the recipe processing pipeline: 1) Update secureProcessRecipeUrl to immediately save shared URLs with 'shared' status 2) Add status transitions: shared → processing → processed/failed 3) Implement retry mechanism with exponential backoff 4) Add comprehensive error capture and logging 5) Preserve original URLs even on processing failure 6) Update rate limiting to work with shared recipes 7) Add batch processing capabilities for multiple shared URLs 8) Implement processing queue management 9) Add real-time status updates to UI. Integrate with existing Supabase Edge Function proxy. Maintain compatibility with existing rate limiting system. Add proper error handling and user feedback.",
-        "testStrategy": "Integration tests for complete sharing workflow. Test status transitions and retry mechanisms. Test rate limiting with shared recipes. Test error handling and recovery scenarios. Test batch processing and queue management. Performance tests for processing pipeline. Test real-time updates and WebSocket functionality. Test edge cases and failure scenarios.",
+        "title": "Implement Image Compression and Performance Optimization",
+        "description": "Add client-side image compression and performance optimizations for better user experience",
+        "details": "Integrate browser-image-compression v2+ for automatic resizing and compression before upload. Implement smart compression based on image dimensions and file size. Add WebP conversion for supported browsers with JPEG/PNG fallback. Implement lazy loading for image galleries using react-lazyload v3+ or Intersection Observer API. Add image caching strategies and service worker integration for offline support. Include progress tracking and cancellation capabilities for large uploads.",
+        "testStrategy": "Performance testing with various image sizes and types. Test compression quality and file size reduction. Verify lazy loading behavior and caching effectiveness. Test upload cancellation and progress tracking.",
         "priority": "medium",
         "dependencies": [
           6
@@ -329,11 +331,11 @@
       },
       {
         "id": 8,
-        "title": "Optimize Mobile Experience and Add Offline Support",
-        "description": "Implement mobile-first optimizations for the sharing workflow, including offline support, progressive enhancement, and mobile-specific UX improvements.",
-        "details": "Optimize mobile experience: 1) Implement offline support with IndexedDB for queuing shared URLs 2) Add service worker for offline functionality 3) Implement progressive enhancement for devices without Web Share API 4) Add touch-friendly interactions and swipe gestures 5) Optimize for one-handed operation 6) Add haptic feedback where supported 7) Implement auto-sync when connection is restored 8) Add clear offline status indicators 9) Optimize performance for mobile devices 10) Add mobile-specific animations and transitions. Use workbox for service worker management. Implement proper cache strategies for offline resources. Add network status detection and handling. Ensure graceful degradation for older browsers.",
-        "testStrategy": "Test offline functionality and URL queuing. Test auto-sync when connection is restored. Test progressive enhancement fallbacks. Mobile device testing across iOS and Android. Test touch interactions and swipe gestures. Test performance on low-end devices. Test network connectivity edge cases. Test service worker registration and updates. User acceptance testing for mobile workflow.",
-        "priority": "medium",
+        "title": "Final Testing and Error Handling Polish",
+        "description": "Comprehensive testing, error handling improvements, and production readiness",
+        "details": "Implement comprehensive error handling with user-friendly messages for all failure scenarios (network errors, storage quota exceeded, invalid files, etc.). Add retry mechanisms with exponential backoff for transient failures. Implement proper loading states and skeleton screens for better perceived performance. Add analytics tracking for image operations success/failure rates. Include accessibility improvements (screen reader support, keyboard navigation, focus management). Perform cross-browser compatibility testing and add necessary polyfills. Implement proper cleanup on component unmount to prevent memory leaks.",
+        "testStrategy": "End-to-end testing of complete image workflow. Cross-browser compatibility testing. Accessibility testing with screen readers. Performance testing under various network conditions. Error scenario testing with network interruptions and invalid files. Load testing with multiple concurrent users.",
+        "priority": "high",
         "dependencies": [
           7
         ],
@@ -342,9 +344,9 @@
       }
     ],
     "metadata": {
-      "created": "2025-07-04T13:13:30.558Z",
-      "updated": "2025-07-04T21:17:54.047Z",
-      "description": "Tasks for share-target context"
+      "created": "2025-07-10T19:23:13.294Z",
+      "updated": "2025-07-10T19:24:38.771Z",
+      "description": "Tasks for image-support context"
     }
   }
 }
