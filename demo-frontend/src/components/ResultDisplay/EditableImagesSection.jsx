@@ -6,6 +6,15 @@ import RecipeImageGallery from '../ui/RecipeImageGallery';
 import { uploadRecipeImage, processImagesForDisplay } from '../../utils/imageService';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Generate unique ID using modern crypto API with fallback
+const generateUniqueId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for older browsers
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
+
 /**
  * EditableImagesSection component for managing recipe images in edit mode
  * @param {Object} props - Component props
@@ -85,7 +94,7 @@ const EditableImagesSection = ({
           });
           
           return {
-            id: `uploaded-${Date.now()}-${Math.random()}`,
+            id: `uploaded-${generateUniqueId()}`,
             url: result.publicUrl || result.url,
             publicUrl: result.publicUrl || result.url,
             filename: file.name,
