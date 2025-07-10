@@ -9,6 +9,7 @@ import { RecipesService } from '../../services/recipesService';
  * @param {Object} props.recipe - Recipe data to save
  * @param {string} props.sourceType - Source type: 'text', 'url', or 'image'
  * @param {string} props.sourceData - Original input data
+ * @param {Object} props.images - Images data from processing result
  * @param {Function} props.onSaveSuccess - Callback when recipe is saved successfully
  * @param {Function} props.onSaveError - Callback when save fails
  * @param {string} props.className - Additional CSS classes
@@ -17,6 +18,7 @@ const SaveRecipeButton = ({
   recipe, 
   sourceType = 'text',
   sourceData = '',
+  images = null,
   onSaveSuccess, 
   onSaveError, 
   className = "" 
@@ -58,7 +60,7 @@ const SaveRecipeButton = ({
         result = await RecipesService.promoteToSaved(existingRecipe.id);
       } else {
         // Create new recipe with saved status
-        result = await RecipesService.saveRecipe(recipe, sourceType, sourceData, null, 'saved');
+        result = await RecipesService.saveRecipe(recipe, sourceType, sourceData, null, 'saved', images);
       }
 
       const { data, error } = result;

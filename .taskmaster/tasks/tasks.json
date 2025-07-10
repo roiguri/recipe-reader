@@ -286,7 +286,7 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -344,7 +344,7 @@
     ],
     "metadata": {
       "created": "2025-07-08T05:36:13.254Z",
-      "updated": "2025-07-08T06:38:27.437Z",
+      "updated": "2025-07-08T06:41:32.675Z",
       "description": "Tasks for demo-image-support context"
     }
   }

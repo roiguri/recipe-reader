@@ -3,13 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { isHebrew, formatTime, generatePdfFilename, detectBrowserPrintCapabilities, getTotalTime } from '../../utils/formatters';
 import Card from '../ui/Card';
+import RecipeImageGallery from '../ui/RecipeImageGallery';
 
 /**
  * ExportOptions component displays PDF export interface with preview
  * @param {Object} props - Component props
  * @param {Object} props.recipe - Recipe data object
+ * @param {Object} props.images - Recipe images object with uploaded/processed arrays
  */
-const ExportOptions = ({ recipe }) => {
+const ExportOptions = ({ recipe, images }) => {
   const { t } = useTranslation();
   const { direction } = useLanguage();
   const [isExporting, setIsExporting] = useState(false);
@@ -624,6 +626,23 @@ const ExportOptions = ({ recipe }) => {
                       {line}
                     </p>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Images Section */}
+            {images && (images.uploaded?.length > 0 || images.processed?.length > 0) && (
+              <div className="mb-8 images-section">
+                <h2 className="text-2xl font-bold text-[#1b0e0e] mb-4 pb-2 border-b border-gray-200">
+                  {t('resultDisplay.sections.images', { defaultValue: 'Images' })}
+                </h2>
+                <div className="print-images">
+                  <RecipeImageGallery 
+                    images={images}
+                    showProcessed={true}
+                    showUploaded={true}
+                    className="grid grid-cols-2 md:grid-cols-3 gap-4"
+                  />
                 </div>
               </div>
             )}

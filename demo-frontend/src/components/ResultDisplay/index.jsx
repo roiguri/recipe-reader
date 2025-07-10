@@ -7,6 +7,7 @@ import Card from '../ui/Card';
 import CopyButton from '../ui/CopyButton';
 import { RecipesService } from '../../services/recipesService';
 import { getTotalTime } from '../../utils/formatters';
+import { processImagesForDisplay } from '../../utils/imageService';
 
 // Import sub-components
 import TabNavigation from './TabNavigation';
@@ -24,6 +25,8 @@ import EditableIngredientsSection from './EditableIngredientsSection';
 import EditableInstructionsSection from './EditableInstructionsSection';
 import EditableCommentsSection from './EditableCommentsSection';
 import EditableTagList from './EditableTagList';
+import EditableImagesSection from './EditableImagesSection';
+import RecipeImageGallery from '../ui/RecipeImageGallery';
 
 const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = '', showActionButtons = true, recipeId = null, onRecipeUpdated = null }) => {
   const { t } = useTranslation();
@@ -35,8 +38,10 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [savedRecipeId, setSavedRecipeId] = useState(recipeId);
+  const [processedImages, setProcessedImages] = useState({ uploaded: [], processed: [] });
+  const [imagesLoading, setImagesLoading] = useState(false);
 
-  const { recipe, confidence_score, processing_time } = result;
+  const { recipe, confidence_score, processing_time, images } = result;
 
   // Use edited recipe if available, otherwise use original
   const displayRecipe = editedRecipe || recipe;
@@ -47,10 +52,39 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
     totalTime: getTotalTime(displayRecipe)
   };
 
+  // Process images for display when images actually change
+  useEffect(() => {
+    const processImages = async () => {
+      // Always use original images for recipe tab, edited images for edit tab
+      const currentImages = images;
+      
+      if (currentImages && (currentImages.uploaded?.length > 0 || currentImages.processed?.length > 0)) {
+        setImagesLoading(true);
+        try {
+          const processed = await processImagesForDisplay(currentImages);
+          setProcessedImages(processed);
+        } catch (error) {
+          setProcessedImages({ uploaded: [], processed: [] });
+        } finally {
+          setImagesLoading(false);
+        }
+      } else {
+        setProcessedImages({ uploaded: [], processed: [] });
+      }
+    };
+
+    processImages();
+  }, [images]);
+
   // Initialize edited recipe when edit tab is first accessed
   const handleTabChange = (tabId) => {
     if (tabId === 'edit' && !editedRecipe) {
-      setEditedRecipe(structuredClone(recipe)); // Deep copy
+      // Create deep copy of recipe and include images from result
+      const recipeWithImages = { 
+        ...structuredClone(recipe), 
+        images: images || { uploaded: [], processed: [] } 
+      };
+      setEditedRecipe(recipeWithImages);
     }
     setActiveTab(tabId);
   };
@@ -81,7 +115,7 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
     if (savedRecipeId) {
       setIsSaving(true);
       try {
-        const { data, error } = await RecipesService.updateRecipe(savedRecipeId, editedRecipe);
+        const { data, error } = await RecipesService.updateRecipe(savedRecipeId, editedRecipe, editedRecipe?.images);
         
         if (error) {
           setSaveError(error.message || t('resultDisplay.edit.saveError'));
@@ -108,7 +142,12 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
 
   // Discard changes (reset to original recipe)
   const discardChanges = () => {
-    setEditedRecipe(structuredClone(recipe));
+    // Create deep copy of recipe and include images from result
+    const recipeWithImages = { 
+      ...structuredClone(recipe), 
+      images: images || { uploaded: [], processed: [] } 
+    };
+    setEditedRecipe(recipeWithImages);
     setHasUnsavedChanges(false);
   };
 
@@ -251,6 +290,7 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
         sourceData={sourceData}
         showActionButtons={showActionButtons}
         onRecipeSaved={handleRecipeSaved}
+        images={images}
       />
 
       {/* Tabs container */}
@@ -276,6 +316,24 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
                 onCopyToClipboard={copyToClipboard}
                 copiedSection={copiedSection}
               />
+              
+              {/* Image gallery */}
+              {(processedImages.uploaded?.length > 0 || processedImages.processed?.length > 0) && (
+                <div className="mb-3 md:mb-6">
+                  {imagesLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#994d51]"></div>
+                      <span className="ml-3 text-gray-600">{t('imageGallery.loadingImages', { defaultValue: 'Loading images...' })}</span>
+                    </div>
+                  ) : (
+                    <RecipeImageGallery 
+                      images={processedImages} 
+                      showProcessed={true}
+                      showUploaded={true}
+                    />
+                  )}
+                </div>
+              )}
               
               {/* Instructions section */}
               <InstructionsSection 
@@ -338,6 +396,19 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
               {/* Editable Recipe metadata */}
               <EditableMetadata 
                 recipe={editedRecipe}
+                onUpdate={updateEditedRecipe}
+                globalEditingState={globalEditingState}
+                onStartEdit={startGlobalEdit}
+                onUpdateEdit={updateGlobalEditValue}
+                onSaveEdit={saveCurrentEdit}
+                onCancelEdit={cancelGlobalEdit}
+              />
+              
+              {/* Editable Images section */}
+              <EditableImagesSection 
+                recipe={editedRecipe}
+                processedImages={processedImages}
+                imagesLoading={imagesLoading}
                 onUpdate={updateEditedRecipe}
                 globalEditingState={globalEditingState}
                 onStartEdit={startGlobalEdit}
@@ -420,6 +491,7 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
             <div className="space-y-3 md:space-y-6 h-full overflow-y-auto">
               <ExportOptions 
                 recipe={displayRecipe}
+                images={processedImages}
               />
             </div>
           )}

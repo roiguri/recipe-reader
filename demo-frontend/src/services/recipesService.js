@@ -13,9 +13,10 @@ export class RecipesService {
    * @param {string} sourceData - Original input data (text, URL, or image path)
    * @param {string} userId - User ID (optional, will use current user if not provided)
    * @param {string} status - Recipe status (optional, defaults to 'processed')
+   * @param {Object} images - Images data (optional)
    * @returns {Promise<{data: Object, error: Object}>}
    */
-  static async saveRecipe(recipeData, sourceType = 'text', sourceData = '', userId = null, status = 'processed') {
+  static async saveRecipe(recipeData, sourceType = 'text', sourceData = '', userId = null, status = 'processed', images = null) {
     try {
       // Get current user if userId not provided
       const currentUser = userId || (await supabase.auth.getUser()).data.user;
@@ -42,6 +43,12 @@ export class RecipesService {
         };
       }
 
+      // Prepare processed recipe data with images included
+      const processedRecipeWithImages = {
+        ...recipeData,
+        images: images || recipeData.images || null
+      };
+
       const { data, error } = await supabase
         .from('user_recipes')
         .insert([
@@ -49,7 +56,7 @@ export class RecipesService {
             user_id: currentUser.id,
             source_type: sourceType,
             source_data: sourceData,
-            processed_recipe: recipeData,
+            processed_recipe: processedRecipeWithImages,
             title: recipeData.name || 'Untitled Recipe',
             confidence_score: recipeData.confidence_score || null,
             recipe_status: status,
@@ -128,15 +135,22 @@ export class RecipesService {
    * Update a recipe by ID
    * @param {string} recipeId - The ID of the recipe to update
    * @param {Object} recipeData - The updated recipe data
+   * @param {Object} images - Images data (optional)
    * @returns {Promise<{data: Object, error: Object}>}
    */
-  static async updateRecipe(recipeId, recipeData) {
+  static async updateRecipe(recipeId, recipeData, images = null) {
     try {
+      // Prepare processed recipe data with images included
+      const processedRecipeWithImages = {
+        ...recipeData,
+        images: images !== null ? images : recipeData.images
+      };
+      
       const { data, error } = await supabase
         .from('user_recipes')
         .update({
           title: recipeData.name || 'Untitled Recipe',
-          processed_recipe: recipeData,
+          processed_recipe: processedRecipeWithImages,
           confidence_score: recipeData.confidence_score || null
         })
         .eq('id', recipeId)

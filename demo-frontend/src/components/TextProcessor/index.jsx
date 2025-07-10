@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { createRequestController, APIError } from '../../utils/api';
 import { secureProcessRecipeText, checkRequestPermission, getErrorDisplayInfo, ExtractionError } from '../../utils/secureApi';
 import { RecipesService } from '../../services/recipesService';
+import { addSampleImagesToRecipe } from '../../utils/imageTestHelpers';
 import ResultDisplay from '../ResultDisplay/index';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
 import Card from '../ui/Card';
@@ -118,7 +119,11 @@ const TextProcessor = () => {
         abortControllerRef.current.signal
       );
       
-      setResult(response);
+      // TEMPORARY: Add sample images for testing gallery
+      const responseWithImages = addSampleImagesToRecipe(response, 2, 1);
+      console.log('[TextProcessor] Added sample images for testing:', responseWithImages.images);
+      
+      setResult(responseWithImages);
       
       // Automatically save processed recipe to history with 'processed' status
       try {

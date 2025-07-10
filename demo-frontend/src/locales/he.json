@@ -376,7 +376,8 @@
     "uploadImages": "העלה תמונות מתכון",
     "removeImage": "הסר תמונה {{index}}",
     "removeAllImages": "הסר את כל התמונות",
-    "optionCard": "{{title}}: {{description}}"
+    "optionCard": "{{title}}: {{description}}",
+    "uploadFiles": "העלה קבצים"
   },
   "auth": {
     "signIn": "התחברות",
@@ -408,5 +409,35 @@
       "resetInfo": "המכסות מתאפסות אחת לחודש, מוזמן לחזור בקרוב.",
       "upgradeInfo": "לשימוש פרטי ב-API צור קשר"
     }
+  },
+  "editableImages": {
+    "title": "תמונות מתכון",
+    "subtitle": "העלה תמונות של המתכון שלך",
+    "currentImages": "תמונות נוכחיות",
+    "uploadNew": "העלה תמונות חדשות",
+    "uploading": "מעלה תמונות...",
+    "uploadError": "נכשלה העלאת תמונות. אנא נסה שוב.",
+    "helpText": "פורמטים נתמכים: JPEG, PNG, WebP, PDF. גודל קובץ מקסימלי: 50MB. ניתן להעלות עד 5 תמונות."
+  },
+  "imageGallery": {
+    "recipeImage": "תמונת מתכון",
+    "loadingImages": "טוען תמונות...",
+    "loadError": "נכשל בטעינה",
+    "noPreview": "אין תצוגה מקדימה זמינה",
+    "uploaded": "מקורית",
+    "processed": "מעובדת",
+    "deleteImage": "מחק תמונה",
+    "noImages": "אין תמונות זמינות",
+    "of": "מתוך",
+    "images": "תמונות"
+  },
+  "imageUpload": {
+    "validating": "בודק קבצים...",
+    "supportedFormats": "נתמך: JPEG, PNG, WebP, PDF"
+  },
+  "fileDropZone": {
+    "dragInactive": "גרור ושחרר קבצים כאן, או לחץ לבחירה",
+    "multipleFiles": "העלה עד 5 קבצים",
+    "maxSize": "מקסימום 50 MB לקובץ"
   }
 }

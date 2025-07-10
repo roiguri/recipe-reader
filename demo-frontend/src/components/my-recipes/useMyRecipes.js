@@ -185,7 +185,8 @@ export const useMyRecipes = () => {
       confidence_score: recipe.confidence_score || 0.8,
       processing_time: 0,
       source_type: recipe.source_type,
-      source_data: recipe.source_data
+      source_data: recipe.source_data,
+      images: recipe.processed_recipe?.images || { uploaded: [], processed: [] }
     };
   };
 

@@ -233,15 +233,21 @@ export async function uploadRecipeImage(file, options = {}) {
         progressTracker.complete();
       }
       
+      // Generate signed URL for immediate use
+      const signedUrl = await getImageUrl(storagePath, 3600);
+      
       return {
         success: true,
         path: data.path,
         fullPath: data.fullPath,
+        url: signedUrl,
+        publicUrl: signedUrl,
         userId,
         filename,
         storagePath,
         processed,
-        uploadId: data.id
+        uploadId: data.id,
+        urlGeneratedAt: new Date().toISOString()
       };
     } catch (error) {
       if (error instanceof ImageServiceError) {
@@ -415,4 +421,107 @@ export async function cleanupOldUploads(maxAgeHours = 24) {
       files: filesToDelete
     };
   }, DEFAULT_RETRY_ATTEMPTS, 'Cleanup old uploads');
+}
+
+/**
+ * Generate signed URLs for image objects with storage paths
+ * @param {Array} images - Array of image objects with storagePath
+ * @param {number} expiresIn - URL expiration time in seconds
+ * @returns {Promise<Array>} - Array of image objects with signed URLs
+ */
+export async function generateImageUrls(images, expiresIn = 3600) {
+  if (!images || !Array.isArray(images)) {
+    return [];
+  }
+
+  const urlPromises = images.map(async (image) => {
+    try {
+      // Skip if already has a valid URL that's not expired
+      if (image.url && !image.url.includes('placeholder') && !image.url.includes('expired')) {
+        // Check if URL is a Supabase signed URL that might be expired
+        if (image.url.includes('supabase.co') && image.url.includes('token=')) {
+          // Only regenerate if the URL is likely expired or close to expiring
+          // Check if URL has a timestamp and if it's still valid for at least 5 minutes
+          if (image.urlGeneratedAt) {
+            const generatedTime = new Date(image.urlGeneratedAt);
+            const now = new Date();
+            const timeDiff = now.getTime() - generatedTime.getTime();
+            const minutesElapsed = timeDiff / (1000 * 60);
+            
+            // If URL was generated less than 55 minutes ago (5 minute buffer), keep it
+            if (minutesElapsed < 55) {
+              return image;
+            }
+          }
+          // If no timestamp or URL is old, regenerate
+        } else {
+          return image;
+        }
+      }
+
+      // Generate signed URL from storage path
+      if (image.storagePath) {
+        const signedUrl = await getImageUrl(image.storagePath, expiresIn);
+        return {
+          ...image,
+          url: signedUrl,
+          // Generate thumbnail URL if not present
+          thumbnail: image.thumbnail || signedUrl,
+          // Add timestamp for URL expiration tracking
+          urlGeneratedAt: new Date().toISOString()
+        };
+      }
+
+      // If no storage path, return with placeholder
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[ImageService] No storage path found for image:', image.filename || image.id);
+      }
+      return {
+        ...image,
+        url: null
+      };
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[ImageService] Failed to generate URL for image:', image.filename, error);
+      }
+      return {
+        ...image,
+        url: null
+      };
+    }
+  });
+
+  return await Promise.all(urlPromises);
+}
+
+/**
+ * Process image data structure for display in gallery
+ * @param {Object} imagesData - Images object with uploaded/processed arrays
+ * @returns {Promise<Object>} - Processed images with signed URLs
+ */
+export async function processImagesForDisplay(imagesData) {
+  if (!imagesData || typeof imagesData !== 'object') {
+    return { uploaded: [], processed: [] };
+  }
+
+  const { uploaded = [], processed = [] } = imagesData;
+
+  try {
+    const [processedUploaded, processedProcessed] = await Promise.all([
+      generateImageUrls(uploaded),
+      generateImageUrls(processed)
+    ]);
+
+    const result = {
+      uploaded: processedUploaded,
+      processed: processedProcessed
+    };
+
+    return result;
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[ImageService] Failed to process images for display:', error);
+    }
+    return { uploaded: [], processed: [] };
+  }
 }
