@@ -39,6 +39,7 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   const [savedRecipeId, setSavedRecipeId] = useState(recipeId);
   const [imageChanges, setImageChanges] = useState(null);
   const [isImageOperationInProgress, setIsImageOperationInProgress] = useState(false);
+  const [latestRecipeData, setLatestRecipeData] = useState(null);
 
   const { recipe, confidence_score, processing_time } = result;
 
@@ -54,7 +55,7 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   // Initialize edited recipe when edit tab is first accessed
   const handleTabChange = (tabId) => {
     if (tabId === 'edit' && !editedRecipe) {
-      setEditedRecipe(structuredClone(recipe)); // Deep copy
+      setEditedRecipe(structuredClone(latestRecipeData || recipe)); // Deep copy
     }
     setActiveTab(tabId);
   };
@@ -68,6 +69,7 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   // Handle recipe save success from SaveRecipeButton
   const handleRecipeSaved = useCallback((savedRecipe) => {
     setSavedRecipeId(savedRecipe.id);
+    setLatestRecipeData(savedRecipe.processed_recipe);
     // Notify parent component if callback provided
     if (onRecipeUpdated) {
       onRecipeUpdated(savedRecipe);
@@ -84,7 +86,6 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
     setIsImageOperationInProgress(changes.new.some(img => !img.uploaded && !img.error));
   }, []);
 
-  // Save changes (apply edited recipe as new recipe)
   const saveChanges = async () => {
     if (!editedRecipe) return;
     
@@ -95,7 +96,6 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
     try {
       let updatedRecipe = { ...editedRecipe };
       
-      // Mark pending images as saved and add to database
       if (imageChanges && imageChanges.markImagesAsSaved) {
         await imageChanges.markImagesAsSaved();
       }
@@ -110,7 +110,6 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
         }));
       }
       
-      // If we have a savedRecipeId, persist to database
       if (savedRecipeId) {
         const { data, error } = await RecipesService.updateRecipe(savedRecipeId, updatedRecipe);
         
@@ -122,10 +121,12 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
         // Notify parent component about the update
         if (onRecipeUpdated && data && data[0]) {
           onRecipeUpdated(data[0]);
+          setLatestRecipeData(data[0].processed_recipe);
         }
         
         setHasUnsavedChanges(false);
         setImageChanges(null);
+        setEditedRecipe(structuredClone(data[0].processed_recipe));
       } else {
         setHasUnsavedChanges(false);
         setImageChanges(null);
@@ -139,7 +140,12 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   };
 
   const discardChanges = () => {
-    setEditedRecipe(structuredClone(recipe));
+    // Restore any deleted images before resetting
+    if (imageChanges && imageChanges.restoreDeletedImages) {
+      imageChanges.restoreDeletedImages();
+    }
+    
+    setEditedRecipe(structuredClone(latestRecipeData || recipe));
     setHasUnsavedChanges(false);
     setImageChanges(null);
     setIsImageOperationInProgress(false);

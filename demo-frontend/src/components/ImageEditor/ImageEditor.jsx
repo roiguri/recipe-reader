@@ -379,21 +379,8 @@ const ImageEditor = ({
     const newImage = newImages.find(img => img.id === imageId);
 
     if (existingImage) {
-      // Handle existing image deletion (already in database)
       setImagesToDelete(prev => [...prev, existingImage.path]);
       setExistingImages(prev => prev.filter(img => img.id !== imageId));
-      
-      // Remove from database if we have a recipe ID
-      if (recipeId) {
-        try {
-          await removeImageFromRecipe(recipeId, existingImage.path);
-        } catch (err) {
-          console.error('Failed to remove image from database:', err);
-          // Revert the deletion on error
-          setExistingImages(prev => [...prev, existingImage]);
-          setImagesToDelete(prev => prev.filter(path => path !== existingImage.path));
-        }
-      }
     } else if (newImage) {
       // Handle new image deletion (not yet added to database)
       setNewImages(prev => prev.filter(img => img.id !== imageId));
@@ -432,6 +419,19 @@ const ImageEditor = ({
 
   // Function to mark all pending images as saved (called from parent on save)
   const markImagesAsSaved = useCallback(async () => {
+    // Process pending deletions first
+    for (const imagePath of imagesToDelete) {
+      if (recipeId) {
+        try {
+          await removeImageFromRecipe(recipeId, imagePath);
+        } catch (err) {
+          console.error('Failed to remove image from database:', err);
+        }
+      }
+    }
+    
+    setImagesToDelete([]);
+    
     // Only process images that are still in the newImages array (not deleted)
     // and have been uploaded successfully
     const pendingImages = newImages.filter(img => 
@@ -462,7 +462,15 @@ const ImageEditor = ({
         ? { ...img, status: 'saved' }
         : img
     ));
-  }, [newImages, recipeId]);
+  }, [newImages, imagesToDelete, recipeId]);
+
+  const restoreDeletedImages = useCallback(() => {
+    setExistingImages([]);
+    setNewImages([]);
+    setImagesToDelete([]);
+    setHasUserMadeChanges(false);
+    setInitialized(false); 
+  }, []);
 
   // Expose the markImagesAsSaved function to parent component via callback
   React.useEffect(() => {
@@ -476,11 +484,12 @@ const ImageEditor = ({
         new: newImages,
         toDelete: imagesToDelete,
         total: allImages.length,
-        markImagesAsSaved, // Expose the function
-        isInitialLoad: !hasRealChanges // Flag to indicate this is just initial loading
+        markImagesAsSaved,
+        restoreDeletedImages, 
+        isInitialLoad: !hasRealChanges 
       });
     }
-  }, [existingImages, newImages, imagesToDelete, allImages.length, onImagesChange, markImagesAsSaved, initialized, hasUserMadeChanges]);
+  }, [existingImages, newImages, imagesToDelete, allImages.length, onImagesChange, markImagesAsSaved, restoreDeletedImages, initialized, hasUserMadeChanges]);
 
   return (
     <div className="space-y-4">
