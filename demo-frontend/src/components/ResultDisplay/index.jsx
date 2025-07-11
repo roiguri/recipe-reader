@@ -24,6 +24,8 @@ import EditableIngredientsSection from './EditableIngredientsSection';
 import EditableInstructionsSection from './EditableInstructionsSection';
 import EditableCommentsSection from './EditableCommentsSection';
 import EditableTagList from './EditableTagList';
+import ImageEditor from '../ImageEditor';
+import ImageDisplay from '../ImageDisplay';
 
 const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = '', showActionButtons = true, recipeId = null, onRecipeUpdated = null }) => {
   const { t } = useTranslation();
@@ -35,6 +37,9 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [savedRecipeId, setSavedRecipeId] = useState(recipeId);
+  const [imageChanges, setImageChanges] = useState(null);
+  const [isImageOperationInProgress, setIsImageOperationInProgress] = useState(false);
+  const [latestRecipeData, setLatestRecipeData] = useState(null);
 
   const { recipe, confidence_score, processing_time } = result;
 
@@ -50,7 +55,7 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   // Initialize edited recipe when edit tab is first accessed
   const handleTabChange = (tabId) => {
     if (tabId === 'edit' && !editedRecipe) {
-      setEditedRecipe(structuredClone(recipe)); // Deep copy
+      setEditedRecipe(structuredClone(latestRecipeData || recipe)); // Deep copy
     }
     setActiveTab(tabId);
   };
@@ -64,24 +69,49 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   // Handle recipe save success from SaveRecipeButton
   const handleRecipeSaved = useCallback((savedRecipe) => {
     setSavedRecipeId(savedRecipe.id);
+    setLatestRecipeData(savedRecipe.processed_recipe);
     // Notify parent component if callback provided
     if (onRecipeUpdated) {
       onRecipeUpdated(savedRecipe);
     }
   }, [onRecipeUpdated]);
 
-  // Save changes (apply edited recipe as new recipe)
+  const handleImagesChange = useCallback((changes) => {
+    setImageChanges(changes);
+    
+    if (!changes.isInitialLoad) {
+      setHasUnsavedChanges(true);
+    }
+    
+    setIsImageOperationInProgress(changes.new.some(img => !img.uploaded && !img.error));
+  }, []);
+
   const saveChanges = async () => {
     if (!editedRecipe) return;
     
     // Clear any previous error
     setSaveError(null);
+    setIsSaving(true);
     
-    // If we have a savedRecipeId, persist to database
-    if (savedRecipeId) {
-      setIsSaving(true);
-      try {
-        const { data, error } = await RecipesService.updateRecipe(savedRecipeId, editedRecipe);
+    try {
+      let updatedRecipe = { ...editedRecipe };
+      
+      if (imageChanges && imageChanges.markImagesAsSaved) {
+        await imageChanges.markImagesAsSaved();
+      }
+      
+      if (imageChanges && savedRecipeId) {
+        const allImages = [...imageChanges.existing, ...imageChanges.new.filter(img => img.uploaded)];
+        updatedRecipe.images = allImages.map(img => ({
+          url: img.url,
+          path: img.path,
+          fileName: img.fileName,
+          uploadedAt: img.uploadedAt || new Date().toISOString()
+        }));
+      }
+      
+      if (savedRecipeId) {
+        const { data, error } = await RecipesService.updateRecipe(savedRecipeId, updatedRecipe);
         
         if (error) {
           setSaveError(error.message || t('resultDisplay.edit.saveError'));
@@ -91,25 +121,34 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
         // Notify parent component about the update
         if (onRecipeUpdated && data && data[0]) {
           onRecipeUpdated(data[0]);
+          setLatestRecipeData(data[0].processed_recipe);
         }
         
         setHasUnsavedChanges(false);
-      } catch (err) {
-        console.error('Error saving recipe edits:', err);
-        setSaveError(t('resultDisplay.edit.saveError'));
-      } finally {
-        setIsSaving(false);
+        setImageChanges(null);
+        setEditedRecipe(structuredClone(data[0].processed_recipe));
+      } else {
+        setHasUnsavedChanges(false);
+        setImageChanges(null);
       }
-    } else {
-      // For new recipes without recipeId, just clear the unsaved changes flag
-      setHasUnsavedChanges(false);
+    } catch (err) {
+      console.error('Error saving recipe edits:', err);
+      setSaveError(t('resultDisplay.edit.saveError'));
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Discard changes (reset to original recipe)
   const discardChanges = () => {
-    setEditedRecipe(structuredClone(recipe));
+    // Restore any deleted images before resetting
+    if (imageChanges && imageChanges.restoreDeletedImages) {
+      imageChanges.restoreDeletedImages();
+    }
+    
+    setEditedRecipe(structuredClone(latestRecipeData || recipe));
     setHasUnsavedChanges(false);
+    setImageChanges(null);
+    setIsImageOperationInProgress(false);
   };
 
   // Global editing state management
@@ -270,6 +309,14 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
               {/* Recipe metadata */}
               <Metadata recipe={displayRecipe} />
               
+              {/* Recipe images */}
+              {displayRecipe.images && displayRecipe.images.length > 0 && (
+                <ImageDisplay
+                  images={displayRecipe.images}
+                  className="recipe-images"
+                />
+              )}
+              
               {/* Ingredients section */}
               <IngredientsSection 
                 ingredients={displayRecipe.ingredients}
@@ -312,30 +359,28 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
                     </button>
                     <button
                       onClick={saveChanges}
-                      disabled={isSaving}
+                      disabled={isSaving || isImageOperationInProgress}
                       className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-2 ${
-                        isSaving 
+                        (isSaving || isImageOperationInProgress)
                           ? 'bg-gray-400 text-white cursor-not-allowed' 
                           : 'bg-[#994d51] text-white hover:bg-[#7a3c40]'
                       }`}
                     >
-                      {isSaving && (
+                      {(isSaving || isImageOperationInProgress) && (
                         <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
                       )}
-                      {isSaving ? t('common.saving') : t('common.save')}
+                      {isImageOperationInProgress ? t('imageEditor.uploading') : isSaving ? t('common.saving') : t('common.save')}
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Save error display */}
               {saveError && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                   <span className="text-sm text-red-800">{saveError}</span>
                 </div>
               )}
 
-              {/* Editable Recipe metadata */}
               <EditableMetadata 
                 recipe={editedRecipe}
                 onUpdate={updateEditedRecipe}
@@ -345,8 +390,15 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
                 onSaveEdit={saveCurrentEdit}
                 onCancelEdit={cancelGlobalEdit}
               />
+
+              <ImageEditor
+                recipeId={savedRecipeId}
+                initialImages={editedRecipe?.images || []}
+                onImagesChange={handleImagesChange}
+                maxImages={5}
+                disabled={isSaving}
+              />
               
-              {/* Editable Ingredients section */}
               <EditableIngredientsSection 
                 ingredients={editedRecipe?.ingredients || []}
                 onUpdate={updateEditedRecipe}
@@ -357,7 +409,6 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
                 onCancelEdit={cancelGlobalEdit}
               />
               
-              {/* Editable Instructions section */}
               <EditableInstructionsSection 
                 instructions={editedRecipe?.instructions}
                 stages={editedRecipe?.stages}
@@ -369,7 +420,6 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
                 onCancelEdit={cancelGlobalEdit}
               />
 
-              {/* Editable Comments section */}
               <EditableCommentsSection 
                 comments={editedRecipe?.comments}
                 onUpdate={updateEditedRecipe}
@@ -380,7 +430,6 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
                 onCancelEdit={cancelGlobalEdit}
               />
 
-              {/* Editable Tags section */}
               <EditableTagList 
                 tags={editedRecipe?.tags || []}
                 onUpdate={updateEditedRecipe}
