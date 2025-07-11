@@ -260,7 +260,7 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -345,7 +345,7 @@
     ],
     "metadata": {
       "created": "2025-07-10T19:23:13.294Z",
-      "updated": "2025-07-10T21:00:26.248Z",
+      "updated": "2025-07-11T07:24:53.513Z",
       "description": "Tasks for image-support context"
     }
   }

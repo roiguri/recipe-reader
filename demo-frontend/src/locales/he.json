@@ -435,5 +435,15 @@
       "dragToReorder": "גרור תמונות כדי לסדר אותן מחדש",
       "clickToDelete": "לחץ על כפתור × כדי למחוק תמונות"
     }
+  },
+  "imageDisplay": {
+    "loading": "טוען תמונות...",
+    "error": "לא ניתן לטעון תמונות",
+    "imageError": "נכשל בטעינת תמונה",
+    "noImages": "אין תמונות זמינות",
+    "imageCarousel": "קרוסלת תמונות מתכון",
+    "goToSlide": "עבור לשקופית",
+    "previousImage": "תמונה קודמת",
+    "nextImage": "תמונה הבאה"
   }
 }

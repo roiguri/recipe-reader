@@ -435,5 +435,15 @@
       "dragToReorder": "Drag images to reorder them",
       "clickToDelete": "Click the × button to delete images"
     }
+  },
+  "imageDisplay": {
+    "loading": "Loading images...",
+    "error": "Unable to load images",
+    "imageError": "Failed to load image",
+    "noImages": "No images available",
+    "imageCarousel": "Recipe image carousel",
+    "goToSlide": "Go to slide",
+    "previousImage": "Previous image",
+    "nextImage": "Next image"
   }
 }

@@ -25,6 +25,7 @@ import EditableInstructionsSection from './EditableInstructionsSection';
 import EditableCommentsSection from './EditableCommentsSection';
 import EditableTagList from './EditableTagList';
 import ImageEditor from '../ImageEditor';
+import ImageDisplay from '../ImageDisplay';
 
 const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = '', showActionButtons = true, recipeId = null, onRecipeUpdated = null }) => {
   const { t } = useTranslation();
@@ -301,6 +302,14 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
             <div className="space-y-3 md:space-y-6 h-full overflow-y-auto">
               {/* Recipe metadata */}
               <Metadata recipe={displayRecipe} />
+              
+              {/* Recipe images */}
+              {displayRecipe.images && displayRecipe.images.length > 0 && (
+                <ImageDisplay
+                  images={displayRecipe.images}
+                  className="recipe-images"
+                />
+              )}
               
               {/* Ingredients section */}
               <IngredientsSection 
