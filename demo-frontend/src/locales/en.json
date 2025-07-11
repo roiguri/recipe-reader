@@ -408,5 +408,32 @@
       "resetInfo": "Demo quotas reset monthly, feel free to come back soon.",
       "upgradeInfo": "For production use, contact us about API access plans."
     }
+  },
+  "imageEditor": {
+    "title": "Recipe Images",
+    "imagesCount": "images",
+    "dragToReorder": "Drag to reorder",
+    "deleteImage": "Delete image",
+    "uploaded": "Uploaded",
+    "saved": "Saved",
+    "pending": "Pending save",
+    "uploading": "Uploading images...",
+    "uploadArea": {
+      "dragOrClick": "Drag images here or click to browse",
+      "dropHere": "Drop images here",
+      "invalidFiles": "Some files are invalid",
+      "supportedFormats": "JPEG, PNG, WebP (max 5MB each)",
+      "remainingSlots": "{{remaining}} of {{max}} slots available",
+      "maxReached": "Maximum images reached"
+    },
+    "errors": {
+      "tooManyFiles": "Cannot add more than {{max}} images total",
+      "fileTooLarge": "File too large (max 5MB)",
+      "invalidType": "Invalid file type (JPEG, PNG, WebP only)"
+    },
+    "instructions": {
+      "dragToReorder": "Drag images to reorder them",
+      "clickToDelete": "Click the × button to delete images"
+    }
   }
 }

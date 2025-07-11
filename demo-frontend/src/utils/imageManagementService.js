@@ -12,7 +12,7 @@ export const uploadImage = async (file, userId, recipeId) => {
 
   const fileExt = file.name.split('.').pop().toLowerCase();
   const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-  const filePath = `recipe-images/${userId}/${recipeId}/${fileName}`;
+  const filePath = `${userId}/${recipeId}/${fileName}`;
 
   let lastError;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -163,12 +163,34 @@ export const getImageUrl = (filePath) => {
   return publicUrl;
 };
 
+export const getSignedImageUrl = async (filePath, expiresIn = 3600) => {
+  if (!filePath) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase.storage
+      .from('recipe-images')
+      .createSignedUrl(filePath, expiresIn);
+
+    if (error) {
+      // Fallback to public URL
+      return getImageUrl(filePath);
+    }
+
+    return data.signedUrl;
+  } catch (error) {
+    // Fallback to public URL
+    return getImageUrl(filePath);
+  }
+};
+
 export const listImages = async (userId, recipeId) => {
   if (!userId || !recipeId) {
     throw new Error('Missing required parameters: userId or recipeId');
   }
 
-  const folderPath = `recipe-images/${userId}/${recipeId}`;
+  const folderPath = `${userId}/${recipeId}`;
 
   try {
     const { data, error } = await supabase.storage

@@ -408,5 +408,32 @@
       "resetInfo": "המכסות מתאפסות אחת לחודש, מוזמן לחזור בקרוב.",
       "upgradeInfo": "לשימוש פרטי ב-API צור קשר"
     }
+  },
+  "imageEditor": {
+    "title": "תמונות המתכון",
+    "imagesCount": "תמונות",
+    "dragToReorder": "גרור לסידור מחדש",
+    "deleteImage": "מחק תמונה",
+    "uploaded": "הועלה",
+    "saved": "נשמר",
+    "pending": "ממתין לשמירה",
+    "uploading": "מעלה תמונות...",
+    "uploadArea": {
+      "dragOrClick": "גרור תמונות לכאן או לחץ לעיון",
+      "dropHere": "שחרר תמונות כאן",
+      "invalidFiles": "קבצים לא תקינים",
+      "supportedFormats": "JPEG, PNG, WebP (מקסימום 5MB כל אחד)",
+      "remainingSlots": "{{remaining}} מתוך {{max}} מקומות זמינים",
+      "maxReached": "הגעת למספר התמונות המקסימלי"
+    },
+    "errors": {
+      "tooManyFiles": "לא ניתן להוסיף יותר מ-{{max}} תמונות",
+      "fileTooLarge": "קובץ גדול מדי (מקסימום 5MB)",
+      "invalidType": "סוג קובץ לא תקין (רק JPEG, PNG, WebP)"
+    },
+    "instructions": {
+      "dragToReorder": "גרור תמונות כדי לסדר אותן מחדש",
+      "clickToDelete": "לחץ על כפתור × כדי למחוק תמונות"
+    }
   }
 }
