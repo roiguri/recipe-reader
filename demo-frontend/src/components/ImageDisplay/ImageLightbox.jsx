@@ -199,18 +199,20 @@ const ImageLightbox = ({
             </div>
           )}
 
-          {/* Image - always rendered but hidden during loading/error */}
-          <img
-            src={imageUrl}
-            alt={imageAlt}
-            className="max-w-full max-h-full w-auto h-auto object-contain"
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            style={{ 
-              display: (loading || error) ? 'none' : 'block',
-              opacity: (loading || error) ? 0 : 1 
-            }}
-          />
+          {/* Image - only rendered when imageUrl is available */}
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt={imageAlt}
+              className="max-w-full max-h-full w-auto h-auto object-contain"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+              style={{ 
+                display: (loading || error) ? 'none' : 'block',
+                opacity: (loading || error) ? 0 : 1 
+              }}
+            />
+          )}
         </div>
 
         {/* Image title/description */}
