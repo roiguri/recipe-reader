@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { isHebrew, formatTime, generatePdfFilename, detectBrowserPrintCapabilities, getTotalTime } from '../../utils/formatters';
+import { getSignedImageUrl } from '../../utils/imageManagementService';
 import Card from '../ui/Card';
 
 /**
@@ -13,8 +14,47 @@ const ExportOptions = ({ recipe }) => {
   const { t } = useTranslation();
   const { direction } = useLanguage();
   const [isExporting, setIsExporting] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
   
   const totalTime = getTotalTime(recipe);
+  const firstImage = recipe.images?.[0];
+  
+  React.useEffect(() => {
+    if (firstImage) {
+      setImageLoading(true);
+      setImageError(false);
+      setImageUrl(firstImage.url || firstImage);
+    }
+  }, [firstImage]);
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoading(false);
+    setImageError(false);
+  }, []);
+
+  const handleImageError = useCallback(async (event) => {
+    if (event.target.complete && event.target.naturalWidth > 0) {
+      setImageLoading(false);
+      return;
+    }
+    
+    if (firstImage?.path && !imageUrl.includes('sign')) {
+      try {
+        const signedUrl = await getSignedImageUrl(firstImage.path);
+        if (signedUrl && signedUrl !== imageUrl) {
+          setImageUrl(signedUrl);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to get signed URL:', error);
+      }
+    }
+    
+    setImageLoading(false);
+    setImageError(true);
+  }, [firstImage, imageUrl]);
   
   // Helper function to get appropriate grid class based on time field count
   const getTimeGridClass = () => {
@@ -109,6 +149,25 @@ const ExportOptions = ({ recipe }) => {
       // Remove any no-print elements from cloned content
       const noPrintElements = clonedContent.querySelectorAll('.no-print');
       noPrintElements.forEach(el => el.remove());
+      
+      const imageContainers = clonedContent.querySelectorAll('.aspect-square.max-w-sm');
+      imageContainers.forEach(container => {
+        const loadingElements = container.querySelectorAll('.animate-spin, .text-center');
+        loadingElements.forEach(el => {
+          if (el.textContent.includes('Loading') || el.querySelector('.animate-spin')) {
+            el.remove();
+          }
+        });
+        
+        const img = container.querySelector('img');
+        if (img) {
+          img.style.display = 'block';
+          img.style.opacity = '1';
+          img.className = 'w-full h-full object-cover recipe-image';
+        }
+        
+        container.className += ' recipe-image-container';
+      });
 
       // Get all styles from the current page
       const styles = extractStylesheets();
@@ -257,6 +316,134 @@ const ExportOptions = ({ recipe }) => {
               background-color: #994d51 !important;
               border-radius: 9999px !important;
               flex-shrink: 0 !important;
+            }
+            
+            /* Recipe image styling for PDF */
+            .recipe-image-container {
+              max-width: 300px !important;
+              margin: 0 auto !important;
+              border: 1px solid #e5e7eb !important;
+              border-radius: 0.5rem !important;
+              overflow: hidden !important;
+              aspect-ratio: 1 / 1 !important;
+              page-break-inside: avoid !important;
+            }
+            
+            .recipe-image {
+              width: 100% !important;
+              height: 100% !important;
+              object-fit: cover !important;
+              display: block !important;
+            }
+            
+            /* PDF Grid layout for ingredients with image */
+            .grid.grid-cols-1.lg\\:grid-cols-2 {
+              display: grid !important;
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+              gap: 2rem !important;
+            }
+            
+            .lg\\:grid-cols-2 {
+              display: grid !important;
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            
+            .lg\\:order-2 {
+              order: 2 !important;
+            }
+            
+            .order-1 {
+              order: 1 !important;
+            }
+            
+            .gap-8 {
+              gap: 2rem !important;
+            }
+            
+            .aspect-square {
+              aspect-ratio: 1 / 1 !important;
+            }
+            
+            .max-w-sm {
+              max-width: 20rem !important; /* Smaller for PDF */
+            }
+            
+            .sticky {
+              position: static !important; /* Override sticky for print */
+            }
+            
+            .top-4 {
+              top: 1rem !important;
+            }
+            
+            /* More specific grid styling for ingredients section */
+            .mb-8 .grid.grid-cols-1.lg\\:grid-cols-2 {
+              display: grid !important;
+              grid-template-columns: 1fr 300px !important; /* Fixed width for image column */
+              gap: 2rem !important;
+              align-items: start !important;
+            }
+            
+            /* Responsive grid adjustments for PDF */
+            .xl\\:grid-cols-2 {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            
+            .lg\\:grid-cols-1.xl\\:grid-cols-2 {
+              grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+            }
+            
+            /* Force grid layout in print media */
+            @media print {
+              .grid {
+                display: grid !important;
+              }
+              
+              .grid-cols-1 {
+                grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+              }
+              
+              .lg\\:grid-cols-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+              }
+              
+              .lg\\:order-2 {
+                order: 2 !important;
+              }
+              
+              .order-1 {
+                order: 1 !important;
+              }
+              
+              .sticky {
+                position: static !important;
+              }
+              
+              /* Very specific selector for ingredients container */
+              .mb-8 > .grid.grid-cols-1.lg\\:grid-cols-2.gap-8 {
+                display: grid !important;
+                grid-template-columns: 1fr 300px !important;
+                gap: 2rem !important;
+                align-items: start !important;
+              }
+              
+              /* Hide loading states in PDF */
+              .animate-spin {
+                display: none !important;
+              }
+              
+              /* Ensure image container is visible */
+              .recipe-image-container,
+              .aspect-square.max-w-sm.mx-auto.bg-gray-100.rounded-lg.overflow-hidden.border.border-gray-200 {
+                display: block !important;
+                max-width: 300px !important;
+                margin: 0 auto !important;
+                border: 1px solid #e5e7eb !important;
+                border-radius: 0.5rem !important;
+                overflow: hidden !important;
+                aspect-ratio: 1 / 1 !important;
+                page-break-inside: avoid !important;
+              }
             }
             
             /* Include minimal existing styles (fallback) */
@@ -548,22 +735,81 @@ const ExportOptions = ({ recipe }) => {
               </div>
             )}
 
-            {/* Ingredients Section */}
             {recipe.ingredients && recipe.ingredients.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-[#1b0e0e] mb-4 pb-2 border-b border-gray-200">
-                  {t('resultDisplay.sections.ingredients')}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {recipe.ingredients.map((ingredient, idx) => (
-                    <div key={idx} className="flex items-center p-2">
-                      <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
-                      <span className="text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
-                        <span className="font-medium">{ingredient.amount} {ingredient.unit}</span> {ingredient.item}
-                      </span>
+                {firstImage ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                      <h2 className="text-2xl font-bold text-[#1b0e0e] mb-4 pb-2 border-b border-gray-200">
+                        {t('resultDisplay.sections.ingredients')}
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2">
+                        {recipe.ingredients.map((ingredient, idx) => (
+                          <div key={idx} className="flex items-center p-2">
+                            <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
+                            <span className="text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
+                              <span className="font-medium">{ingredient.amount} {ingredient.unit}</span> {ingredient.item}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
+                    
+                    <div className="lg:order-2 order-1">
+                      <div className="sticky top-4">
+                        <div className="relative aspect-square max-w-sm mx-auto bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                          {imageLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                              <div className="text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#994d51] mx-auto mb-2"></div>
+                                <span className="text-gray-600 text-sm">{t('imageDisplay.loading')}</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {imageError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                              <div className="text-center">
+                                <svg className="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                <p className="text-gray-600 text-sm">{t('imageDisplay.imageError')}</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {imageUrl && (
+                            <img
+                              src={imageUrl}
+                              alt={firstImage.alt || firstImage.fileName || t('imageDisplay.recipeImage')}
+                              className={`w-full h-full object-cover transition-opacity duration-200 ${
+                                imageLoading || imageError ? 'opacity-0' : 'opacity-100'
+                              }`}
+                              onLoad={handleImageLoad}
+                              onError={handleImageError}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#1b0e0e] mb-4 pb-2 border-b border-gray-200">
+                      {t('resultDisplay.sections.ingredients')}
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {recipe.ingredients.map((ingredient, idx) => (
+                        <div key={idx} className="flex items-center p-2">
+                          <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
+                          <span className="text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
+                            <span className="font-medium">{ingredient.amount} {ingredient.unit}</span> {ingredient.item}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

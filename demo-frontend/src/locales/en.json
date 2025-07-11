@@ -444,6 +444,7 @@
     "imageCarousel": "Recipe image carousel",
     "goToSlide": "Go to slide",
     "previousImage": "Previous image",
-    "nextImage": "Next image"
+    "nextImage": "Next image",
+    "recipeImage": "Recipe image"
   }
 }

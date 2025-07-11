@@ -260,7 +260,7 @@
         "dependencies": [
           1
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -287,7 +287,7 @@
           2,
           3
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -300,7 +300,7 @@
         "dependencies": [
           4
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -313,7 +313,7 @@
         "dependencies": [
           5
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -326,7 +326,7 @@
         "dependencies": [
           6
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -345,7 +345,7 @@
     ],
     "metadata": {
       "created": "2025-07-10T19:23:13.294Z",
-      "updated": "2025-07-11T07:24:53.513Z",
+      "updated": "2025-07-11T14:26:32.804Z",
       "description": "Tasks for image-support context"
     }
   }
