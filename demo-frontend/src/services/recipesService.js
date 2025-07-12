@@ -102,6 +102,44 @@ export class RecipesService {
   }
 
   /**
+   * Get a specific recipe by ID
+   * @param {string} recipeId - The ID of the recipe to retrieve
+   * @returns {Promise<{data: Object, error: Object}>}
+   */
+  static async getRecipeById(recipeId) {
+    try {
+      if (!recipeId) {
+        return { 
+          data: null, 
+          error: { message: 'Recipe ID is required' } 
+        };
+      }
+
+      const { data, error } = await supabase
+        .from('user_recipes')
+        .select('*')
+        .eq('id', recipeId)
+        .single();
+
+      if (error) {
+        console.error('Error getting recipe by ID:', error);
+        return { 
+          data: null, 
+          error: { message: 'Failed to retrieve recipe. Please try again.' } 
+        };
+      }
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error getting recipe by ID:', error);
+      return { 
+        data: null, 
+        error: { message: 'Failed to retrieve recipe. Please try again.' } 
+      };
+    }
+  }
+
+  /**
    * Delete a recipe by ID
    * @param {string} recipeId - The ID of the recipe to delete
    * @returns {Promise<{data: Object, error: Object}>}

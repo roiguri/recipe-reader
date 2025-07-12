@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ANIMATION_CONFIG } from '../../utils/animationConfig';
@@ -6,6 +6,7 @@ import useClipboard from '../../hooks/useClipboard';
 import Card from '../ui/Card';
 import CopyButton from '../ui/CopyButton';
 import { RecipesService } from '../../services/recipesService';
+import { ImageService } from '../../services/imageService';
 import { getTotalTime } from '../../utils/formatters';
 
 // Import sub-components
@@ -17,6 +18,7 @@ import CommentsSection from './CommentsSection';
 import Metadata from './Metadata';
 import TagList from './TagList';
 import ExportOptions from './ExportOptions';
+import RecipeImageSection from './RecipeImageSection';
 
 // Import editable components
 import EditableMetadata from './EditableMetadata';
@@ -24,6 +26,7 @@ import EditableIngredientsSection from './EditableIngredientsSection';
 import EditableInstructionsSection from './EditableInstructionsSection';
 import EditableCommentsSection from './EditableCommentsSection';
 import EditableTagList from './EditableTagList';
+import EditableImageSection from './EditableImageSection';
 
 const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = '', showActionButtons = true, recipeId = null, onRecipeUpdated = null }) => {
   const { t } = useTranslation();
@@ -35,6 +38,7 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [savedRecipeId, setSavedRecipeId] = useState(recipeId);
+  const editableImageSectionRef = useRef(null);
 
   const { recipe, confidence_score, processing_time } = result;
 
@@ -81,12 +85,72 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
     if (savedRecipeId) {
       setIsSaving(true);
       try {
-        const { data, error } = await RecipesService.updateRecipe(savedRecipeId, editedRecipe);
+        // Handle image operations first if there are any
+        let finalRecipe = { ...editedRecipe };
+        let hadImageChanges = false;
+        
+        if (editedRecipe._imageSaveData) {
+          hadImageChanges = true;
+          const { pendingUploads, imagesToRemove } = editedRecipe._imageSaveData;
+          
+          // Get current user for image operations
+          const { data: user, error: userError } = await ImageService.getCurrentUser();
+          if (userError || !user) {
+            setSaveError(userError?.message || t('resultDisplay.images.authError'));
+            return;
+          }
+          
+          // Delete removed images
+          if (imagesToRemove.length > 0) {
+            const { error: deleteError } = await ImageService.deleteMultipleImages(
+              user.id, 
+              savedRecipeId, 
+              imagesToRemove
+            );
+            if (deleteError) {
+              console.error('Error deleting images:', deleteError);
+              // Continue anyway, don't fail the whole save
+            }
+          }
+          
+          // Upload new images
+          let uploadedFilenames = [];
+          if (pendingUploads.length > 0) {
+            const { data: filenames, error: uploadError } = await ImageService.uploadMultipleImages(
+              user.id, 
+              savedRecipeId, 
+              pendingUploads
+            );
+            
+            if (uploadError) {
+              setSaveError(uploadError.message || t('resultDisplay.edit.imageUploadError'));
+              return;
+            }
+            
+            uploadedFilenames = filenames || [];
+          }
+          
+          // Update the images array in the recipe
+          const currentImages = recipe.images || []; // Use original recipe images, not edited
+          const remainingImages = currentImages.filter(filename => !imagesToRemove.includes(filename));
+          finalRecipe = {
+            ...editedRecipe,
+            images: [...remainingImages, ...uploadedFilenames]
+          };
+          
+          // Remove the temporary save data
+          delete finalRecipe._imageSaveData;
+        }
+        
+        const { data, error } = await RecipesService.updateRecipe(savedRecipeId, finalRecipe);
         
         if (error) {
           setSaveError(error.message || t('resultDisplay.edit.saveError'));
           return;
         }
+        
+        // Update local state with the saved recipe
+        setEditedRecipe(finalRecipe);
         
         // Notify parent component about the update
         if (onRecipeUpdated && data && data[0]) {
@@ -94,6 +158,12 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
         }
         
         setHasUnsavedChanges(false);
+        
+        // Reset image section to reflect new state
+        if (hadImageChanges && editableImageSectionRef.current) {
+          editableImageSectionRef.current.resetToSavedState();
+        }
+        
       } catch (err) {
         console.error('Error saving recipe edits:', err);
         setSaveError(t('resultDisplay.edit.saveError'));
@@ -110,6 +180,10 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   const discardChanges = () => {
     setEditedRecipe(structuredClone(recipe));
     setHasUnsavedChanges(false);
+    // Reset image section as well
+    if (editableImageSectionRef.current) {
+      editableImageSectionRef.current.resetToSavedState();
+    }
   };
 
   // Global editing state management
@@ -270,6 +344,12 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
               {/* Recipe metadata */}
               <Metadata recipe={displayRecipe} />
               
+              {/* Recipe images section */}
+              <RecipeImageSection 
+                recipe={displayRecipe}
+                recipeId={savedRecipeId}
+              />
+              
               {/* Ingredients section */}
               <IngredientsSection 
                 ingredients={displayRecipe.ingredients}
@@ -346,6 +426,14 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
                 onCancelEdit={cancelGlobalEdit}
               />
               
+              {/* Editable Images section */}
+              <EditableImageSection 
+                ref={editableImageSectionRef}
+                recipe={editedRecipe}
+                recipeId={savedRecipeId}
+                onUpdate={updateEditedRecipe}
+              />
+              
               {/* Editable Ingredients section */}
               <EditableIngredientsSection 
                 ingredients={editedRecipe?.ingredients || []}
@@ -420,6 +508,7 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
             <div className="space-y-3 md:space-y-6 h-full overflow-y-auto">
               <ExportOptions 
                 recipe={displayRecipe}
+                recipeId={savedRecipeId}
               />
             </div>
           )}

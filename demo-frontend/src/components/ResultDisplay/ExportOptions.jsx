@@ -1,20 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { isHebrew, formatTime, generatePdfFilename, detectBrowserPrintCapabilities, getTotalTime } from '../../utils/formatters';
+import { ImageService } from '../../services/imageService';
 import Card from '../ui/Card';
 
 /**
  * ExportOptions component displays PDF export interface with preview
  * @param {Object} props - Component props
  * @param {Object} props.recipe - Recipe data object
+ * @param {string} props.recipeId - Recipe ID for image loading
  */
-const ExportOptions = ({ recipe }) => {
+const ExportOptions = ({ recipe, recipeId }) => {
   const { t } = useTranslation();
   const { direction } = useLanguage();
   const [isExporting, setIsExporting] = useState(false);
+  const [firstImageUrl, setFirstImageUrl] = useState(null);
+  const [imageLoading, setImageLoading] = useState(false);
   
   const totalTime = getTotalTime(recipe);
+  
+  // Load first image URL for export display
+  const loadFirstImage = useCallback(async () => {
+    // Check if recipe has images and we have a recipeId
+    if (!recipe?.images?.length || !recipeId) {
+      setFirstImageUrl(null);
+      return;
+    }
+
+    setImageLoading(true);
+    try {
+      // Get current user
+      const { data: user, error: userError } = await ImageService.getCurrentUser();
+      
+      if (userError || !user) {
+        setFirstImageUrl(null);
+        setImageLoading(false);
+        return;
+      }
+
+      // Get signed URL for just the first image
+      const { data: urls, error: urlError } = await ImageService.getRecipeImageUrls(
+        user.id, 
+        recipeId, 
+        [recipe.images[0]]  // Only load first image
+      );
+
+      if (!urlError && urls?.length === 1) {
+        setFirstImageUrl(urls[0].url);
+      } else {
+        setFirstImageUrl(null);
+      }
+    } catch (err) {
+      console.error('Error loading first image for export:', err);
+      setFirstImageUrl(null);
+    } finally {
+      setImageLoading(false);
+    }
+  }, [recipe?.images, recipeId]);
+
+  // Load first image when component mounts or dependencies change
+  useEffect(() => {
+    loadFirstImage();
+  }, [loadFirstImage]);
   
   // Helper function to get appropriate grid class based on time field count
   const getTimeGridClass = () => {
@@ -356,6 +404,55 @@ const ExportOptions = ({ recipe }) => {
               margin-top: 0.5rem;
             }
             
+            /* Recipe images section specific styles */
+            .print-images-section {
+              margin-bottom: 2rem;
+              page-break-inside: avoid;
+            }
+            
+            .print-image {
+              max-width: 100% !important;
+              height: auto !important;
+              max-height: 300px !important;
+              object-fit: cover !important;
+              border-radius: 0.5rem !important;
+              border: 1px solid #e5e7eb !important;
+              display: block !important;
+            }
+            
+            /* Ensure images work well in print */
+            @media print {
+              .print-images-section {
+                break-inside: avoid;
+                page-break-inside: avoid;
+              }
+              
+              .print-image {
+                max-height: 250px !important;
+                width: auto !important;
+                max-width: 100% !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+              }
+              
+              /* Ensure image grid works in print */
+              .print-images-section .grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1.5rem !important;
+              }
+              
+              /* Single column layout for smaller prints */
+              @page {
+                @media (max-width: 600px) {
+                  .print-images-section .grid {
+                    grid-template-columns: 1fr !important;
+                  }
+                }
+              }
+            }
+            
             /* Cross-browser flexbox fallbacks */
             ${!browserInfo.features.flexboxPrint ? `
             .flex {
@@ -548,8 +645,52 @@ const ExportOptions = ({ recipe }) => {
               </div>
             )}
 
-            {/* Ingredients Section */}
-            {recipe.ingredients && recipe.ingredients.length > 0 && (
+            {/* Images Section - only show first image */}
+            {(firstImageUrl || imageLoading) && (
+              <div className="mb-8 print-images-section">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Ingredients in first column */}
+                  {recipe.ingredients && recipe.ingredients.length > 0 && (
+                    <div>
+                      <h2 className="text-2xl font-bold text-[#1b0e0e] mb-4 pb-2 border-b border-gray-200">
+                        {t('resultDisplay.sections.ingredients')}
+                      </h2>
+                      <div className="space-y-2">
+                        {recipe.ingredients.map((ingredient, idx) => (
+                          <div key={idx} className="flex items-center p-2">
+                            <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
+                            <span className="text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
+                              <span className="font-medium">{ingredient.amount} {ingredient.unit}</span> {ingredient.item}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* First image in second column */}
+                  <div className="flex justify-center">
+                    <div className="max-w-md w-full">
+                      {imageLoading ? (
+                        <div className="w-full h-64 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center">
+                          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                        </div>
+                      ) : firstImageUrl ? (
+                        <img
+                          src={firstImageUrl}
+                          alt={`${recipe.name || t('resultDisplay.images.dishImage')}`}
+                          className="w-full h-auto rounded-lg border border-gray-200 print-image"
+                          style={{ maxHeight: '300px', objectFit: 'cover' }}
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Ingredients Section - only when no images */}
+            {!firstImageUrl && recipe.ingredients && recipe.ingredients.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-[#1b0e0e] mb-4 pb-2 border-b border-gray-200">
                   {t('resultDisplay.sections.ingredients')}

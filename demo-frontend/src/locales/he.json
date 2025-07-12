@@ -17,7 +17,9 @@
     "timeMinutes_other": "{{count}} דקות",
     "timeHours_one": "שעה",
     "timeHours_other": "{{count}} שעות",
-    "timeHoursMinutes": "{{hours}} {{minutes}}"
+    "timeHoursMinutes": "{{hours}} {{minutes}}",
+    "previous": "הקודם",
+    "next": "הבא"
   },
   "header": {
     "title": "הוסף מתכון חדש",
@@ -199,6 +201,7 @@
       "noTags": "אין תגיות עדיין",
       "removeTag": "הסר תגית",
       "saveError": "נכשל לשמור שינויים. אנא נסה שוב.",
+      "imageUploadError": "העלאת התמונות נכשלה. אנא נסה שוב.",
       "format": "פורמט",
       "simple": "פשוט",
       "structured": "מובנה",
@@ -228,7 +231,31 @@
         "ingredients": "לחץ על רכיבים לעריכה, השתמש בכפתורים להוסיף, להסיר או לסדר מחדש",
         "instructions": "החלף בין פורמטים פשוטים ומובנים. לחץ לעריכה, גרור לסידור מחדש",
         "tags": "לחץ על תגיות לעריכה או הסרה. הוסף תגיות חדשות לסיווג המתכון שלך"
+      },
+      "images": {
+        "title": "תמונות המתכון",
+        "uploadZone": "גרור ושחרר תמונות כאן או לחץ לבחירה",
+        "currentImages": "תמונות נוכחיות",
+        "removeImage": "הסר תמונה",
+        "restoreImage": "שחזר תמונה",
+        "markedForRemoval": "מסומן להסרה",
+        "pending": "חדש",
+        "removed": "הוסר",
+        "noImages": "אין תמונות עדיין - גרור ושחרר או לחץ להוספת תמונות",
+        "maxFiles": "מקסימום {{count}} תמונות",
+        "maxSize": "מקסימום {{size}}MB לתמונה",
+        "supportedFormats": "תומך ב-JPG, PNG, WebP, GIF"
       }
+    },
+    "images": {
+      "title": "תמונות המתכון",
+      "dishImage": "תמונת המנה",
+      "viewImage": "צפה בתמונה",
+      "loadError": "נכשל בטעינת התמונה",
+      "authError": "נדרש אימות כדי לצפות בתמונות",
+      "noImagesLoaded": "לא ניתן לטעון תמונות",
+      "refresh": "רענון",
+      "pressEscapeToClose": "לחץ Escape כדי לסגור"
     }
   },
   "errors": {

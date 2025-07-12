@@ -17,7 +17,9 @@
     "timeMinutes_other": "{{count}} min",
     "timeHours_one": "{{count}}h",
     "timeHours_other": "{{count}}h",
-    "timeHoursMinutes": "{{hours}} {{minutes}}"
+    "timeHoursMinutes": "{{hours}} {{minutes}}",
+    "previous": "Previous",
+    "next": "Next"
   },
   "header": {
     "title": "Add a new recipe",
@@ -199,6 +201,7 @@
       "noTags": "No tags yet",
       "removeTag": "Remove tag",
       "saveError": "Failed to save changes. Please try again.",
+      "imageUploadError": "Failed to upload images. Please try again.",
       "format": "Format",
       "simple": "Simple",
       "structured": "Structured",
@@ -228,7 +231,31 @@
         "ingredients": "Click on ingredients to edit, use buttons to add, remove, or reorder",
         "instructions": "Toggle between simple and structured formats. Click to edit, drag to reorder",
         "tags": "Click tags to edit or remove them. Add new tags to categorize your recipe"
+      },
+      "images": {
+        "title": "Recipe Images",
+        "uploadZone": "Drag & drop images here or click to select",
+        "currentImages": "Current Images",
+        "removeImage": "Remove image",
+        "restoreImage": "Restore image",
+        "markedForRemoval": "Marked for Removal",
+        "pending": "New",
+        "removed": "Removed",
+        "noImages": "No images yet - drag and drop or click to add images",
+        "maxFiles": "Maximum {{count}} images",
+        "maxSize": "Maximum {{size}}MB per image",
+        "supportedFormats": "Supports JPG, PNG, WebP, GIF"
       }
+    },
+    "images": {
+      "title": "Recipe Images",
+      "dishImage": "Dish Image",
+      "viewImage": "View Image",
+      "loadError": "Image failed to load",
+      "authError": "Authentication required to view images",
+      "noImagesLoaded": "No images could be loaded",
+      "refresh": "Refresh",
+      "pressEscapeToClose": "Press Escape to close"
     }
   },
   "errors": {
