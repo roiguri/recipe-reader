@@ -186,6 +186,7 @@
     },
     "edit": {
       "unsavedChanges": "יש לך שינויים שלא נשמרו",
+      "editingTip": "לחץ על כל שדה כדי להתחיל לערוך",
       "clickToEdit": "לחץ לעריכה",
       "clickToAddIngredient": "לחץ להוספת רכיב",
       "clickToAddInstruction": "לחץ להוספת הוראה",

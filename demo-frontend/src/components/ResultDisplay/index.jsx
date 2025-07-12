@@ -379,34 +379,43 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
 
           {activeTab === 'edit' && (
             <div className="space-y-3 md:space-y-6 h-full overflow-y-auto">
-              {/* Edit mode header with save/discard buttons */}
-              {hasUnsavedChanges && (
-                <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <span className="text-sm text-yellow-800">{t('resultDisplay.edit.unsavedChanges')}</span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={discardChanges}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
-                    >
-                      {t('common.cancel')}
-                    </button>
-                    <button
-                      onClick={saveChanges}
-                      disabled={isSaving}
-                      className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-2 ${
-                        isSaving 
-                          ? 'bg-gray-400 text-white cursor-not-allowed' 
-                          : 'bg-[#994d51] text-white hover:bg-[#7a3c40]'
-                      }`}
-                    >
-                      {isSaving && (
-                        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
-                      )}
-                      {isSaving ? t('common.saving') : t('common.save')}
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* Edit mode header - always rendered to prevent layout shift */}
+              <div className="flex items-center justify-between p-4 rounded-lg transition-colors duration-200 min-h-[74px] md:min-h-[64px]" 
+                   style={{
+                     backgroundColor: hasUnsavedChanges ? '#fefce8' : '#f9fafb',
+                     borderColor: hasUnsavedChanges ? '#fde047' : '#e5e7eb',
+                     borderWidth: '1px'
+                   }}>
+                {hasUnsavedChanges ? (
+                  <>
+                    <span className="text-sm text-yellow-800">{t('resultDisplay.edit.unsavedChanges')}</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={discardChanges}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                      <button
+                        onClick={saveChanges}
+                        disabled={isSaving}
+                        className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-2 ${
+                          isSaving 
+                            ? 'bg-gray-400 text-white cursor-not-allowed' 
+                            : 'bg-[#994d51] text-white hover:bg-[#7a3c40]'
+                        }`}
+                      >
+                        {isSaving && (
+                          <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                        )}
+                        {isSaving ? t('common.saving') : t('common.save')}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <span className="text-sm text-gray-600">{t('resultDisplay.edit.editingTip')}</span>
+                )}
+              </div>
 
               {/* Save error display */}
               {saveError && (
@@ -485,9 +494,15 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
             <div className="h-full overflow-y-auto" dir="ltr" style={{ direction: 'ltr', textAlign: 'left' }}>
               <div className="relative" dir="ltr">
                 <pre 
-                  className="bg-gray-50 p-4 rounded-lg text-sm overflow-x-auto" 
+                  className="bg-gray-50 p-4 rounded-lg text-sm overflow-x-auto max-w-full" 
                   dir="ltr" 
-                  style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'embed' }}
+                  style={{ 
+                    direction: 'ltr', 
+                    textAlign: 'left', 
+                    unicodeBidi: 'embed',
+                    wordBreak: 'break-all',
+                    whiteSpace: 'pre-wrap'
+                  }}
                 >
                   {JSON.stringify(normalizedRecipe, null, 2)}
                 </pre>

@@ -186,6 +186,7 @@
     },
     "edit": {
       "unsavedChanges": "You have unsaved changes",
+      "editingTip": "Click on any field to start editing",
       "clickToEdit": "Click to edit",
       "clickToAddIngredient": "Click to add ingredient",
       "clickToAddInstruction": "Click to add instruction",

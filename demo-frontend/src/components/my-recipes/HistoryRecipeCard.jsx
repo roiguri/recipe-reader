@@ -19,8 +19,8 @@ const HistoryRecipeCard = ({ recipe, onSaveToCollection, onRecipeClick, getStatu
       className="bg-[#fcf8f8] border border-[#e7d0d1] rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onRecipeClick(recipe.id)}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex-1 min-w-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between">
+        <div className="flex-1 min-w-0 mb-4 sm:mb-0">
           <div className="flex items-center gap-3 mb-2">
             <div className="text-[#1b0e0e] flex-shrink-0">
               {recipe.source_type === 'url' ? (
@@ -42,7 +42,7 @@ const HistoryRecipeCard = ({ recipe, onSaveToCollection, onRecipeClick, getStatu
             </h4>
           </div>
           
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full ${statusInfo.bg} ${statusInfo.color}`}>
               <span>{statusInfo.icon}</span>
               <span>{statusInfo.text}</span>
@@ -61,7 +61,7 @@ const HistoryRecipeCard = ({ recipe, onSaveToCollection, onRecipeClick, getStatu
               e.stopPropagation();
               onSaveToCollection(recipe.id);
             }}
-            className="ml-4"
+            className="ml-0 sm:ml-4 mt-4 sm:mt-0 flex-shrink-0"
           >
             {t('myRecipes.history.saveToCollection')}
           </Button>

@@ -114,12 +114,13 @@ const MyRecipesPage = ({ onNavigateHome }) => {
 
   // Main recipes display  
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={ANIMATION_CONFIG.DEFAULT}
-      className="w-full max-w-6xl mx-auto p-4 md:p-6"
-    >
+    <div className="px-2 sm:px-8 md:px-20 lg:px-40 flex flex-1 justify-center py-3 md:py-5">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={ANIMATION_CONFIG.DEFAULT}
+        className="layout-content-container flex flex-col max-w-[960px] flex-1"
+      >
       {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -132,16 +133,18 @@ const MyRecipesPage = ({ onNavigateHome }) => {
         </Button>
       </div>
 
-      {/* Tab Navigation */}
-      <TabNavigation
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        savedCount={recipes.length}
-        historyCount={historyRecipes.length}
-      />
+      {/* Tab Navigation - Hidden when recipe is expanded */}
+      {!expandedRecipeData && (
+        <TabNavigation
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          savedCount={recipes.length}
+          historyCount={historyRecipes.length}
+        />
+      )}
 
-      {/* Search and Filter Controls */}
-      {((activeTab === 'saved' && recipes.length > 0) || (activeTab === 'history' && historyRecipes.length > 0)) && (
+      {/* Search and Filter Controls - Hidden when recipe is expanded */}
+      {!expandedRecipeData && ((activeTab === 'saved' && recipes.length > 0) || (activeTab === 'history' && historyRecipes.length > 0)) && (
         <SearchAndFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -157,7 +160,7 @@ const MyRecipesPage = ({ onNavigateHome }) => {
         />
       )}
 
-      {/* Expanded Recipe Overlay */}
+      {/* Expanded Recipe Inline */}
       {expandedRecipeData && (
         <ExpandedRecipeOverlay
           expandedRecipeData={expandedRecipeData}
@@ -170,8 +173,8 @@ const MyRecipesPage = ({ onNavigateHome }) => {
         />
       )}
 
-      {/* Tab Content */}
-      {activeTab === 'saved' && (
+      {/* Tab Content - Hidden when recipe is expanded */}
+      {!expandedRecipeData && activeTab === 'saved' && (
         <SavedRecipesSection
           recipes={recipes}
           loading={loading}
@@ -187,7 +190,7 @@ const MyRecipesPage = ({ onNavigateHome }) => {
         />
       )}
 
-      {activeTab === 'history' && (
+      {!expandedRecipeData && activeTab === 'history' && (
         <HistorySection
           historyRecipes={historyRecipes}
           historyLoading={historyLoading}
@@ -210,7 +213,8 @@ const MyRecipesPage = ({ onNavigateHome }) => {
         sourceData={sourceViewModal.recipe?.source_data}
         title={sourceViewModal.recipe?.title || sourceViewModal.recipe?.processed_recipe?.name}
       />
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

@@ -77,14 +77,15 @@ const RecipeInfoCard = ({
           </div>
         </div>
         {showActionButtons && (
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-row gap-2">
             <button
               onClick={onStartOver}
-              className="px-3 py-1 md:px-6 md:py-2 text-sm md:text-base bg-white border border-[#994d51] text-[#994d51] rounded-md hover:bg-[#fcf8f8] transition-colors focus:outline-none focus:ring-2 focus:ring-[#994d51]"
+              className="flex-1 md:flex-none px-3 py-1 md:px-6 md:py-2 text-sm md:text-base bg-white border border-[#994d51] text-[#994d51] rounded-md hover:bg-[#fcf8f8] transition-colors focus:outline-none focus:ring-2 focus:ring-[#994d51] h-8 md:h-10 flex items-center justify-center whitespace-nowrap"
             >
               {t('common.processAnother')}
             </button>
             <SaveRecipeButton
+              className="flex-1 md:flex-none whitespace-nowrap"
               recipe={recipe}
               sourceType={sourceType}
               sourceData={sourceData}

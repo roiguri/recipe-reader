@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import ResultDisplay from '../ResultDisplay';
 
 /**
- * ExpandedRecipeOverlay component for displaying recipe details in modal
+ * ExpandedRecipeOverlay component for displaying recipe details inline
  */
 const ExpandedRecipeOverlay = ({ 
   expandedRecipeData, 
@@ -20,26 +20,16 @@ const ExpandedRecipeOverlay = ({
   if (!expandedRecipeData) return null;
 
   return (
-    <>
-      {/* Overlay for click-outside-to-close */}
-      <motion.div
-        className="fixed inset-0 bg-black bg-opacity-25 z-40"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        onClick={() => handleCardClick(expandedRecipeData.id)}
-      />
-      
-      {/* Expanded card */}
-      <motion.div
-        layoutId={expandedRecipeData.id}
-        className="absolute inset-x-0 top-0 z-50 p-2 md:p-4"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={`expanded-title-${expandedRecipeData.id}`}
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
-      >
+    <motion.div
+      layoutId={expandedRecipeData.id}
+      className="w-full mb-6"
+      role="region"
+      aria-labelledby={`expanded-title-${expandedRecipeData.id}`}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+    >
         <div className="bg-[#fcf8f8] rounded-lg border border-[#e7d0d1] p-3 md:p-6 min-h-0">
           {/* Header with controls */}
           <motion.div
@@ -139,8 +129,7 @@ const ExpandedRecipeOverlay = ({
             />
           </motion.div>
         </div>
-      </motion.div>
-    </>
+    </motion.div>
   );
 };
 
