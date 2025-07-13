@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ImageService } from '../../services/imageService';
 import Card from '../ui/Card';
@@ -15,8 +15,8 @@ const EditableImageSection = forwardRef(({
 }, ref) => {
   const { t } = useTranslation();
   
-  // Current images from recipe
-  const currentImages = recipe?.images || [];
+  // Stabilize current images reference to prevent unnecessary re-renders
+  const currentImages = useMemo(() => recipe?.images || [], [recipe?.images]);
   
   // Component state
   const [currentImageUrls, setCurrentImageUrls] = useState([]);
@@ -178,36 +178,44 @@ const EditableImageSection = forwardRef(({
   }, []);
 
   // Prepare final images array for save
-  const getFinalImagesArray = () => {
+  const getFinalImagesArray = useCallback(() => {
     // Start with current images, remove the ones marked for removal
     const remainingCurrent = currentImages.filter(filename => 
       !removedImages.includes(filename)
     );
     
-    // Add filenames that will be generated for pending files
-    // Note: We don't know the actual filenames until upload, so this is handled in save
     return remainingCurrent;
-  };
+  }, [currentImages, removedImages]);
 
+  const previousImagesRef = useRef(currentImages);
+  
   // Expose save operation data to parent when there are changes
   useEffect(() => {
-    // Only update if there are actual changes (pending uploads or removals)
     if (pendingFiles.length > 0 || removedImages.length > 0) {
+      const finalImages = getFinalImagesArray();
       const saveData = {
         pendingUploads: pendingFiles.map(item => item.file),
         imagesToRemove: removedImages,
-        finalImagesList: getFinalImagesArray()
+        finalImagesList: finalImages
       };
       
-      // Store save data in a way parent can access it
-      if (onUpdate) {
+      const hasImageChanges = JSON.stringify(finalImages) !== JSON.stringify(previousImagesRef.current);
+      
+      if (onUpdate && hasImageChanges) {
         onUpdate({ 
-          images: getFinalImagesArray(),
+          images: finalImages,
+          _imageSaveData: saveData 
+        });
+        previousImagesRef.current = finalImages;
+      } else if (onUpdate && !hasImageChanges) {
+        onUpdate({ 
           _imageSaveData: saveData 
         });
       }
+    } else {
+      previousImagesRef.current = currentImages;
     }
-  }, [pendingFiles.length, removedImages.length]); // Only depend on lengths to avoid infinite loops
+  }, [pendingFiles, removedImages]);
 
   // Cleanup object URLs on unmount
   useEffect(() => {

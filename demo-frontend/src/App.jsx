@@ -8,11 +8,17 @@ import ImageProcessor from './components/ImageProcessor/index';
 import { MyRecipesPage } from './components/my-recipes';
 import { useCardConfigs } from './config/cardConfigs.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ToastProvider, useGlobalToast } from './contexts/ToastContext';
+import { ModalProvider, useModal } from './contexts/ModalContext';
+import ToastContainer from './components/ui/ToastContainer';
+import ModalContainer from './components/ui/ModalContainer';
 
-function App() {
+function AppContent() {
   const [expandedCard, setExpandedCard] = useState(null);
   const [currentView, setCurrentView] = useState('home'); // 'home' or 'my-recipes'
   const cardConfigs = useCardConfigs();
+  const { toasts, removeToast } = useGlobalToast();
+  const { modals, closeModal } = useModal();
 
   // Restore expanded card state on page load (after OAuth redirect)
   useEffect(() => {
@@ -115,7 +121,27 @@ function App() {
           )}
         </ErrorBoundary>
       </div>
+      
+      <ToastContainer 
+        toasts={toasts} 
+        onRemoveToast={removeToast} 
+      />
+      
+      <ModalContainer
+        modals={modals}
+        onCloseModal={closeModal}
+      />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ToastProvider>
+      <ModalProvider>
+        <AppContent />
+      </ModalProvider>
+    </ToastProvider>
   );
 }
 

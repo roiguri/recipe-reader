@@ -182,6 +182,15 @@
           "ie": "Limited print support. Consider using a modern browser like Chrome or Edge for better results.",
           "unknown": "Look for \"Save as PDF\" or \"Print to PDF\" option in your browser's print dialog."
         }
+      },
+      "cookbook": {
+        "button": "Share",
+        "sharing": "Sharing...",
+        "confirm": "Share this recipe with your cookbook?",
+        "success": "Recipe shared successfully!",
+        "error": "Failed to share recipe",
+        "saveFirst": "Please save the recipe before sharing with cookbook",
+        "unsavedChanges": "You have unsaved changes. Save the recipe first to share with cookbook."
       }
     },
     "edit": {

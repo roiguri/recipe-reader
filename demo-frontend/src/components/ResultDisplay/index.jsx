@@ -524,6 +524,8 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
               <ExportOptions 
                 recipe={displayRecipe}
                 recipeId={savedRecipeId}
+                hasUnsavedChanges={hasUnsavedChanges}
+                onSaveRecipe={saveChanges}
               />
             </div>
           )}

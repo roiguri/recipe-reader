@@ -3,6 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { isHebrew, formatTime, generatePdfFilename, detectBrowserPrintCapabilities, getTotalTime } from '../../utils/formatters';
 import { ImageService } from '../../services/imageService';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../utils/supabase';
+import { useGlobalToast } from '../../contexts/ToastContext';
+import { useModal } from '../../contexts/ModalContext';
 import Card from '../ui/Card';
 
 /**
@@ -10,13 +14,23 @@ import Card from '../ui/Card';
  * @param {Object} props - Component props
  * @param {Object} props.recipe - Recipe data object
  * @param {string} props.recipeId - Recipe ID for image loading
+ * @param {boolean} props.hasUnsavedChanges - Whether recipe has unsaved changes
+ * @param {function} props.onSaveRecipe - Callback to save recipe
  */
-const ExportOptions = ({ recipe, recipeId }) => {
+const ExportOptions = ({ recipe, recipeId, hasUnsavedChanges = false, onSaveRecipe }) => {
   const { t } = useTranslation();
   const { direction } = useLanguage();
+  const auth = useAuth();
   const [isExporting, setIsExporting] = useState(false);
+  const [isSharingCookbook, setIsSharingCookbook] = useState(false);
   const [firstImageUrl, setFirstImageUrl] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
+  
+  // Global toast notifications
+  const { showSuccess, showError } = useGlobalToast();
+  
+  // Global modal system
+  const { showConfirmation } = useModal();
   
   const totalTime = getTotalTime(recipe);
   
@@ -529,6 +543,86 @@ const ExportOptions = ({ recipe, recipeId }) => {
     }
   };
 
+  // Check if cookbook transfer is enabled
+  const isCookbookEnabled = import.meta.env.VITE_ENABLE_COOKBOOK_TRANSFER === 'true';
+  const cookbookIconUrl = import.meta.env.VITE_COOKBOOK_ICON_URL;
+  const cookbookName = import.meta.env.VITE_COOKBOOK_NAME || 'Cookbook';
+
+  // Handle cookbook export
+  const handleCookbookExport = async () => {
+    try {
+      // Check if user is authenticated
+      if (!auth?.isAuthenticated || !auth?.user) {
+        showError(t('recipes.authRequired'));
+        return;
+      }
+
+      // Check if recipe needs to be saved first
+      if (hasUnsavedChanges) {
+        const shouldSave = await showConfirmation({
+          title: t('common.save'),
+          message: t('resultDisplay.export.cookbook.unsavedChanges'),
+          confirmText: t('common.save'),
+          cancelText: t('common.cancel'),
+          confirmVariant: 'primary'
+        });
+        if (!shouldSave) {
+          return;
+        }
+        
+        // Try to save the recipe first
+        if (onSaveRecipe) {
+          const saveResult = await onSaveRecipe();
+          if (!saveResult || !saveResult.success) {
+            showError(t('resultDisplay.export.cookbook.saveFirst'));
+            return;
+          }
+        } else {
+          showError(t('resultDisplay.export.cookbook.saveFirst'));
+          return;
+        }
+      }
+
+      // Check if we have a recipe ID
+      if (!recipeId) {
+        showError(t('resultDisplay.export.cookbook.saveFirst'));
+        return;
+      }
+
+      // Show confirmation dialog
+      const confirmed = await showConfirmation({
+        title: cookbookName,
+        message: t('resultDisplay.export.cookbook.confirm'),
+        confirmText: t('resultDisplay.export.cookbook.button'),
+        cancelText: t('common.cancel'),
+        confirmVariant: 'success'
+      });
+      if (!confirmed) {
+        return;
+      }
+
+      setIsSharingCookbook(true);
+
+      // Call the cookbook transfer edge function
+      const { data, error } = await supabase.functions.invoke('cookbook-transfer', {
+        body: {
+          recipeId: recipeId,
+          userId: auth.user.id
+        }
+      });
+
+      if (error) {
+        showError(t('resultDisplay.export.cookbook.error'));
+      } else {
+        showSuccess(t('resultDisplay.export.cookbook.success'));
+      }
+    } catch (err) {
+      showError(t('resultDisplay.export.cookbook.error'));
+    } finally {
+      setIsSharingCookbook(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -544,7 +638,37 @@ const ExportOptions = ({ recipe, recipeId }) => {
       {/* Export Controls */}
       <Card className="p-4">
         <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            {t('resultDisplay.export.pdf.format')}
+          </div>
+
           <div className="flex gap-4 items-center">
+            {/* Cookbook Export Icon */}
+            {isCookbookEnabled && (
+              <button
+                onClick={handleCookbookExport}
+                disabled={isSharingCookbook}
+                className="hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed h-[40px] flex items-center justify-center"
+                title={isSharingCookbook ? t('resultDisplay.export.cookbook.sharing') : t('resultDisplay.export.cookbook.button')}
+              >
+                {isSharingCookbook ? (
+                  <div className="w-8 h-8 border-2 border-[#994d51] border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    {cookbookIconUrl ? (
+                      <img 
+                        src={cookbookIconUrl} 
+                        alt={cookbookName}
+                        className="h-8 w-auto"
+                      />
+                    ) : (
+                      <span className="text-3xl leading-none">📖</span>
+                    )}
+                  </>
+                )}
+              </button>
+            )}
+
             {/* Print Button */}
             <button
               onClick={handlePrint}
@@ -563,10 +687,6 @@ const ExportOptions = ({ recipe, recipeId }) => {
               )}
             </button>
 
-          </div>
-
-          <div className="text-sm text-gray-500">
-            {t('resultDisplay.export.pdf.format')}
           </div>
         </div>
       </Card>
