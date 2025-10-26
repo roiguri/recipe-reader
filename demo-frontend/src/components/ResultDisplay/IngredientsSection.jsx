@@ -9,13 +9,14 @@ import CopyButton from '../ui/CopyButton';
  * IngredientsSection component displays recipe ingredients
  * @param {Object} props - Component props
  * @param {Array} props.ingredients - Array of ingredient objects
+ * @param {Array} [props.ingredient_stages] - Array of ingredient stages (optional)
  * @param {Function} props.onCopyToClipboard - Function to copy text to clipboard
  * @param {string|null} props.copiedSection - Currently copied section ID
  */
-const IngredientsSection = ({ ingredients, onCopyToClipboard, copiedSection }) => {
+const IngredientsSection = ({ ingredients, ingredient_stages, onCopyToClipboard, copiedSection }) => {
   const { t } = useTranslation();
   const { direction } = useLanguage();
-  
+
   return (
     <Card className="flex flex-col">
       <div className="flex items-center justify-between mb-2 md:mb-4 flex-shrink-0">
@@ -23,22 +24,46 @@ const IngredientsSection = ({ ingredients, onCopyToClipboard, copiedSection }) =
           {t('resultDisplay.sections.ingredients')}
         </h3>
         <CopyButton
-          content={formatIngredients(ingredients)}
+          content={formatIngredients(ingredients, ingredient_stages)}
           sectionId="ingredients"
           copiedSection={copiedSection}
           onCopy={onCopyToClipboard}
           title={t('resultDisplay.copy.ingredients')}
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 overflow-y-auto max-h-80">
-        {ingredients.map((ingredient, idx) => (
-          <div key={idx} className="flex items-center p-2 hover:bg-[#fcf8f8] rounded">
-            <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
-            <span className="text-xs md:text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
-              <span className="font-medium">{ingredient.amount} {ingredient.unit}</span> {ingredient.item}
-            </span>
+      <div className="overflow-y-auto max-h-80">
+        {ingredient_stages ? (
+          <div className="space-y-3 md:space-y-4">
+            {ingredient_stages.map((stage, stageIdx) => (
+              <div key={stageIdx}>
+                <h4 className="text-sm md:text-base font-semibold text-[#994d51] mb-1 md:mb-2" style={{ direction: isHebrew(stage.title) ? 'rtl' : 'ltr' }}>
+                  {stage.title}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {(stage.ingredients || []).map((ingredient, idx) => (
+                    <div key={idx} className="flex items-center p-2 hover:bg-[#fcf8f8] rounded">
+                      <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
+                      <span className="text-xs md:text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
+                        <span className="font-medium">{ingredient.amount} {ingredient.unit}</span> {ingredient.item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {ingredients.map((ingredient, idx) => (
+              <div key={idx} className="flex items-center p-2 hover:bg-[#fcf8f8] rounded">
+                <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
+                <span className="text-xs md:text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
+                  <span className="font-medium">{ingredient.amount} {ingredient.unit}</span> {ingredient.item}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );

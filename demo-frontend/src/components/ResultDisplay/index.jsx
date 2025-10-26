@@ -351,8 +351,9 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
               />
               
               {/* Ingredients section */}
-              <IngredientsSection 
+              <IngredientsSection
                 ingredients={displayRecipe.ingredients}
+                ingredient_stages={displayRecipe.ingredient_stages}
                 onCopyToClipboard={copyToClipboard}
                 copiedSection={copiedSection}
               />
@@ -444,8 +445,9 @@ className="w-full max-w-6xl mx-auto p-2 md:p-6"
               />
               
               {/* Editable Ingredients section */}
-              <EditableIngredientsSection 
+              <EditableIngredientsSection
                 ingredients={editedRecipe?.ingredients || []}
+                ingredient_stages={editedRecipe?.ingredient_stages}
                 onUpdate={updateEditedRecipe}
                 globalEditingState={globalEditingState}
                 onStartEdit={startGlobalEdit}

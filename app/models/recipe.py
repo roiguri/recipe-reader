@@ -48,6 +48,12 @@ class Stage(BaseModel):
     instructions: List[str] = Field(..., description="List of instruction texts for this stage")
 
 
+class IngredientStage(BaseModel):
+    """Model for a recipe ingredient stage."""
+    title: str = Field(..., description="Title of the ingredient stage (e.g., 'For the dough', 'For the sauce')")
+    ingredients: List[Ingredient] = Field(..., description="List of ingredients for this stage")
+
+
 class ImageDetails(BaseModel):
     """Model for image details."""
     id: str = Field(..., description="Image identifier")
@@ -80,8 +86,10 @@ class RecipeBase(BaseModel):
     # Either a list of stages or a flat list of instructions
     stages: Optional[List[Stage]] = Field(None, description="List of preparation stages")
     instructions: Optional[List[str]] = Field(None, description="Flat list of instructions (if not using stages)")
-    
-    ingredients: List[Ingredient] = Field([], description="List of ingredients")
+
+    # Either a list of ingredient stages or a flat list of ingredients
+    ingredient_stages: Optional[List[IngredientStage]] = Field(None, description="List of ingredient stages (for recipes with distinct sections)")
+    ingredients: List[Ingredient] = Field([], description="Flat list of ingredients (if not using ingredient_stages)")
     mainIngredient: Optional[str] = Field(None, description="Main ingredient")
     tags: List[str] = Field([], description="Recipe tags")
     
@@ -95,10 +103,25 @@ class RecipeBase(BaseModel):
         """Validate that either stages or instructions are provided, but not both."""
         if self.stages is None and self.instructions is None:
             raise ValueError("Either 'stages' or 'instructions' must be provided")
-        
+
         if self.stages is not None and self.instructions is not None:
             raise ValueError("Cannot provide both 'stages' and 'instructions'")
-            
+
+        return self
+
+    @model_validator(mode='after')
+    def check_ingredients_format(self) -> 'RecipeBase':
+        """Validate that either ingredient_stages or ingredients are provided, but not both."""
+        # At least one must be provided and non-empty
+        has_flat_ingredients = bool(self.ingredients)
+        has_staged_ingredients = self.ingredient_stages is not None and len(self.ingredient_stages) > 0
+
+        if not has_flat_ingredients and not has_staged_ingredients:
+            raise ValueError("Either 'ingredients' or 'ingredient_stages' must be provided")
+
+        if has_flat_ingredients and has_staged_ingredients:
+            raise ValueError("Cannot provide both 'ingredients' and 'ingredient_stages'")
+
         return self
 
 

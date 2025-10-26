@@ -30,10 +30,19 @@ export const formatTime = (minutes, t = null) => {
 
 /**
  * Format ingredients into a text list
- * @param {Array} ingredients - Array of ingredient objects
+ * @param {Array} ingredients - Array of ingredient objects or ingredient stages
+ * @param {Array} [ingredient_stages] - Array of ingredient stage objects (optional)
  * @returns {string} - Formatted ingredients text
  */
-export const formatIngredients = (ingredients) => {
+export const formatIngredients = (ingredients, ingredient_stages) => {
+  if (ingredient_stages) {
+    return ingredient_stages
+      .map((stage) =>
+        `${stage.title}:\n${stage.ingredients.map(ing => `• ${ing.amount} ${ing.unit} ${ing.item}`).join('\n')}`
+      )
+      .join('\n\n');
+  }
+
   return ingredients
     .map(ing => `• ${ing.amount} ${ing.unit} ${ing.item}`)
     .join('\n');
