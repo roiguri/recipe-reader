@@ -223,6 +223,9 @@
       "deleteStage": "Delete stage",
       "moveUp": "Move up",
       "moveDown": "Move down",
+      "switchToFlat": "Switch to flat ingredient list",
+      "switchToStructured": "Switch to sectioned ingredient list",
+      "clickToAddTitle": "Click to add title",
       "placeholders": {
         "recipeName": "Enter recipe name",
         "description": "Enter recipe description",

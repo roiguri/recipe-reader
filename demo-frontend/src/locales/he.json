@@ -223,6 +223,9 @@
       "deleteStage": "מחק שלב",
       "moveUp": "העבר למעלה",
       "moveDown": "העבר למטה",
+      "switchToFlat": "עבור לרשימת רכיבים שטוחה",
+      "switchToStructured": "עבור לרשימת רכיבים מחולקת לקטגוריות",
+      "clickToAddTitle": "לחץ להוספת כותרת",
       "placeholders": {
         "recipeName": "הכנס שם מתכון",
         "description": "הכנס תיאור מתכון",
