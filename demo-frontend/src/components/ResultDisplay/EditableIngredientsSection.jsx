@@ -280,21 +280,6 @@ const EditableIngredientsSection = ({
     onCancelEdit();
   };
 
-  const handleClickOutside = (e) => {
-    if (globalEditingState.component === componentName && globalEditingState.field) {
-      const clickedElement = e.target;
-      const editingContainer = clickedElement.closest('[data-editing-ingredient]') || clickedElement.closest('[data-editing-title]');
-
-      if (!editingContainer) {
-        if (isStructured) {
-          stopEditingStaged();
-        } else {
-          stopEditingFlat();
-        }
-      }
-    }
-  };
-
   const handleInputChange = (e, fieldKey, field) => {
     const value = e.target.value;
     const fullFieldKey = `${fieldKey}-${field}`;
@@ -609,16 +594,58 @@ const EditableIngredientsSection = ({
         <h3 className="text-lg font-bold text-[#1b0e0e]">
           {t('resultDisplay.sections.ingredients')}
         </h3>
-        <button
-          onClick={toggleFormat}
-          className="px-3 py-1 text-sm border border-[#994d51] text-[#994d51] rounded hover:bg-[#fcf8f8] transition-colors"
-          title={isStructured ? t('resultDisplay.edit.switchToFlat') : t('resultDisplay.edit.switchToStructured')}
-        >
-          {isStructured ? '📋' : '📑'}
-        </button>
+
+        <div className="flex items-center gap-2">
+          {/* Format toggle switch */}
+          <div className="flex items-center text-sm">
+            {direction === 'rtl' ? (
+              // RTL layout: Structured - Toggle - Simple
+              <>
+                <span className="ml-2">{t('resultDisplay.edit.structured')}</span>
+                <button
+                  onClick={toggleFormat}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:ring-offset-2 ${
+                    isStructured ? 'bg-[#994d51]' : 'bg-gray-200'
+                  }`}
+                  role="switch"
+                  aria-checked={isStructured}
+                  aria-label={t('resultDisplay.edit.toggleFormat')}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isStructured ? '-translate-x-1' : '-translate-x-6'
+                    }`}
+                  />
+                </button>
+                <span className="mr-2">{t('resultDisplay.edit.simple')}</span>
+              </>
+            ) : (
+              // LTR layout: Simple - Toggle - Structured
+              <>
+                <span className="mr-2">{t('resultDisplay.edit.simple')}</span>
+                <button
+                  onClick={toggleFormat}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#994d51] focus:ring-offset-2 ${
+                    isStructured ? 'bg-[#994d51]' : 'bg-gray-200'
+                  }`}
+                  role="switch"
+                  aria-checked={isStructured}
+                  aria-label={t('resultDisplay.edit.toggleFormat')}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isStructured ? 'translate-x-6' : 'translate-x-0.5'
+                    }`}
+                  />
+                </button>
+                <span className="ml-2">{t('resultDisplay.edit.structured')}</span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="overflow-y-auto overflow-x-auto max-h-80" onClick={handleClickOutside}>
+      <div className="overflow-y-auto overflow-x-auto max-h-80">
         {isStructured ? (
           // Structured view with stages
           <div className="space-y-4">

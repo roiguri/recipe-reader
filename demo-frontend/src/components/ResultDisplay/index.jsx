@@ -220,38 +220,69 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
   const saveCurrentEdit = useCallback(() => {
     const { component, field, tempValues } = globalEditingState;
     if (!component || !field) return;
-    
+
     if (component === 'ingredients') {
-      const index = parseInt(field);
-      const amount = tempValues[`${index}-amount`]?.trim() || '';
-      const unit = tempValues[`${index}-unit`]?.trim() || '';
-      const item = tempValues[`${index}-item`]?.trim() || '';
-      
       // Helper function to remove empty ingredients
       const removeEmptyIngredientIfNeeded = (updatedIngredients, targetIndex) => {
         const ingredient = updatedIngredients[targetIndex];
         if (!ingredient) return updatedIngredients;
-        
-        const isEmpty = !ingredient.item?.trim() && 
-                       !ingredient.amount?.trim() && 
+
+        const isEmpty = !ingredient.item?.trim() &&
+                       !ingredient.amount?.trim() &&
                        !ingredient.unit?.trim();
-        
+
         if (isEmpty) {
           return updatedIngredients.filter((_, i) => i !== targetIndex);
         }
-        
+
         return updatedIngredients;
       };
-      
-      // Update ingredient and remove if empty
-      const currentIngredients = editedRecipe?.ingredients || [];
-      const newIngredients = [...currentIngredients];
-      // Always update the ingredient, even if it might be empty
-      newIngredients[index] = { ...newIngredients[index], amount, unit, item };
-      const finalIngredients = removeEmptyIngredientIfNeeded(newIngredients, index);
-      updateEditedRecipe({ ingredients: finalIngredients });
+
+      // Check if editing flat or staged ingredients
+      if (field.startsWith('ingredient-')) {
+        // Flat ingredient editing
+        const index = parseInt(field.replace('ingredient-', ''));
+        const amount = tempValues[`${field}-amount`]?.trim() || '';
+        const unit = tempValues[`${field}-unit`]?.trim() || '';
+        const item = tempValues[`${field}-item`]?.trim() || '';
+
+        // Update ingredient and remove if empty
+        const currentIngredients = editedRecipe?.ingredients || [];
+        const newIngredients = [...currentIngredients];
+        newIngredients[index] = { ...newIngredients[index], amount, unit, item };
+        const finalIngredients = removeEmptyIngredientIfNeeded(newIngredients, index);
+        updateEditedRecipe({ ingredients: finalIngredients });
+      } else if (field.startsWith('stage-') && field.includes('-ingredient-')) {
+        // Staged ingredient editing
+        const parts = field.split('-');
+        const stageIndex = parseInt(parts[1]);
+        const ingredientIndex = parseInt(parts[3]);
+
+        const amount = tempValues[`${field}-amount`]?.trim() || '';
+        const unit = tempValues[`${field}-unit`]?.trim() || '';
+        const item = tempValues[`${field}-item`]?.trim() || '';
+
+        // Update ingredient_stages
+        const newStages = [...(editedRecipe?.ingredient_stages || [])];
+        const newIngredients = [...(newStages[stageIndex]?.ingredients || [])];
+        newIngredients[ingredientIndex] = { ...newIngredients[ingredientIndex], amount, unit, item };
+
+        // Remove empty ingredients
+        const finalIngredients = removeEmptyIngredientIfNeeded(newIngredients, ingredientIndex);
+        newStages[stageIndex] = { ...newStages[stageIndex], ingredients: finalIngredients };
+
+        updateEditedRecipe({ ingredient_stages: newStages });
+      } else if (field.startsWith('stage-') && field.includes('-title')) {
+        // Stage title editing
+        const stageIndex = parseInt(field.split('-')[1]);
+        const title = tempValues[field]?.trim() || '';
+
+        const newStages = [...(editedRecipe?.ingredient_stages || [])];
+        newStages[stageIndex] = { ...newStages[stageIndex], title };
+        updateEditedRecipe({ ingredient_stages: newStages });
+      }
     }
-    
+
     // Clear the editing state
     setGlobalEditingState({ component: null, field: null, tempValues: {} });
   }, [globalEditingState, editedRecipe, updateEditedRecipe, setGlobalEditingState]);
@@ -270,20 +301,20 @@ const ResultDisplay = ({ result, onStartOver, sourceType = 'text', sourceData = 
         return;
       }
       
-      // Special handling for ingredients - allow navigation within same ingredient
+      // Special handling for ingredients - allow navigation within same ingredient or title
       if (globalEditingState.component === 'ingredients') {
-        const editingIndex = parseInt(globalEditingState.field);
-        
-        // Check if the click is within the currently editing ingredient
+        const fieldKey = globalEditingState.field;
+
+        // Check if click is within currently editing ingredient (flat or staged)
         const clickedIngredientElement = e.target.closest('[data-editing-ingredient]');
-        const clickedIngredientIndex = clickedIngredientElement ? 
-          parseInt(clickedIngredientElement.dataset.editingIngredient) : null;
-        
-        // If clicking within the same ingredient, allow it (don't save)
-        if (clickedIngredientIndex === editingIndex) {
+        const clickedTitleElement = e.target.closest('[data-editing-title]');
+
+        // If clicking within the same editing container, allow it (don't save)
+        if (clickedIngredientElement?.dataset.editingIngredient === fieldKey ||
+            clickedTitleElement?.dataset.editingTitle === fieldKey) {
           return;
         }
-        
+
         saveCurrentEdit();
       } else {
         saveCurrentEdit();
