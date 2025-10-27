@@ -18,6 +18,9 @@ from google.genai import types
 # Import our existing recipe models (no duplicates!)
 from app.models import Recipe, RecipeResponse, RecipeBase, RecipeCategory
 
+# Import centralized AI configuration
+from app.config import GEMINI_MODEL
+
 class GeminiService:
     """Service for recipe extraction using Google's new Gen AI SDK with structured output."""
     
@@ -118,7 +121,7 @@ class GeminiService:
                 response = await asyncio.get_event_loop().run_in_executor(
                     None,
                     lambda: self.client.models.generate_content(
-                        model="gemini-1.5-flash",
+                        model=GEMINI_MODEL,
                         contents=prompt,
                         config=config
                     )

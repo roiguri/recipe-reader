@@ -22,6 +22,9 @@ from google.genai import types
 from app.models import Recipe, RecipeResponse, RecipeBase
 from app.services.text_processor import TextProcessor
 
+# Import centralized AI configuration
+from app.config import GEMINI_MODEL
+
 # Define compatible resampling filter for Pillow versions
 try:
     # Pillow >= 9.1.0
@@ -171,7 +174,7 @@ class ImageProcessingService:
                 response = await asyncio.get_event_loop().run_in_executor(
                     None,
                     lambda: self.client.models.generate_content(
-                        model="gemini-1.5-pro",
+                        model=GEMINI_MODEL,
                         contents=content,
                         config=config
                     )
@@ -336,7 +339,7 @@ class ImageProcessingService:
                 response = await asyncio.get_event_loop().run_in_executor(
                     None,
                     lambda: self.client.models.generate_content(
-                        model="gemini-1.5-pro",
+                        model=GEMINI_MODEL,
                         contents=content,
                         config=config
                     )

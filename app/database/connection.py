@@ -70,6 +70,12 @@ class DatabaseManager:
         if self._pool:
             try:
                 await self._pool.close()
+            except RuntimeError as e:
+                # Ignore "Event loop is closed" errors during serverless cleanup
+                if "Event loop is closed" in str(e):
+                    logger.debug(f"Skipping pool close due to closed event loop: {e}")
+                else:
+                    logger.warning(f"Error closing invalid pool: {e}")
             except Exception as e:
                 logger.warning(f"Error closing invalid pool: {e}")
             finally:
