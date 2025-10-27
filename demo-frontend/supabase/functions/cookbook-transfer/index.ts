@@ -249,8 +249,20 @@ function transformRecipeData(recipe: any, imageUrls: string[], imageFilenames: s
         ? { stages: recipeData.stages } 
         : {}),
     
+    // Handle ingredient_stages (structured sections) or ingredients (flat list)
+    ...(recipeData.ingredient_stages && Array.isArray(recipeData.ingredient_stages) && recipeData.ingredient_stages.length > 0
+        ? {
+            // Transform ingredient_stages to Cookbook's ingredientSections format
+            ingredientSections: recipeData.ingredient_stages.map((stage: any) => ({
+              title: stage.title,
+              items: stage.ingredients || []  // Map 'ingredients' field to 'items'
+            }))
+          }
+        : recipeData.ingredients && Array.isArray(recipeData.ingredients) && recipeData.ingredients.length > 0
+        ? { ingredients: recipeData.ingredients }  // Pass flat ingredients as-is
+        : {}),  // No ingredients at all
+
     // Additional fields
-    ingredients: recipeData.ingredients || [],
     description: recipeData.description || '',
     servings: recipeData.servings || 1,
     difficulty: mappedDifficulty,
