@@ -77,7 +77,7 @@ const EditableIngredientsSection = ({
       const newStages = ingredients?.length > 0 ?
         [{ title: t('resultDisplay.edit.defaultStageTitle'), ingredients: [...ingredients] }] :
         [{ title: '', ingredients: [] }];
-      onUpdate({ ingredient_stages: newStages, ingredients: [] });
+      onUpdate({ ingredient_stages: newStages, ingredients: null });
     }
     setIsStructured(!isStructured);
     onCancelEdit(); // Clear global editing state

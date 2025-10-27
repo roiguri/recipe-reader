@@ -89,7 +89,7 @@ class RecipeBase(BaseModel):
 
     # Either a list of ingredient stages or a flat list of ingredients
     ingredient_stages: Optional[List[IngredientStage]] = Field(None, description="List of ingredient stages (for recipes with distinct sections)")
-    ingredients: List[Ingredient] = Field([], description="Flat list of ingredients (if not using ingredient_stages)")
+    ingredients: Optional[List[Ingredient]] = Field(None, description="Flat list of ingredients (if not using ingredient_stages)")
     mainIngredient: Optional[str] = Field(None, description="Main ingredient")
     tags: List[str] = Field([], description="Recipe tags")
     
@@ -113,7 +113,7 @@ class RecipeBase(BaseModel):
     def check_ingredients_format(self) -> 'RecipeBase':
         """Validate that either ingredient_stages or ingredients are provided, but not both."""
         # At least one must be provided and non-empty
-        has_flat_ingredients = bool(self.ingredients)
+        has_flat_ingredients = self.ingredients is not None and len(self.ingredients) > 0
         has_staged_ingredients = self.ingredient_stages is not None and len(self.ingredient_stages) > 0
 
         if not has_flat_ingredients and not has_staged_ingredients:

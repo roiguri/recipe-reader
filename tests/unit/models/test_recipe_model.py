@@ -487,6 +487,7 @@ def test_recipe_with_flat_ingredients():
         instructions=["Cook pasta", "Add sauce"]
     )
     assert recipe.name == "Simple Pasta"
+    assert recipe.ingredients is not None
     assert len(recipe.ingredients) == 2
     assert recipe.ingredient_stages is None
 
@@ -508,7 +509,17 @@ def test_ingredient_stages_validation():
         )
     assert "Cannot provide both 'ingredients' and 'ingredient_stages'" in str(exc_info.value)
 
-    # Should fail: neither ingredients nor ingredient_stages provided
+    # Should fail: neither ingredients nor ingredient_stages provided (both None)
+    with pytest.raises(ValidationError) as exc_info:
+        RecipeBase(
+            name="Invalid Recipe",
+            ingredients=None,
+            ingredient_stages=None,
+            instructions=["Step 1"]
+        )
+    assert "Either 'ingredients' or 'ingredient_stages' must be provided" in str(exc_info.value)
+
+    # Should fail: empty ingredients list
     with pytest.raises(ValidationError) as exc_info:
         RecipeBase(
             name="Invalid Recipe",
@@ -577,10 +588,11 @@ def test_ingredient_stages_serialization():
     assert "ingredient_stages" in recipe_dict
     assert len(recipe_dict["ingredient_stages"]) == 1
     assert recipe_dict["ingredient_stages"][0]["title"] == "Main ingredients"
-    assert recipe_dict["ingredients"] == []
+    assert recipe_dict["ingredients"] is None
 
     # Test JSON serialization/deserialization
     recipe_json = recipe.model_dump_json()
     reconstructed_recipe = RecipeBase.model_validate_json(recipe_json)
     assert len(reconstructed_recipe.ingredient_stages) == 1
     assert reconstructed_recipe.ingredient_stages[0].title == "Main ingredients"
+    assert reconstructed_recipe.ingredients is None
