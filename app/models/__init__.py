@@ -7,6 +7,7 @@ from .recipe import (
     RecipeInDB,
     Ingredient,
     Stage,
+    IngredientStage,
     ImageDetails,
     TextProcessRequest,
     RecipeResponse,
@@ -16,11 +17,12 @@ from .recipe import (
 
 __all__ = [
     "Recipe",
-    "RecipeBase", 
+    "RecipeBase",
     "RecipeCreate",
     "RecipeInDB",
     "Ingredient",
     "Stage",
+    "IngredientStage",
     "ImageDetails",
     "TextProcessRequest",
     "RecipeResponse",

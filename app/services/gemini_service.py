@@ -209,11 +209,20 @@ EXTRACTION GUIDELINES:
 
 INGREDIENT EXTRACTION RULES:
 - "1 ק\"ג פרגיות" → item: "פרגיות", amount: "1", unit: "ק\"ג"
-- "2 כפות שמן" → item: "שמן", amount: "2", unit: "כפות" 
+- "2 כפות שמן" → item: "שמן", amount: "2", unit: "כפות"
 - "3 ביצים" → item: "ביצים", amount: "3", unit: "יחידה"
 - "מלח לפי הטעם" → item: "מלח", amount: "לפי הטעם", unit: "ללא"
 - "קמח (כ-2 כוסות)" → item: "קמח", amount: "כ-2", unit: "כוסות"
 CRITICAL: Always separate the NUMBER from the UNIT into different fields!
+
+INGREDIENT STRUCTURE DECISION:
+- Use "ingredients" (set "ingredient_stages" to null) for simple recipes with all ingredients listed together
+- Use "ingredient_stages" (set "ingredients" to empty list []) when ingredients are clearly organized into sections
+- Examples that should use ingredient_stages:
+  * "For the dough: flour, water, yeast... For the filling: cheese, spinach..."
+  * "Cake ingredients: ... Frosting ingredients: ..."
+  * "לבצק: קמח, מים... למילוי: גבינה, תרד..."
+- Never use both ingredients and ingredient_stages with values (one must be null/empty)
 
 WHAT TO DO WHEN DATA IS MISSING:
 - Missing prep time → prepTime: null
@@ -311,8 +320,10 @@ Output: prepTime: null, cookTime: 20, waitTime: 10 (WRONG - include cooling in c
         format_type = options.get("format_type")
         if format_type == "structured":
             base_prompt += "PREFERENCE: Use 'stages' to organize instructions into logical cooking phases.\n"
+            base_prompt += "PREFERENCE: Use 'ingredient_stages' to organize ingredients into logical sections when applicable.\n"
         elif format_type == "simple":
             base_prompt += "PREFERENCE: Use flat 'instructions' array for simple step-by-step directions.\n"
+            base_prompt += "PREFERENCE: Use flat 'ingredients' array for simple ingredient lists.\n"
 
         base_prompt += f"""
 RECIPE TEXT:
@@ -453,6 +464,7 @@ Extract the recipe information as a valid JSON object that matches the required 
             "name": name,
             "description": "Recipe extraction failed. Please try with cleaner text.",
             "ingredients": [],
+            "ingredient_stages": None,
             "instructions": ["Recipe processing failed. Please try again with simpler formatting."],
             "stages": None,
             "prepTime": None,

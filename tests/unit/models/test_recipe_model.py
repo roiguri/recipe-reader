@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 from app.models.recipe import (
-    Ingredient, Stage, ImageDetails, RecipeBase, 
+    Ingredient, Stage, IngredientStage, ImageDetails, RecipeBase,
     RecipeCreate, Recipe, TextProcessRequest, RecipeCategory, RecipeDifficulty
 )
 from datetime import datetime
@@ -419,14 +419,180 @@ def test_total_time_serialization():
         instructions=["Step 1"],
         ingredients=[Ingredient(item="Flour", amount="1", unit="cup")]
     )
-    
+
     # Test model to dict serialization
     recipe_dict = recipe.model_dump()
     assert "totalTime" in recipe_dict
     assert recipe_dict["totalTime"] == 45
     assert "waitTime" not in recipe_dict
-    
+
     # Test JSON serialization
     recipe_json = recipe.model_dump_json()
     assert '"totalTime":45' in recipe_json
     assert "waitTime" not in recipe_json
+
+
+def test_ingredient_stage_model():
+    """Test the IngredientStage model creation and validation."""
+    ingredient_stage = IngredientStage(
+        title="For the dough",
+        ingredients=[
+            Ingredient(item="Flour", amount="2", unit="cups"),
+            Ingredient(item="Water", amount="1", unit="cup")
+        ]
+    )
+    assert ingredient_stage.title == "For the dough"
+    assert len(ingredient_stage.ingredients) == 2
+    assert ingredient_stage.ingredients[0].item == "Flour"
+
+
+def test_recipe_with_ingredient_stages():
+    """Test creating a recipe with ingredient stages."""
+    recipe = RecipeBase(
+        name="Layered Cake",
+        ingredient_stages=[
+            IngredientStage(
+                title="For the cake",
+                ingredients=[
+                    Ingredient(item="Flour", amount="2", unit="cups"),
+                    Ingredient(item="Sugar", amount="1", unit="cup")
+                ]
+            ),
+            IngredientStage(
+                title="For the frosting",
+                ingredients=[
+                    Ingredient(item="Butter", amount="1/2", unit="cup"),
+                    Ingredient(item="Powdered sugar", amount="2", unit="cups")
+                ]
+            )
+        ],
+        instructions=["Make the cake", "Make the frosting", "Assemble"]
+    )
+    assert recipe.name == "Layered Cake"
+    assert len(recipe.ingredient_stages) == 2
+    assert recipe.ingredient_stages[0].title == "For the cake"
+    assert len(recipe.ingredient_stages[0].ingredients) == 2
+    assert recipe.ingredient_stages[1].title == "For the frosting"
+    assert len(recipe.ingredient_stages[1].ingredients) == 2
+
+
+def test_recipe_with_flat_ingredients():
+    """Test creating a recipe with flat ingredients (existing behavior)."""
+    recipe = RecipeBase(
+        name="Simple Pasta",
+        ingredients=[
+            Ingredient(item="Pasta", amount="200", unit="g"),
+            Ingredient(item="Sauce", amount="1", unit="cup")
+        ],
+        instructions=["Cook pasta", "Add sauce"]
+    )
+    assert recipe.name == "Simple Pasta"
+    assert recipe.ingredients is not None
+    assert len(recipe.ingredients) == 2
+    assert recipe.ingredient_stages is None
+
+
+def test_ingredient_stages_validation():
+    """Test that ingredient stage validation works correctly."""
+    # Should fail: both ingredients and ingredient_stages provided
+    with pytest.raises(ValidationError) as exc_info:
+        RecipeBase(
+            name="Invalid Recipe",
+            ingredients=[Ingredient(item="Flour", amount="1", unit="cup")],
+            ingredient_stages=[
+                IngredientStage(
+                    title="Stage 1",
+                    ingredients=[Ingredient(item="Sugar", amount="1", unit="cup")]
+                )
+            ],
+            instructions=["Step 1"]
+        )
+    assert "Cannot provide both 'ingredients' and 'ingredient_stages'" in str(exc_info.value)
+
+    # Should fail: neither ingredients nor ingredient_stages provided (both None)
+    with pytest.raises(ValidationError) as exc_info:
+        RecipeBase(
+            name="Invalid Recipe",
+            ingredients=None,
+            ingredient_stages=None,
+            instructions=["Step 1"]
+        )
+    assert "Either 'ingredients' or 'ingredient_stages' must be provided" in str(exc_info.value)
+
+    # Should fail: empty ingredients list
+    with pytest.raises(ValidationError) as exc_info:
+        RecipeBase(
+            name="Invalid Recipe",
+            ingredients=[],
+            ingredient_stages=None,
+            instructions=["Step 1"]
+        )
+    assert "Either 'ingredients' or 'ingredient_stages' must be provided" in str(exc_info.value)
+
+
+def test_recipe_with_both_stages_and_ingredient_stages():
+    """Test creating a recipe with both instruction stages and ingredient stages."""
+    recipe = RecipeBase(
+        name="Complex Recipe",
+        ingredient_stages=[
+            IngredientStage(
+                title="Dough ingredients",
+                ingredients=[
+                    Ingredient(item="Flour", amount="2", unit="cups"),
+                    Ingredient(item="Water", amount="1", unit="cup")
+                ]
+            ),
+            IngredientStage(
+                title="Filling ingredients",
+                ingredients=[
+                    Ingredient(item="Cheese", amount="1", unit="cup"),
+                    Ingredient(item="Spinach", amount="2", unit="cups")
+                ]
+            )
+        ],
+        stages=[
+            Stage(
+                title="Prepare dough",
+                instructions=["Mix flour and water", "Knead until smooth"]
+            ),
+            Stage(
+                title="Prepare filling",
+                instructions=["Mix cheese and spinach", "Season to taste"]
+            )
+        ]
+    )
+    assert recipe.name == "Complex Recipe"
+    assert len(recipe.ingredient_stages) == 2
+    assert len(recipe.stages) == 2
+    assert recipe.ingredient_stages[0].title == "Dough ingredients"
+    assert recipe.stages[0].title == "Prepare dough"
+
+
+def test_ingredient_stages_serialization():
+    """Test Pydantic serialization with ingredient stages."""
+    recipe = RecipeBase(
+        name="Test Recipe",
+        ingredient_stages=[
+            IngredientStage(
+                title="Main ingredients",
+                ingredients=[
+                    Ingredient(item="Flour", amount="2", unit="cups")
+                ]
+            )
+        ],
+        instructions=["Step 1"]
+    )
+
+    # Test model to dict serialization
+    recipe_dict = recipe.model_dump()
+    assert "ingredient_stages" in recipe_dict
+    assert len(recipe_dict["ingredient_stages"]) == 1
+    assert recipe_dict["ingredient_stages"][0]["title"] == "Main ingredients"
+    assert recipe_dict["ingredients"] is None
+
+    # Test JSON serialization/deserialization
+    recipe_json = recipe.model_dump_json()
+    reconstructed_recipe = RecipeBase.model_validate_json(recipe_json)
+    assert len(reconstructed_recipe.ingredient_stages) == 1
+    assert reconstructed_recipe.ingredient_stages[0].title == "Main ingredients"
+    assert reconstructed_recipe.ingredients is None
