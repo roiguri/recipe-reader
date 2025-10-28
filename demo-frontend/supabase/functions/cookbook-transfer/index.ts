@@ -266,7 +266,14 @@ function transformRecipeData(recipe: any, imageUrls: string[], imageFilenames: s
     description: recipeData.description || '',
     servings: recipeData.servings || 1,
     difficulty: mappedDifficulty,
-    
+
+    // Comments: Transform from string to array (cookbook expects array)
+    comments: recipeData.comments
+      ? [recipeData.comments]  // Wrap string in array
+      : [],                     // Empty array if no comments
+
+    tags: recipeData.tags || [],
+
     // Source metadata
     sourceApp: 'recipe-reader-demo',
     sourceRecipeId: recipe.id,
