@@ -169,16 +169,30 @@ class UrlProcessor:
 
                 else:
                     # Log detailed information for unusual status codes
-                    error_msg = f"HTTP {response.status_code}"
                     self.logger.warning(f"Received unusual status code: {response.status_code}")
                     self.logger.warning(f"Response headers: {dict(response.headers)}")
 
-                    # Try to log response body for debugging (limited to first 500 chars)
+                    # Try to log response body for debugging (limited to first 1000 chars)
+                    error_body = ""
                     try:
-                        response_body = response.text[:500]
-                        self.logger.warning(f"Response body preview: {response_body}")
+                        error_body = response.text[:1000]
+                        self.logger.warning(f"Response body preview: {error_body}")
+
+                        # If it's JSON, try to parse and log it nicely
+                        content_type = response.headers.get('content-type', '').lower()
+                        if 'application/json' in content_type:
+                            try:
+                                error_json = json.loads(response.text)
+                                self.logger.error(f"JSON error response: {json.dumps(error_json, indent=2)}")
+                            except:
+                                pass
                     except Exception as body_error:
                         self.logger.warning(f"Could not read response body: {body_error}")
+
+                    # Create detailed error message
+                    error_msg = f"HTTP {response.status_code}"
+                    if error_body:
+                        error_msg += f" - {error_body[:200]}"  # Include first 200 chars in error
 
                     raise httpx.HTTPStatusError(
                         error_msg,
