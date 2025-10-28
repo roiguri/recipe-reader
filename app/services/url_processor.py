@@ -37,11 +37,13 @@ class UrlProcessor:
         self.max_retries = 3
         self.retry_delay = 1.0
         
-        # User agents for better success rates
+        # User agents for better success rates - using recent browser versions
         self.user_agents = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         ]
         
         # Content size limits
@@ -111,11 +113,16 @@ class UrlProcessor:
         
         headers = {
             'User-Agent': options.get('user_agent', self.user_agents[0]),
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5,he;q=0.3',
-            'Accept-Encoding': 'gzip, deflate',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0',
         }
         
         timeout = options.get('timeout', self.timeout)
@@ -137,14 +144,14 @@ class UrlProcessor:
                     allowed_types = ['text/html', 'application/xhtml+xml', 'text/plain']
                     if not any(ct in content_type for ct in allowed_types):
                         raise ValueError(f"Unsupported content type for recipe extraction: {content_type}")
-                    
+
                     content = response.text
-                    
+
                     # Check content size
                     if len(content) > self.max_content_size:
                         self.logger.warning(f"Content too large ({len(content)} bytes), truncating")
                         content = content[:self.max_content_size]
-                    
+
                     return {
                         'content': content,
                         'url': str(response.url),  # Final URL after redirects
@@ -153,17 +160,29 @@ class UrlProcessor:
                         'encoding': response.encoding,
                         'success': True
                     }
-                
+
                 elif response.status_code == 429:  # Rate limited
                     wait_time = self.retry_delay * (2 ** attempt)
                     self.logger.warning(f"Rate limited, waiting {wait_time}s before retry")
                     await asyncio.sleep(wait_time)
                     continue
-                    
+
                 else:
+                    # Log detailed information for unusual status codes
+                    error_msg = f"HTTP {response.status_code}"
+                    self.logger.warning(f"Received unusual status code: {response.status_code}")
+                    self.logger.warning(f"Response headers: {dict(response.headers)}")
+
+                    # Try to log response body for debugging (limited to first 500 chars)
+                    try:
+                        response_body = response.text[:500]
+                        self.logger.warning(f"Response body preview: {response_body}")
+                    except Exception as body_error:
+                        self.logger.warning(f"Could not read response body: {body_error}")
+
                     raise httpx.HTTPStatusError(
-                        f"HTTP {response.status_code}", 
-                        request=response.request, 
+                        error_msg,
+                        request=response.request,
                         response=response
                     )
                         
