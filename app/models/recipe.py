@@ -112,14 +112,10 @@ class RecipeBase(BaseModel):
     @model_validator(mode='after')
     def check_ingredients_format(self) -> 'RecipeBase':
         """Validate that either ingredient_stages or ingredients are provided, but not both."""
-        # At least one must be provided and non-empty
-        has_flat_ingredients = self.ingredients is not None and len(self.ingredients) > 0
-        has_staged_ingredients = self.ingredient_stages is not None and len(self.ingredient_stages) > 0
-
-        if not has_flat_ingredients and not has_staged_ingredients:
+        if self.ingredients is None and self.ingredient_stages is None:
             raise ValueError("Either 'ingredients' or 'ingredient_stages' must be provided")
 
-        if has_flat_ingredients and has_staged_ingredients:
+        if self.ingredients is not None and self.ingredient_stages is not None:
             raise ValueError("Cannot provide both 'ingredients' and 'ingredient_stages'")
 
         return self

@@ -110,11 +110,12 @@ class GeminiService:
                 # Configure generation parameters
                 config = types.GenerateContentConfig(
                     temperature=options.get("temperature", 0.1 + (attempt * 0.05)),
-                    max_output_tokens=options.get("max_tokens", 2048),
+                    max_output_tokens=options.get("max_tokens", 8192),
                     top_p=options.get("top_p", 0.8),
                     top_k=options.get("top_k", 40),
                     response_mime_type="application/json",
-                    response_schema=RecipeBase  # Use your existing model directly!
+                    response_schema=RecipeBase,
+                    thinking_config=types.ThinkingConfig(thinking_budget=0)  # Disable thinking to preserve output tokens
                 )
                 
                 # Make the API call using the new SDK
@@ -126,16 +127,22 @@ class GeminiService:
                         config=config
                     )
                 )
-                
+
+                # Debug: Log response structure if text is None
+                if not response.text:
+                    self.logger.warning(f"Response text is None. Response object: {response}")
+                    self.logger.warning(f"Response dump: {response.model_dump()}")
+                    raise ValueError("API returned empty response text")
+
                 # Parse the guaranteed-valid JSON response
                 result_dict = json.loads(response.text)
-                
+
                 # Convert to your RecipeBase Pydantic model for validation
                 extracted_recipe = RecipeBase(**result_dict)
-                
+
                 # Convert to dict for further processing
                 result = extracted_recipe.model_dump()
-                
+
                 # Calculate confidence score
                 confidence_score = self._calculate_confidence(result)
                 
@@ -412,22 +419,35 @@ Extract the recipe information as a valid JSON object that matches the required 
     def _calculate_confidence(self, result: Dict[str, Any]) -> float:
         """Calculate a confidence score for the extraction result."""
         confidence = 0.8  # Higher base confidence for structured output
-        
+
         # Factors that increase confidence
         if result.get("name") and result["name"] != "Untitled Recipe":
             confidence += 0.05
-            
+
         # More complete recipes have higher confidence
-        ingredients_count = len(result.get("ingredients", []))
+        # Handle both flat ingredients list and ingredient_stages
+        ingredients = result.get("ingredients")
+        ingredient_stages = result.get("ingredient_stages")
+
+        # Calculate total ingredient count from either format
+        ingredients_count = 0
+        if ingredients:
+            ingredients_count = len(ingredients)
+        elif ingredient_stages:
+            ingredients_count = sum(len(stage.get("ingredients", [])) for stage in ingredient_stages)
+
         if ingredients_count >= 3:
             confidence += 0.05
         if ingredients_count >= 8:
             confidence += 0.05
-            
+
         # Having instructions or stages increases confidence
-        if result.get("instructions") and len(result["instructions"]) >= 3:
+        instructions = result.get("instructions")
+        if instructions and len(instructions) >= 3:
             confidence += 0.05
-        if result.get("stages") and len(result["stages"]) >= 2:
+
+        stages = result.get("stages")
+        if stages and len(stages) >= 2:
             confidence += 0.1  # Stages indicate more complex, complete recipes
             
         # Having time information increases confidence
@@ -466,7 +486,13 @@ Extract the recipe information as a valid JSON object that matches the required 
         return {
             "name": name,
             "description": "Recipe extraction failed. Please try with cleaner text.",
-            "ingredients": [],
+            "ingredients": [
+                {
+                    "item": "Ingredient extraction failed",
+                    "amount": "N/A",
+                    "unit": "N/A"
+                }
+            ],
             "ingredient_stages": None,
             "instructions": ["Recipe processing failed. Please try again with simpler formatting."],
             "stages": None,

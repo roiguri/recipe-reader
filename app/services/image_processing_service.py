@@ -152,11 +152,11 @@ class ImageProcessingService:
                 # Configure generation parameters
                 config = types.GenerateContentConfig(
                     temperature=options.get("temperature", 0.1 + (attempt * 0.05)),
-                    max_output_tokens=options.get("max_tokens", 2048),
+                    max_output_tokens=options.get("max_tokens", 8192),  # Increased from 2048 to handle complex recipes
                     top_p=options.get("top_p", 0.8),
                     top_k=options.get("top_k", 40),
                     response_mime_type="application/json",
-                    response_schema=RecipeBase
+                    response_schema=RecipeBase,
                 )
                 
                 # Prepare content with image and text
