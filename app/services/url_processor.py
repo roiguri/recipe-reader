@@ -133,7 +133,12 @@ class UrlProcessor:
         for attempt in range(max_retries):
             try:
                 self.logger.info(f"Fetching URL (attempt {attempt + 1}/{max_retries}): {url}")
-                
+
+                # On retries, try different User-Agent strings to bypass bot detection
+                if attempt > 0 and attempt < len(self.user_agents):
+                    headers['User-Agent'] = self.user_agents[attempt]
+                    self.logger.info(f"Retry with different User-Agent: {headers['User-Agent'][:50]}...")
+
                 # Use persistent HTTP client with connection pooling
                 response = await self.http_client.get(url, headers=headers)
                 
@@ -167,6 +172,15 @@ class UrlProcessor:
                     await asyncio.sleep(wait_time)
                     continue
 
+                elif response.status_code == 403:  # Forbidden - likely bot protection
+                    self.logger.error(f"Access forbidden (403) - website may have bot protection")
+                    self.logger.error(f"Response body: {response.text[:500]}")
+
+                    raise ValueError(
+                        f"Access denied by website. The site may have anti-bot protection or requires authentication. "
+                        f"Status: {response.status_code}, Body: {response.text[:200]}"
+                    )
+
                 else:
                     # Log detailed information for unusual status codes
                     self.logger.warning(f"Received unusual status code: {response.status_code}")
@@ -189,16 +203,27 @@ class UrlProcessor:
                     except Exception as body_error:
                         self.logger.warning(f"Could not read response body: {body_error}")
 
-                    # Create detailed error message
-                    error_msg = f"HTTP {response.status_code}"
-                    if error_body:
-                        error_msg += f" - {error_body[:200]}"  # Include first 200 chars in error
+                    # Create user-friendly error message based on status code
+                    if response.status_code in range(400, 500):
+                        # Client errors - likely bot protection, authentication, or invalid URL
+                        error_msg = (
+                            f"Website blocked the request (HTTP {response.status_code}). "
+                            f"This may be due to bot protection, authentication requirements, or geo-restrictions. "
+                        )
+                        if error_body:
+                            error_msg += f"Response: {error_body[:200]}"
+                        raise ValueError(error_msg)
+                    else:
+                        # Other unusual status codes
+                        error_msg = f"Unexpected HTTP status {response.status_code}"
+                        if error_body:
+                            error_msg += f" - {error_body[:200]}"
 
-                    raise httpx.HTTPStatusError(
-                        error_msg,
-                        request=response.request,
-                        response=response
-                    )
+                        raise httpx.HTTPStatusError(
+                            error_msg,
+                            request=response.request,
+                            response=response
+                        )
                         
             except Exception as e:
                 last_error = e
