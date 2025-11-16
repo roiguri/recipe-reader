@@ -327,13 +327,30 @@ HEBREW SUPPORT:
 """
 
         base_prompt += """
-STRUCTURE DECISION:
-- Use "ingredients" + "instructions" for simple recipes (most common)
-- Use "ingredient_stages" + "stages" only if recipe has distinct phases
-- Examples for stages:
-  * "For the dough: flour, water... For the filling: cheese, spinach..."
-  * "Cake ingredients: ... Frosting ingredients: ..."
-- Never use both flat and staged structures together
+STRUCTURE DECISION (CRITICAL - MUST FOLLOW):
+
+Instructions Format (choose ONE):
+1. "instructions": Use for simple step-by-step recipes
+   - Provide as array of strings: ["Step 1", "Step 2", ...]
+   - Set "stages" to null
+2. "stages": Use ONLY for multi-phase recipes with distinct sections
+   - Example: [{"title": "Make dough", "instructions": ["Mix flour...", ...]}, ...]
+   - Set "instructions" to null
+
+Ingredients Format (choose ONE):
+1. "ingredients": Use for simple ingredient lists
+   - Provide as array: [{"item": "flour", "amount": "2", "unit": "cups"}, ...]
+   - Set "ingredient_stages" to null
+2. "ingredient_stages": Use ONLY for recipes with ingredient sections
+   - Example: "For the dough: ..., For the filling: ..."
+   - Provide as: [{"title": "For the dough", "ingredients": [...]}, ...]
+   - Set "ingredients" to null
+
+IMPORTANT:
+- You MUST provide at least ONE format for instructions (either "instructions" OR "stages")
+- You MUST provide at least ONE format for ingredients (either "ingredients" OR "ingredient_stages")
+- NEVER leave both options null - this will cause validation errors
+- The formats can be mixed: simple ingredients + staged instructions, or vice versa
 
 MISSING DATA HANDLING:
 - Missing times → null

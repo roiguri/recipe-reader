@@ -112,7 +112,29 @@ class RecipeBase(BaseModel):
     
     source_url: Optional[str] = Field(None, description="Original source URL")
     comments: Optional[str] = Field(None, description="User comments about the recipe")
-    
+
+    @model_validator(mode='before')
+    @classmethod
+    def set_default_formats(cls, data: Any) -> Any:
+        """
+        Provide sensible defaults when both format options are missing.
+
+        This pre-validator runs BEFORE field validation and sets default empty lists
+        when Gemini returns None for both alternatives. This prevents validation errors
+        while still allowing Gemini flexibility in choosing the appropriate format.
+        """
+        # Handle dict input (most common from Gemini JSON)
+        if isinstance(data, dict):
+            # Default to simple instructions format if both are None/missing
+            if not data.get('instructions') and not data.get('stages'):
+                data['instructions'] = []
+
+            # Default to simple ingredients format if both are None/missing
+            if not data.get('ingredients') and not data.get('ingredient_stages'):
+                data['ingredients'] = []
+
+        return data
+
     @model_validator(mode='after')
     def check_instructions_format(self) -> 'RecipeBase':
         """Validate that either stages or instructions are provided, but not both."""
