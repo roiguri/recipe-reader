@@ -26,6 +26,21 @@ class RecipeDifficulty(str, Enum):
     HARD = "hard"
 
 
+class AggressivenessLevel(str, Enum):
+    """
+    URL fetching aggressiveness levels for bot detection bypass.
+
+    - FAST: Quick fetching, single browser impersonation, 2 retries (1-3s typical)
+    - BALANCED: Multiple browser rotation, 3 retries, best success rate (2-5s typical) [DEFAULT]
+    - AGGRESSIVE: Extended retries with all browsers, 5 attempts (3-8s typical)
+    - MAXIMUM: Maximum effort, 5 retries + extended timeout (5-15s typical)
+    """
+    FAST = "fast"
+    BALANCED = "balanced"
+    AGGRESSIVE = "aggressive"
+    MAXIMUM = "maximum"
+
+
 class Ingredient(BaseModel):
     """
     Recipe ingredient with separate amount and unit fields.
@@ -148,18 +163,37 @@ class UrlProcessRequest(BaseModel):
     """Request model for URL processing endpoint."""
     url: str = Field(..., description="Recipe URL to process", min_length=1)
     options: Optional[Dict[str, Any]] = Field({}, description="Processing options")
-    
+    aggressiveness: Optional[AggressivenessLevel] = Field(
+        AggressivenessLevel.BALANCED,
+        description=(
+            "Fetching strategy aggressiveness level:\n"
+            "- 'fast': Quick, single browser, 2 retries (1-3s)\n"
+            "- 'balanced': Default, multiple browsers, best success rate (2-5s)\n"
+            "- 'aggressive': Persistent, all browsers, 5 retries (3-8s)\n"
+            "- 'maximum': Maximum effort, extended timeout (5-15s)"
+        )
+    )
+
+    @model_validator(mode='after')
+    def merge_aggressiveness_into_options(self) -> 'UrlProcessRequest':
+        """Merge aggressiveness into options dict for processor."""
+        if self.options is None:
+            self.options = {}
+        if self.aggressiveness:
+            self.options['aggressiveness'] = self.aggressiveness.value
+        return self
+
     @model_validator(mode='after')
     def validate_url_format(self) -> 'UrlProcessRequest':
         """Basic URL validation."""
         from urllib.parse import urlparse
-        
+
         # Normalize URL
         url = self.url.strip()
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
             self.url = url
-        
+
         # Parse and validate
         try:
             parsed = urlparse(url)
@@ -167,7 +201,7 @@ class UrlProcessRequest(BaseModel):
                 raise ValueError("Invalid URL format")
         except Exception:
             raise ValueError("Invalid URL format")
-            
+
         return self
 
 
