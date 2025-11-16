@@ -35,15 +35,11 @@ class TextProcessor:
         
         # Basic text cleaning
         text = text.strip()
-        
+
         # Enhanced cleaning for web-scraped content
         if extraction_method in ['css-selectors', 'full-text']:
             text = self._clean_web_content(text)
-        
-        # Add source URL context if available
-        if source_url and extraction_method:
-            text = f"Recipe source: {source_url}\nExtraction method: {extraction_method}\n\n{text}"
-        
+
         return text
     
     def _clean_web_content(self, text: str) -> str:

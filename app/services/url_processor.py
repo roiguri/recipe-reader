@@ -489,41 +489,109 @@ class UrlProcessor:
         }
     
     def _extract_json_ld(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract recipe content from JSON-LD structured data."""
+        """
+        Extract recipe content from JSON-LD structured data.
+
+        Returns raw JSON as compact string instead of verbose formatted text.
+        This significantly reduces input size and prevents token limit issues.
+        """
         try:
             scripts = soup.find_all('script', type='application/ld+json')
-            
+
             for script in scripts:
                 try:
                     data = json.loads(script.string)
-                    
+
                     # Handle both single objects and arrays
                     if isinstance(data, list):
                         data = data[0] if data else {}
-                    
+
                     # Look for Recipe schema
                     if self._is_recipe_schema(data):
-                        return self._format_json_ld_recipe(data)
-                        
+                        return self._format_json_ld_compact(data)
+
                     # Check nested @graph
                     if '@graph' in data:
                         for item in data['@graph']:
                             if self._is_recipe_schema(item):
-                                return self._format_json_ld_recipe(item)
-                                
+                                return self._format_json_ld_compact(item)
+
                 except json.JSONDecodeError:
                     continue
-                    
+
         except Exception as e:
             self.logger.warning(f"Error extracting JSON-LD: {str(e)}")
-        
+
         return None
     
     def _is_recipe_schema(self, data: Dict) -> bool:
         """Check if data contains Recipe schema."""
         type_val = data.get('@type', '')
         return 'Recipe' in type_val if isinstance(type_val, (str, list)) else False
-    
+
+    def _format_json_ld_compact(self, data: Dict) -> str:
+        """
+        Format JSON-LD recipe data as compact JSON string.
+
+        Instead of creating verbose human-readable text (4-6KB),
+        this returns a minimal JSON representation (~1-2KB) with only
+        essential recipe fields. This reduces input size by 60-70%.
+
+        The AI model can parse JSON directly and extract recipe info efficiently.
+        """
+        # Extract only essential recipe fields, ignore metadata/fluff
+        compact_recipe = {}
+
+        # Basic info
+        if 'name' in data:
+            compact_recipe['name'] = data['name']
+        if 'description' in data:
+            compact_recipe['description'] = data['description']
+
+        # Times (parse ISO 8601 to minutes)
+        if 'prepTime' in data:
+            compact_recipe['prepTime'] = self._parse_duration(data['prepTime'])
+        if 'cookTime' in data:
+            compact_recipe['cookTime'] = self._parse_duration(data['cookTime'])
+        elif 'totalTime' in data:
+            # Use total time as cook time if cook time missing
+            compact_recipe['cookTime'] = self._parse_duration(data['totalTime'])
+
+        # Servings
+        recipe_yield = data.get('recipeYield') or data.get('yield')
+        if recipe_yield:
+            compact_recipe['servings'] = recipe_yield
+
+        # Ingredients (always include, critical for recipes)
+        ingredients = data.get('recipeIngredient', [])
+        if ingredients:
+            compact_recipe['ingredients'] = ingredients
+
+        # Instructions
+        instructions = data.get('recipeInstructions', [])
+        if instructions:
+            # Flatten instruction objects to simple text list
+            instruction_texts = []
+            for instruction in instructions:
+                if isinstance(instruction, dict):
+                    text = instruction.get('text', '')
+                else:
+                    text = str(instruction)
+                if text:
+                    instruction_texts.append(text)
+            compact_recipe['instructions'] = instruction_texts
+
+        # Optional metadata (keep minimal)
+        if 'recipeCategory' in data:
+            compact_recipe['category'] = data['recipeCategory']
+        if 'recipeCuisine' in data:
+            compact_recipe['cuisine'] = data['recipeCuisine']
+        if 'keywords' in data:
+            compact_recipe['keywords'] = data['keywords']
+
+        # Return compact JSON string (no formatting, no whitespace)
+        return json.dumps(compact_recipe, ensure_ascii=False, separators=(',', ':'))
+
     def _format_json_ld_recipe(self, data: Dict) -> str:
         """Format JSON-LD recipe data into readable text."""
         lines = []

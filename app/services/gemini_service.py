@@ -118,9 +118,10 @@ class GeminiService:
                 self.logger.info(f"Attempting structured extraction (attempt {attempt + 1}/{max_retries})")
                 
                 # Configure generation parameters
+                # Gemini 2.5 Flash supports up to 65536 tokens - using 16384 for recipe extraction
                 config = types.GenerateContentConfig(
                     temperature=options.get("temperature", 0.1 + (attempt * 0.05)),
-                    max_output_tokens=options.get("max_tokens", 8192),
+                    max_output_tokens=options.get("max_tokens", 16384),
                     top_p=options.get("top_p", 0.8),
                     top_k=options.get("top_k", 40),
                     response_mime_type="application/json",
@@ -279,155 +280,77 @@ class GeminiService:
         
         # Detect if text contains Hebrew
         contains_hebrew = self._contains_hebrew(text)
-        
+
         base_prompt = f"""
-Extract complete recipe information from the following text. Focus on accuracy and completeness.
+Extract complete recipe information from the following data. Focus on accuracy and completeness.
 
 CRITICAL RULES:
 - DO NOT invent or guess missing information
 - If information is not clearly stated, use null/empty values
-- For missing ingredients amounts: use "amount not specified" 
+- For missing ingredient amounts: use "not specified"
 - For missing times: use null, do NOT estimate
 - For missing servings: use null, do NOT guess
 - For tags: only use terms that appear in the text or are clearly implied
-- For difficulty: ONLY use one of these exact values: "easy", "medium", "hard". Convert natural language descriptions to these standard values.
-- For category: ONLY use one of these allowed values if clearly identifiable: {', '.join([cat.value for cat in RecipeCategory])}. If unclear, leave null.
+- Difficulty: ONLY "easy", "medium", or "hard" (or null if unclear)
 
-EXTRACTION GUIDELINES:
-- Convert time references to minutes only if explicitly stated
-- Extract ingredients exactly as written - don't add units that aren't there
-- Don't assume cooking methods not mentioned in the text
-- prepTime: Time for preparation, mixing, chopping before cooking
+TIME EXTRACTION:
+- prepTime: Preparation work before cooking (chopping, mixing, etc.)
 - cookTime: Total cooking time including baking, frying, waiting, resting, cooling
 - DO NOT extract totalTime - it will be calculated automatically
-- Include waiting/resting periods in cookTime, not as separate field
-- comments: Extract any notes, tips, or personal comments about the recipe
+- Include cooling/resting periods in cookTime, not as separate field
 
-INGREDIENT EXTRACTION RULES:
-- "1 ק\"ג פרגיות" → item: "פרגיות", amount: "1", unit: "ק\"ג"
-- "2 כפות שמן" → item: "שמן", amount: "2", unit: "כפות"
-- "3 ביצים" → item: "ביצים", amount: "3", unit: "יחידה"
-- "מלח לפי הטעם" → item: "מלח", amount: "לפי הטעם", unit: "ללא"
-- "קמח (כ-2 כוסות)" → item: "קמח", amount: "כ-2", unit: "כוסות"
-CRITICAL: Always separate the NUMBER from the UNIT into different fields!
-
-INGREDIENT STRUCTURE DECISION:
-- Use "ingredients" (set "ingredient_stages" to null) for simple recipes with all ingredients listed together
-- Use "ingredient_stages" (set "ingredients" to empty list []) when ingredients are clearly organized into sections
-- Examples that should use ingredient_stages:
-  * "For the dough: flour, water, yeast... For the filling: cheese, spinach..."
-  * "Cake ingredients: ... Frosting ingredients: ..."
-  * "לבצק: קמח, מים... למילוי: גבינה, תרד..."
-- Never use both ingredients and ingredient_stages with values (one must be null/empty)
-
-WHAT TO DO WHEN DATA IS MISSING:
-- Missing prep time → prepTime: null
-- Missing cook time → cookTime: null  
-- Missing servings → servings: null
-- Missing ingredient amounts → amount: "not specified"
-- Missing description → description: "No description provided"
-- Missing category → category: null
-- Invalid category → category: null (must be one of the allowed values)
-- Missing comments/notes → comments: null
-
-COMMENTS EXTRACTION GUIDANCE:
-- Extract cooking tips, personal notes, or advice mentioned in the text
-- Include storage instructions, serving suggestions, or variations
-- Don't extract author personal comments like "this is my grandmother's recipe"
-- Include warnings or special notes about ingredients or techniques
-- Examples: "Best served hot", "Can be frozen for up to 3 months"
-
-STRUCTURE DECISION:
-- Use "instructions" (set "stages" to null) for straightforward recipes
-- Use "stages" (set "instructions" to null) only if recipe has distinct preparation phases
-- Never use both instructions and stages together
-
-DIFFICULTY CLASSIFICATION GUIDELINES:
-Map natural language difficulty descriptions to standard values:
-
-EASY ("easy"):
-- "simple", "quick", "basic", "beginner", "easy", "effortless"
-- "5 minutes", "no cooking", "no-bake", "microwave"
-- "one bowl", "mix and serve", "no special skills"
-- Hebrew: "פשוט", "קל", "בסיסי", "למתחילים", "ללא בישול"
-
-MEDIUM ("medium"):
-- "moderate", "intermediate", "average", "standard cooking"
-- "some cooking experience", "requires attention", "multiple steps"
-- "20-45 minutes", "stovetop cooking", "basic techniques"
-- Hebrew: "בינוני", "רגיל", "דורש ניסיון", "כמה שלבים"
-
-HARD ("hard"):
-- "difficult", "challenging", "advanced", "complex", "professional"
-- "special techniques", "multiple stages", "precise timing", "expert level"
-- "over 1 hour", "advanced skills", "special equipment"
-- Hebrew: "קשה", "מתקדם", "מורכב", "דורש מיומנות", "רמה גבוהה"
-
-IF AMBIGUOUS OR NOT MENTIONED: use null
-
-CATEGORY CLASSIFICATION EXAMPLES:
-- "Chocolate chip cookies" → "desserts"
-- "Caesar salad" → "salads"
-- "Chicken pasta" → "main-courses"
-- "French onion soup" → "soups"
-- "Beef stew" → "stews"
-- "Hummus" → "appetizers"
-- "Garlic bread" → "side-dishes"
-- "Coffee" → "beverages"
-- "Granola bars" → "snacks"
-- "Pancakes" → "breakfast&brunch"
-- "Eggs benedict" → "breakfast&brunch"
-
-"""
-
-        if contains_hebrew:
-            base_prompt += """
-HEBREW TEXT HANDLING:
-- Process Hebrew ingredients and instructions accurately
-- Maintain original Hebrew names for ingredients when appropriate
-- Convert Hebrew time expressions to minutes (דקות = minutes, שעות = hours)
-- Preserve authentic cooking terminology
-
-"""
-        # Examples
-        base_prompt += """
-GOOD EXAMPLES:
-Input: "Boil pasta for 10 minutes"
-Output: prepTime: null, cookTime: 10
-
+EXAMPLES:
 Input: "Mix ingredients and bake for 30 minutes, then let cool for 15 minutes"
 Output: prepTime: null, cookTime: 45 (30 baking + 15 cooling)
 
 Input: "Prep vegetables for 15 minutes, cook for 20 minutes"
 Output: prepTime: 15, cookTime: 20
 
-Input: "Mix ingredients and bake"  
+Input: "Mix ingredients and bake" (times not specified)
 Output: prepTime: null, cookTime: null
 
-BAD EXAMPLES (DON'T DO THIS):
-Input: "Mix ingredients and bake"
-Output: prepTime: 15, cookTime: 30 (WRONG - these weren't specified!)
-
-Input: "Bake for 20 minutes, cool for 10 minutes"
-Output: prepTime: null, cookTime: 20, waitTime: 10 (WRONG - include cooling in cookTime!)
+INGREDIENT EXTRACTION:
+- Separate amounts from units: "2 cups flour" → item:"flour", amount:"2", unit:"cups"
+- For "to taste": "Salt to taste" → item:"Salt", amount:"to taste", unit:null
+- For countable items: "3 eggs" → item:"eggs", amount:"3", unit:"piece"
 """
-        
-        # Add format-specific guidance
-        format_type = options.get("format_type")
-        if format_type == "structured":
-            base_prompt += "PREFERENCE: Use 'stages' to organize instructions into logical cooking phases.\n"
-            base_prompt += "PREFERENCE: Use 'ingredient_stages' to organize ingredients into logical sections when applicable.\n"
-        elif format_type == "simple":
-            base_prompt += "PREFERENCE: Use flat 'instructions' array for simple step-by-step directions.\n"
-            base_prompt += "PREFERENCE: Use flat 'ingredients' array for simple ingredient lists.\n"
+
+        if contains_hebrew:
+            base_prompt += """
+HEBREW SUPPORT:
+- Preserve Hebrew ingredient names and instructions
+- Convert time units: דקות=minutes, שעות=hours (multiply by 60)
+- Examples:
+  * "1 ק\"ג פרגיות" → item:"פרגיות", amount:"1", unit:"ק\"ג"
+  * "2 כפות שמן" → item:"שמן", amount:"2", unit:"כפות"
+  * "מלח לפי הטעם" → item:"מלח", amount:"לפי הטעם", unit:null
+"""
+
+        base_prompt += """
+STRUCTURE DECISION:
+- Use "ingredients" + "instructions" for simple recipes (most common)
+- Use "ingredient_stages" + "stages" only if recipe has distinct phases
+- Examples for stages:
+  * "For the dough: flour, water... For the filling: cheese, spinach..."
+  * "Cake ingredients: ... Frosting ingredients: ..."
+- Never use both flat and staged structures together
+
+MISSING DATA HANDLING:
+- Missing times → null
+- Missing servings → null
+- Missing ingredient amounts → "not specified"
+- Missing description → "No description provided"
+- Missing category → null
+- Missing comments/notes → null
+"""
 
         base_prompt += f"""
-RECIPE TEXT:
+RECIPE DATA:
 {text}
 
 Extract the recipe information as a valid JSON object that matches the required schema.
 """
-        
+
         return base_prompt
     
     def _convert_to_recipe_model(self, data: Dict[str, Any]) -> Recipe:
@@ -462,11 +385,19 @@ Extract the recipe information as a valid JSON object that matches the required 
             )
     
     def _preprocess_text(self, text: str) -> str:
-        """Enhanced preprocessing for recipe text."""
-        
+        """
+        Enhanced preprocessing for recipe text with intelligent truncation.
+
+        Handles large JSON-LD content by prioritizing critical sections:
+        1. Recipe name and description (always preserved)
+        2. Ingredients (essential)
+        3. Instructions (essential)
+        4. Times and metadata (nice to have)
+        """
+
         # Remove excessive whitespace
         text = ' '.join(text.split())
-        
+
         # Remove common website navigation elements
         website_noise_patterns = [
             r'שמרו|שתפו|דרגו|לחצו כאן',  # Hebrew: save, share, rate, click here
@@ -474,24 +405,91 @@ Extract the recipe information as a valid JSON object that matches the required 
             r'plus|minus|\+|\-',  # Navigation buttons
             r'כבר הכנתם\?|רוצים להגיב\?',  # Interactive elements
         ]
-        
+
         for pattern in website_noise_patterns:
             text = re.sub(pattern, '', text, flags=re.IGNORECASE)
-        
+
         # Clean up extra spaces after removal
         text = re.sub(r'\s+', ' ', text)
-        
-        # Truncate if too long (Gemini has a maximum input length)
-        max_length = 30000 
+
+        # Intelligent truncation for very long content
+        # With compact JSON-LD format, recipes should be much smaller (~1-2KB)
+        # 20KB is generous and forces cleanup of bloated inputs
+        max_length = 20000  # Optimized from 50000 for typical recipe content
+
         if len(text) > max_length:
             self.logger.warning(f"Recipe text truncated from {len(text)} to {max_length} characters")
-            text = text[:max_length]
-            # Try to cut at a reasonable boundary
-            last_period = text.rfind('.')
-            if last_period > max_length * 0.8:
-                text = text[:last_period + 1]
-        
+
+            # Try to preserve critical sections intelligently
+            truncated_text = self._smart_truncate(text, max_length)
+            return truncated_text.strip()
+
         return text.strip()
+
+    def _smart_truncate(self, text: str, max_length: int) -> str:
+        """
+        Intelligently truncate recipe text while preserving critical sections.
+
+        Priority order:
+        1. Recipe name/description (first 2000 chars)
+        2. Ingredients section
+        3. Instructions section
+        4. Cut at sentence boundary
+        """
+        # Identify section markers
+        ingredients_marker = None
+        instructions_marker = None
+
+        # Find ingredients section
+        for pattern in [r'\bIngredients:\s*', r'\bמרכיבים:\s*']:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                ingredients_marker = match.start()
+                break
+
+        # Find instructions section
+        for pattern in [r'\bInstructions:\s*', r'\bהוראות:\s*', r'\bDirections:\s*']:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                instructions_marker = match.start()
+                break
+
+        # Strategy 1: Preserve header + ingredients + instructions
+        if ingredients_marker and instructions_marker:
+            # Take everything up to max_length, but prioritize the recipe sections
+            header = text[:min(ingredients_marker, 2000)]
+
+            # Calculate remaining space
+            remaining = max_length - len(header)
+
+            # Try to fit ingredients and instructions
+            ingredients_end = instructions_marker
+            ingredients = text[ingredients_marker:ingredients_end]
+            instructions = text[instructions_marker:min(len(text), instructions_marker + remaining)]
+
+            # If ingredients + instructions fit, use them
+            if len(ingredients) + len(instructions) <= remaining:
+                truncated = header + " " + ingredients + " " + instructions
+            else:
+                # Prioritize ingredients, truncate instructions
+                if len(ingredients) < remaining * 0.6:
+                    instructions_budget = remaining - len(ingredients)
+                    truncated = header + " " + ingredients + " " + instructions[:instructions_budget]
+                else:
+                    # Truncate both proportionally
+                    ingredients_budget = int(remaining * 0.6)
+                    instructions_budget = remaining - ingredients_budget
+                    truncated = header + " " + ingredients[:ingredients_budget] + " " + instructions[:instructions_budget]
+        else:
+            # Strategy 2: Simple truncation with sentence boundary
+            truncated = text[:max_length]
+            # Try to cut at a sentence boundary
+            last_period = truncated.rfind('.')
+            if last_period > max_length * 0.8:
+                truncated = truncated[:last_period + 1]
+
+        self.logger.info(f"Smart truncation preserved {len(truncated)}/{len(text)} characters")
+        return truncated
     
     def _contains_hebrew(self, text: str) -> bool:
         """Check if text contains Hebrew characters."""
