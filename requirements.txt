@@ -16,6 +16,7 @@ json-repair==0.*  # JSON repair for malformed Gemini responses (pin major versio
 # Web scraping for URL processor
 httpx==0.28.1
 beautifulsoup4==4.12.3
+curl-cffi==0.7.3  # Browser TLS fingerprinting for bot detection bypass
 lxml==5.1.0
 
 # Image processing

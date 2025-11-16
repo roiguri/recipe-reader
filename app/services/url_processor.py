@@ -6,10 +6,23 @@ import time
 import logging
 import asyncio
 import ipaddress
-from typing import Dict, Any, Optional
+import random
+from typing import Dict, Any, Optional, List
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import httpx
+
+# Try to import curl_cffi for bot detection bypass
+# Falls back to httpx if unavailable
+try:
+    from curl_cffi.requests import AsyncSession
+    CURL_CFFI_AVAILABLE = True
+except ImportError:
+    CURL_CFFI_AVAILABLE = False
+    logging.getLogger(__name__).warning(
+        "curl-cffi not available, falling back to httpx. "
+        "Install with: pip install curl-cffi"
+    )
 
 
 class UrlProcessor:
@@ -21,6 +34,36 @@ class UrlProcessor:
     CONFIDENCE_CSS_SELECTORS = 0.75
     CONFIDENCE_FULL_TEXT = 0.5
     
+    # Browser impersonation options for curl_cffi
+    BROWSERS = [
+        'chrome120',    # Most common - Chrome 120
+        'chrome119',    # Chrome 119 (previous version)
+        'safari15_5',   # Safari 15.5 (macOS/iOS)
+        'safari17_0',   # Safari 17.0 (newer macOS/iOS)
+        'edge101'       # Edge 101
+    ]
+    
+    # Expanded User-Agent list with recent browser versions
+    # Rotated on each retry attempt for diversity
+    USER_AGENTS = [
+        # Chrome on Windows
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        # Chrome on macOS
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        # Chrome on Linux
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        # Firefox on Windows
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+        # Firefox on macOS
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:123.0) Gecko/20100101 Firefox/123.0',
+        # Safari on macOS
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3.1 Safari/605.1.15',
+        # Safari on iOS
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3 Mobile/15E148 Safari/604.1',
+        # Edge on Windows
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0',
+    ]
+    
     # Content scoring constants
     MIN_CONTENT_SCORE_THRESHOLD = 10
     SHORT_CONTENT_PENALTY = 0.5
@@ -29,25 +72,24 @@ class UrlProcessor:
     MAX_CONTENT_LENGTH = 10000
     
     def __init__(self):
-        """Initialize the URL processor with configuration."""
+        """Initialize the URL processor with curl_cffi support and enhanced configuration."""
         self.logger = logging.getLogger(__name__)
-        
+
+        # Log curl_cffi availability
+        if CURL_CFFI_AVAILABLE:
+            self.logger.info("curl_cffi available - using browser TLS fingerprinting")
+        else:
+            self.logger.info("curl_cffi not available - using httpx fallback")
+
         # Request configuration
         self.timeout = 30
         self.max_retries = 3
         self.retry_delay = 1.0
-        
-        # User agents for better success rates
-        self.user_agents = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        ]
-        
+
         # Content size limits
         self.max_content_size = 5 * 1024 * 1024  # 5MB
-        
-        # HTTP client with connection pooling for better performance
+
+        # HTTP client with connection pooling (fallback for when curl_cffi unavailable)
         self.http_client = httpx.AsyncClient(
             timeout=self.timeout,
             follow_redirects=True,
@@ -91,45 +133,255 @@ class UrlProcessor:
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
         return url
+
+    def _build_enhanced_headers(self, url: str, user_agent: str) -> Dict[str, str]:
+        """
+        Build enhanced HTTP headers to mimic real browser requests.
+
+        Includes critical headers that bot detection systems check:
+        - Sec-Fetch-* headers (browser security context)
+        - Referer and Origin (navigation context)
+        - Modern Accept headers with quality values
+        - DNT (Do Not Track)
+
+        Args:
+            url: Target URL (used to set Referer/Origin)
+            user_agent: User-Agent string to use
+
+        Returns:
+            Dict of HTTP headers
+        """
+        parsed = urlparse(url)
+        origin = f"{parsed.scheme}://{parsed.netloc}"
+
+        return {
+            'User-Agent': user_agent,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            # Sec-Fetch headers (modern browsers send these)
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            # Navigation context
+            'Cache-Control': 'max-age=0',
+            'DNT': '1',  # Do Not Track
+        }
     
     async def fetch_content(self, url: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Fetch content from URL with proper error handling and retries.
-        
+        Fetch content from URL with curl_cffi for bot detection bypass.
+
+        Supports aggressiveness levels:
+        - fast: Single browser, 2 retries, 30s timeout
+        - balanced: 3 browsers, 3 retries, 30s timeout (default)
+        - aggressive: All 5 browsers, 5 retries, 30s timeout
+        - maximum: All 5 browsers, 5 retries, 45s timeout
+
         Args:
             url: URL to fetch
-            options: Optional processing parameters
-            
+            options: Optional parameters including 'aggressiveness'
+
         Returns:
             Dict containing content, metadata, and status information
         """
         options = options or {}
         url = self.normalize_url(url)
-        
+
         if not self.validate_url(url):
             raise ValueError(f"Invalid URL format: {url}")
+
+        # Parse aggressiveness level from options
+        aggressiveness = options.get('aggressiveness', 'balanced')
+
+        # Aggressiveness configurations
+        AGGR_CONFIGS = {
+            'fast': {'max_retries': 2, 'browsers': 1, 'timeout': 30},
+            'balanced': {'max_retries': 3, 'browsers': 3, 'timeout': 30},
+            'aggressive': {'max_retries': 5, 'browsers': 5, 'timeout': 30},
+            'maximum': {'max_retries': 5, 'browsers': 5, 'timeout': 45},
+        }
         
+        config = AGGR_CONFIGS.get(aggressiveness, AGGR_CONFIGS['balanced'])
+        max_retries = config['max_retries']
+        browsers_to_try = self.BROWSERS[:config['browsers']]
+        timeout = config['timeout']
+
+        # Try curl_cffi if available
+        if CURL_CFFI_AVAILABLE:
+            result = await self._fetch_with_curl_cffi(
+                url, options, browsers_to_try, max_retries, timeout
+            )
+            if result:
+                return result
+
+            self.logger.warning("curl_cffi failed, falling back to httpx")
+
+        # Fallback to httpx
+        return await self._fetch_with_httpx(url, options, max_retries, timeout)
+
+    async def _fetch_with_curl_cffi(
+        self,
+        url: str,
+        options: Dict[str, Any],
+        browsers: List[str],
+        max_retries: int,
+        timeout: int
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Fetch URL using curl_cffi with browser TLS fingerprinting.
+
+        Implements:
+        - Browser impersonation rotation (chrome, safari, edge)
+        - User-Agent rotation on each retry
+        - Enhanced headers (Sec-Fetch-*, Referer, Origin)
+        - Exponential backoff with jitter (±20% randomness)
+        - Bot detection error handling (247, 403, 429)
+
+        Args:
+            url: URL to fetch
+            options: Processing options
+            browsers: List of browser fingerprints to rotate through
+            max_retries: Maximum retry attempts
+            timeout: Request timeout in seconds
+
+        Returns:
+            Dict with content and metadata on success, None on failure
+        """
+        last_error = None
+        browser_index = 0
+
+        for attempt in range(max_retries):
+            try:
+                # Rotate browsers on each attempt
+                browser = browsers[browser_index % len(browsers)]
+                browser_index += 1
+
+                # Rotate User-Agent
+                user_agent = self.USER_AGENTS[attempt % len(self.USER_AGENTS)]
+
+                # Build enhanced headers
+                headers = self._build_enhanced_headers(url, user_agent)
+
+                self.logger.info(
+                    f"Fetching URL (attempt {attempt + 1}/{max_retries}): {url} "
+                    f"[browser: {browser}, UA: {user_agent[:50]}...]"
+                )
+
+                # Fetch with curl_cffi browser impersonation
+                async with AsyncSession() as session:
+                    response = await session.get(
+                        url,
+                        headers=headers,
+                        impersonate=browser,
+                        timeout=timeout,
+                        allow_redirects=True
+                    )
+
+                    # Validate content type BEFORE reading body
+                    content_type = response.headers.get('content-type', '').lower()
+                    allowed_types = ['text/html', 'application/xhtml+xml', 'text/plain']
+                    if not any(ct in content_type for ct in allowed_types):
+                        raise ValueError(f"Unsupported content type: {content_type}")
+
+                    # Success!
+                    if response.status_code == 200:
+                        content = response.text
+
+                        # Check content size
+                        if len(content) > self.max_content_size:
+                            self.logger.warning(f"Content too large, truncating to {self.max_content_size} bytes")
+                            content = content[:self.max_content_size]
+
+                        self.logger.info(f"✓ Successfully fetched with curl_cffi ({browser})")
+
+                        return {
+                            'content': content,
+                            'url': str(response.url),  # Final URL after redirects
+                            'status_code': response.status_code,
+                            'headers': dict(response.headers),
+                            'encoding': response.encoding or 'utf-8',
+                            'success': True,
+                            'metadata': {
+                                'fetcher': 'curl_cffi',
+                                'browser': browser,
+                                'attempt': attempt + 1,
+                                'user_agent': user_agent
+                            }
+                        }
+
+                    # Bot detection patterns - log but keep retrying
+                    if response.status_code in [247, 403, 429]:
+                        last_error = f"Bot detection (HTTP {response.status_code})"
+                        self.logger.warning(last_error)
+                    elif len(response.text) < 1024 and ('cloudflare' in response.text.lower() or 'captcha' in response.text.lower()):
+                        last_error = f"Bot detection in content (HTTP {response.status_code})"
+                        self.logger.warning(last_error)
+                    else:
+                        last_error = f"HTTP {response.status_code}"
+                        self.logger.warning(f"Attempt {attempt + 1} failed: {last_error}")
+
+            except Exception as e:
+                last_error = str(e)
+                self.logger.warning(f"Attempt {attempt + 1} failed: {last_error}")
+
+            # Wait before retry with exponential backoff + jitter
+            if attempt < max_retries - 1:
+                wait_time = self.retry_delay * (2 ** attempt)
+                jitter = random.uniform(-wait_time * 0.2, wait_time * 0.2)  # ±20% jitter
+                total_wait = max(0.5, wait_time + jitter)  # Minimum 0.5s wait
+                self.logger.info(f"Retrying in {total_wait:.1f} seconds...")
+                await asyncio.sleep(total_wait)
+
+        self.logger.error(f"curl_cffi failed after {max_retries} attempts: {last_error}")
+        return None
+
+    async def _fetch_with_httpx(
+        self,
+        url: str,
+        options: Dict[str, Any],
+        max_retries: int,
+        timeout: int
+    ) -> Dict[str, Any]:
+        """
+        Fallback to httpx for URL fetching.
+
+        Used when curl_cffi is unavailable or fails.
+        Implements basic retry logic with exponential backoff.
+
+        Args:
+            url: URL to fetch
+            options: Processing options
+            max_retries: Maximum retry attempts
+            timeout: Request timeout in seconds
+
+        Returns:
+            Dict with content and metadata
+
+        Raises:
+            Exception: If all retry attempts fail
+        """
         headers = {
-            'User-Agent': options.get('user_agent', self.user_agents[0]),
+            'User-Agent': options.get('user_agent', self.USER_AGENTS[0]),
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5,he;q=0.3',
             'Accept-Encoding': 'gzip, deflate',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
         }
-        
-        timeout = options.get('timeout', self.timeout)
-        max_retries = options.get('max_retries', self.max_retries)
-        
+
         last_error = None
-        
+
         for attempt in range(max_retries):
             try:
-                self.logger.info(f"Fetching URL (attempt {attempt + 1}/{max_retries}): {url}")
-                
+                self.logger.info(f"Fetching URL with httpx (attempt {attempt + 1}/{max_retries}): {url}")
+
                 # Use persistent HTTP client with connection pooling
-                response = await self.http_client.get(url, headers=headers)
-                
+                response = await self.http_client.get(url, headers=headers, timeout=timeout)
+
                 # Check response status
                 if response.status_code == 200:
                     # Validate content type for security
@@ -137,49 +389,53 @@ class UrlProcessor:
                     allowed_types = ['text/html', 'application/xhtml+xml', 'text/plain']
                     if not any(ct in content_type for ct in allowed_types):
                         raise ValueError(f"Unsupported content type for recipe extraction: {content_type}")
-                    
+
                     content = response.text
-                    
+
                     # Check content size
                     if len(content) > self.max_content_size:
                         self.logger.warning(f"Content too large ({len(content)} bytes), truncating")
                         content = content[:self.max_content_size]
-                    
+
                     return {
                         'content': content,
                         'url': str(response.url),  # Final URL after redirects
                         'status_code': response.status_code,
                         'headers': dict(response.headers),
-                        'encoding': response.encoding,
-                        'success': True
+                        'encoding': response.encoding or 'utf-8',
+                        'success': True,
+                        'metadata': {
+                            'fetcher': 'httpx',
+                            'attempt': attempt + 1
+                        }
                     }
-                
+
                 elif response.status_code == 429:  # Rate limited
                     wait_time = self.retry_delay * (2 ** attempt)
                     self.logger.warning(f"Rate limited, waiting {wait_time}s before retry")
                     await asyncio.sleep(wait_time)
                     continue
-                    
+
                 else:
                     raise httpx.HTTPStatusError(
-                        f"HTTP {response.status_code}", 
-                        request=response.request, 
+                        f"HTTP {response.status_code}",
+                        request=response.request,
                         response=response
                     )
-                        
+
             except Exception as e:
                 last_error = e
                 self.logger.warning(f"Attempt {attempt + 1} failed: {str(e)}")
-                
+
                 if attempt < max_retries - 1:
                     wait_time = self.retry_delay * (2 ** attempt)
                     self.logger.info(f"Retrying in {wait_time} seconds...")
                     await asyncio.sleep(wait_time)
                     continue
-        
+
         # All attempts failed
         raise Exception(f"Failed to fetch URL after {max_retries} attempts. Last error: {str(last_error)}")
-    
+
     def extract_recipe_content(self, html_content: str, source_url: str) -> Dict[str, Any]:
         """
         Extract recipe content from HTML using multiple strategies.
