@@ -15,6 +15,16 @@ import re
 from google import genai
 from google.genai import types
 
+# JSON repair for handling malformed responses
+try:
+    from json_repair import repair_json
+    JSON_REPAIR_AVAILABLE = True
+except ImportError:
+    JSON_REPAIR_AVAILABLE = False
+    logging.getLogger(__name__).warning(
+        "json-repair not available - install with: pip install json-repair"
+    )
+
 # Import our existing recipe models (no duplicates!)
 from app.models import Recipe, RecipeResponse, RecipeBase, RecipeCategory
 
@@ -134,8 +144,84 @@ class GeminiService:
                     self.logger.warning(f"Response dump: {response.model_dump()}")
                     raise ValueError("API returned empty response text")
 
+                # Check for problematic finish reasons
+                if hasattr(response, 'candidates') and response.candidates:
+                    finish_reason = response.candidates[0].finish_reason
+
+                    # Handle finish reasons using enum members (not strings)
+                    if finish_reason == types.FinishReason.MAX_TOKENS:
+                        self.logger.warning(f"Response truncated due to MAX_TOKENS")
+                        raise ValueError(
+                            f"Response truncated due to token limit. "
+                            f"Consider increasing max_output_tokens beyond {config.max_output_tokens}"
+                        )
+                    elif finish_reason == types.FinishReason.SAFETY:
+                        self.logger.error(f"Response blocked due to SAFETY filters")
+                        raise ValueError(
+                            f"Response blocked by safety filters. Recipe content may contain inappropriate material."
+                        )
+                    elif finish_reason == types.FinishReason.RECITATION:
+                        self.logger.error(f"Response blocked due to RECITATION (copyrighted content)")
+                        raise ValueError(
+                            f"Response blocked due to recitation of copyrighted content."
+                        )
+                    elif finish_reason == types.FinishReason.PROHIBITED_CONTENT:
+                        self.logger.error(f"Response blocked due to PROHIBITED_CONTENT")
+                        raise ValueError(
+                            f"Response blocked due to prohibited content policy."
+                        )
+                    elif finish_reason == types.FinishReason.SPII:
+                        self.logger.error(f"Response blocked due to SPII (sensitive personal information)")
+                        raise ValueError(
+                            f"Response blocked due to sensitive personal information detection."
+                        )
+                    elif finish_reason == types.FinishReason.MALFORMED_FUNCTION_CALL:
+                        self.logger.error(f"Response contained malformed function call")
+                        raise ValueError(
+                            f"Response contained malformed function call (should not occur with structured output)."
+                        )
+                    elif finish_reason != types.FinishReason.STOP:
+                        # Log any other unexpected finish reasons
+                        self.logger.warning(f"Unexpected finish reason: {finish_reason}")
+
+                # Log token usage for monitoring
+                if hasattr(response, 'usage_metadata') and response.usage_metadata:
+                    usage = response.usage_metadata
+                    self.logger.info(
+                        f"Token usage - Input: {usage.prompt_token_count}, "
+                        f"Output: {usage.candidates_token_count}, "
+                        f"Total: {usage.total_token_count}"
+                    )
+
+                    # Warn if approaching token limit (>90% usage)
+                    output_limit = config.max_output_tokens
+                    if usage.candidates_token_count > 0.9 * output_limit:
+                        self.logger.warning(
+                            f"Output tokens ({usage.candidates_token_count}) near limit "
+                            f"({output_limit}) - recipe may benefit from higher token limit"
+                        )
+
                 # Parse the guaranteed-valid JSON response
-                result_dict = json.loads(response.text)
+                try:
+                    result_dict = json.loads(response.text)
+                except json.JSONDecodeError as json_error:
+                    # Attempt JSON repair if available
+                    if JSON_REPAIR_AVAILABLE:
+                        self.logger.warning(f"JSON decode failed: {str(json_error)}")
+                        self.logger.info("Attempting JSON repair...")
+                        try:
+                            result_dict = repair_json(response.text)
+                            self.logger.info("✓ JSON repair successful")
+                        except Exception as repair_error:
+                            self.logger.error(f"JSON repair failed: {str(repair_error)}")
+                            raise json_error  # Re-raise original error
+                    else:
+                        # No repair available, log and re-raise
+                        self.logger.error(
+                            f"JSON parsing failed and json-repair not available. "
+                            f"Error: {str(json_error)}"
+                        )
+                        raise
 
                 # Convert to your RecipeBase Pydantic model for validation
                 extracted_recipe = RecipeBase(**result_dict)
