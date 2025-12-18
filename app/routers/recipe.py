@@ -1,3 +1,4 @@
+from functools import lru_cache
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import ValidationError
 from ..models.recipe import TextProcessRequest, UrlProcessRequest, ImageProcessRequest, RecipeResponse
@@ -13,8 +14,23 @@ router = APIRouter(
 )
 
 
-# Dependencies to get services
+# Singleton Text processor for caching and client reuse efficiency
+@lru_cache()
 def get_text_processor():
+    """
+    Get a singleton instance of TextProcessor for caching efficiency.
+
+    This function implements a singleton pattern using lru_cache to ensure
+    only one TextProcessor instance is created per application lifecycle.
+    This is critical for:
+
+    - Caching: Preserves the in-memory cache in GeminiService across requests
+    - Resource optimization: Avoids overhead of re-initializing Gemini client
+    - Connection pooling: Reuses underlying network connections
+
+    Returns:
+        TextProcessor: The singleton TextProcessor instance
+    """
     return TextProcessor()
 
 # Singleton URL processor for connection pooling efficiency
