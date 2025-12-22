@@ -16,7 +16,7 @@ import CopyButton from '../ui/CopyButton';
 const InstructionsSection = ({ instructions, stages, onCopyToClipboard, copiedSection }) => {
   const { t } = useTranslation();
   const { direction } = useLanguage();
-  
+
   return (
     <Card className="flex flex-col">
       <div className="flex items-center justify-between mb-2 md:mb-4 flex-shrink-0">
@@ -54,7 +54,7 @@ const InstructionsSection = ({ instructions, stages, onCopyToClipboard, copiedSe
           </div>
         ) : (
           <ol className="space-y-3">
-            {instructions.map((instruction, idx) => (
+            {(instructions || []).map((instruction, idx) => (
               <li key={idx} className="flex items-start">
                 <span className={`flex-shrink-0 w-6 h-6 bg-[#994d51] text-white rounded-full text-xs flex items-center justify-center ${direction === 'rtl' ? 'ml-3' : 'mr-3'} mt-0.5`}>
                   {idx + 1}

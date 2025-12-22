@@ -54,7 +54,7 @@ const IngredientsSection = ({ ingredients, ingredient_stages, onCopyToClipboard,
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {ingredients.map((ingredient, idx) => (
+            {(ingredients || []).map((ingredient, idx) => (
               <div key={idx} className="flex items-center p-2 hover:bg-[#fcf8f8] rounded">
                 <span className={`w-2 h-2 bg-[#994d51] rounded-full ${direction === 'rtl' ? 'ml-3' : 'mr-3'} flex-shrink-0`}></span>
                 <span className="text-xs md:text-sm text-[#1b0e0e]" style={{ direction: isHebrew(ingredient.item) ? 'rtl' : 'ltr' }}>
