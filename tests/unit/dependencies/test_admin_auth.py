@@ -17,6 +17,13 @@ from app.dependencies.admin_auth import get_admin_from_key, admin_key_header
 class TestAdminAuthentication:
     """Test admin authentication dependency functionality."""
 
+    @pytest.mark.asyncio
+    async def test_constant_time_comparison(self, mock_env_admin_key):
+        """Test that secrets.compare_digest is used for constant-time comparison."""
+        with patch("app.dependencies.admin_auth.secrets.compare_digest", return_value=True) as mock_compare:
+            await get_admin_from_key(mock_env_admin_key)
+            mock_compare.assert_called_once_with(mock_env_admin_key, mock_env_admin_key)
+
     @pytest.fixture
     def mock_admin_key(self):
         """Fixture providing a test admin key."""

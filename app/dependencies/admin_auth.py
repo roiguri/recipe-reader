@@ -6,6 +6,7 @@ using X-Admin-Key header validation against environment variables.
 """
 
 import os
+import secrets
 from datetime import datetime, timezone
 from fastapi import HTTPException, Security
 from fastapi.security import APIKeyHeader
@@ -65,7 +66,7 @@ async def get_admin_from_key(admin_key: str = Security(admin_key_header)):
         )
     
     # Validate admin key
-    if admin_key != expected_admin_key:
+    if not secrets.compare_digest(admin_key, expected_admin_key):
         logger.warning(f"Admin request with invalid admin key: {admin_key[:4]}...")
         raise HTTPException(
             status_code=403,
