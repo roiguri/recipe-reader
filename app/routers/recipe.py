@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import ValidationError
+from functools import lru_cache
 from ..models.recipe import TextProcessRequest, UrlProcessRequest, ImageProcessRequest, RecipeResponse
 from ..services.text_processor import TextProcessor
 from ..services.url_processor import UrlProcessor
@@ -14,13 +15,17 @@ router = APIRouter(
 
 
 # Dependencies to get services
+@lru_cache()
 def get_text_processor():
+    """
+    Get a singleton instance of TextProcessor.
+    Using lru_cache ensures the service is initialized only once,
+    avoiding expensive re-initialization of GeminiService on every request.
+    """
     return TextProcessor()
 
-# Singleton URL processor for connection pooling efficiency
-_url_processor_instance = None
-
-async def get_url_processor():
+@lru_cache()
+def get_url_processor():
     """
     Get a singleton instance of UrlProcessor for connection pooling efficiency.
     
@@ -34,14 +39,9 @@ async def get_url_processor():
     Returns:
         UrlProcessor: The singleton UrlProcessor instance
     """
-    global _url_processor_instance
-    if _url_processor_instance is None:
-        _url_processor_instance = UrlProcessor()
-    return _url_processor_instance
+    return UrlProcessor()
 
-# Singleton Image processor for resource efficiency
-_image_processor_instance = None
-
+@lru_cache()
 def get_image_processor():
     """
     Get a singleton instance of ImageProcessingService for resource efficiency.
@@ -49,10 +49,7 @@ def get_image_processor():
     Returns:
         ImageProcessingService: The singleton ImageProcessingService instance
     """
-    global _image_processor_instance
-    if _image_processor_instance is None:
-        _image_processor_instance = ImageProcessingService()
-    return _image_processor_instance
+    return ImageProcessingService()
 
 @router.post("/text", response_model=RecipeResponse)
 async def process_recipe_text(
