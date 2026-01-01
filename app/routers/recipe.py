@@ -14,8 +14,20 @@ router = APIRouter(
 
 
 # Dependencies to get services
+# Singleton Text processor for resource efficiency and caching
+_text_processor_instance = None
+
 def get_text_processor():
-    return TextProcessor()
+    """
+    Get a singleton instance of TextProcessor for resource efficiency.
+
+    Returns:
+        TextProcessor: The singleton TextProcessor instance
+    """
+    global _text_processor_instance
+    if _text_processor_instance is None:
+        _text_processor_instance = TextProcessor()
+    return _text_processor_instance
 
 # Singleton URL processor for connection pooling efficiency
 _url_processor_instance = None
