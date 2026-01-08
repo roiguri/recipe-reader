@@ -127,10 +127,21 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
-# Add CORS middleware
+# Configure CORS
+# In production, ALLOWED_ORIGINS should be a comma-separated list of trusted origins
+# Example: https://my-app.com,https://staging.my-app.com
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS")
+if allowed_origins_env:
+    allow_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+else:
+    # Default to wildcard if not configured (useful for development/demo)
+    # WARNING: This is insecure for production if allow_credentials=True
+    logger.warning("ALLOWED_ORIGINS not set. Defaulting to '*' (allow all). This is insecure for production.")
+    allow_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
