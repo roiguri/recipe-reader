@@ -205,3 +205,5 @@ node_modules/
 
 # MCP configuration with sensitive tokens
 .mcp.json
+# AI dev-workflow scaffolding
+.taskmaster/
