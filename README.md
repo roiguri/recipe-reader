@@ -1,12 +1,11 @@
 # Recipe Auto-Creation API
 
-**Enterprise-grade FastAPI service for AI-powered recipe extraction from text, URLs, and images with secure client management and admin controls.**
+**FastAPI service for AI-powered recipe extraction from text, URLs, and images, with secure client management and admin controls.**
 
-## 🚀 Live Demo
+![Demo input panel](docs/screenshots/demo-input-panel.png)
 
-**Try it now: [https://recipe-reader-demo.netlify.app](https://recipe-reader-demo.netlify.app)**
-
-Experience the API through our React demo with Google/GitHub authentication, real-time rate limiting, and multi-language support.
+> [!NOTE]
+> **Project status: paused (as of 2026-05-28).** The hosted API on Vercel and the React demo on Netlify have been torn down, and the linked Supabase project has been retired. The codebase is preserved as a portfolio artifact and is fully restorable — see [How to redeploy from scratch](#-how-to-redeploy-from-scratch).
 
 ## ✨ API Features
 
@@ -43,46 +42,27 @@ Experience the API through our React demo with Google/GitHub authentication, rea
 
 ## 🚀 Quick Start
 
-### **For End Users: Try the Demo**
+> The hosted API and demo are no longer running. To try the API live, follow [How to redeploy from scratch](#-how-to-redeploy-from-scratch) to spin up your own instance.
 
-**🎯 Ready to use: [https://recipe-reader-demo.netlify.app](https://recipe-reader-demo.netlify.app)**
+### **Example API Usage**
 
-No setup required! Sign in with Google/GitHub and start processing recipes immediately.
-
-### **For Developers: API Integration**
-
-The API is hosted on Vercel with enterprise-grade infrastructure. Contact us for:
-- **Production API keys** for your applications
-- **Custom rate limits** based on your usage needs  
-- **Admin access** for client management
-- **Technical support** and integration assistance
-
-### **API Documentation**
-
-**📖 Live API Docs: [https://recipe-reader-chi.vercel.app/docs](https://recipe-reader-chi.vercel.app/docs)**
-
-```bash
-# Health check (no API key required)
-curl https://recipe-reader-chi.vercel.app/health
-
-# API version information
-curl https://recipe-reader-chi.vercel.app/api/versions
-```
-
-### **Example API Usage** (with provided API key)
+Once deployed, the API accepts requests like:
 
 ```bash
 # Text processing
-curl -X POST "https://recipe-reader-chi.vercel.app/api/v1/recipe/text" \
+curl -X POST "https://YOUR-DEPLOY.vercel.app/api/v1/recipe/text" \
   -H "X-API-Key: your_provided_api_key" \
   -H "Content-Type: application/json" \
   -d '{"text": "Chocolate Cake\n\nIngredients:\n2 cups flour\n1 cup sugar\n\nInstructions:\n1. Mix ingredients\n2. Bake at 350°F"}'
 
-# URL processing  
-curl -X POST "https://recipe-reader-chi.vercel.app/api/v1/recipe/url" \
+# URL processing
+curl -X POST "https://YOUR-DEPLOY.vercel.app/api/v1/recipe/url" \
   -H "X-API-Key: your_provided_api_key" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/recipe"}'
+
+# Health check (no API key required)
+curl https://YOUR-DEPLOY.vercel.app/health
 ```
 
 ## 📡 API Reference
@@ -262,10 +242,10 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - PostgreSQL database (Neon recommended for production parity)
 - Admin key for client management features
 
-### **Production Deployment**
+### **Previous Production Stack** (parked — see redeploy section above)
 - **Platform**: Vercel with Python runtime
 - **Database**: Neon PostgreSQL (serverless)
-- **AI Service**: Google Gemini Pro API
+- **AI Service**: Google Gemini API
 - **Configuration**: Environment variables via Vercel dashboard
 
 ## ⚡ Performance Features
@@ -276,6 +256,80 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **Hebrew Language Support**: Cultural context and RTL handling
 - **Robust Error Handling**: Comprehensive validation and recovery
 - **Production Ready**: Logging, monitoring, and security best practices
+
+## ♻️ How to Redeploy from Scratch
+
+The project was paused on 2026-05-28. Everything needed to spin it back up is in this repo. The steps below assume a fresh start with no surviving infra.
+
+### 1. Backend API (FastAPI on Vercel)
+
+1. **Create a Postgres database** (Neon, Supabase, or Vercel Postgres). Note the connection string.
+2. **Apply the backend migration** to the new database:
+   ```bash
+   psql "$DATABASE_URL" -f app/database/migrations/001_clients.sql
+   ```
+3. **Get a Google AI Studio key** at https://aistudio.google.com/app/apikey.
+4. **Deploy to Vercel**:
+   ```bash
+   npx vercel link        # link to a new or existing Vercel project
+   npx vercel env add     # set GOOGLE_AI_API_KEY, DATABASE_URL, ADMIN_API_KEY
+   npx vercel --prod
+   ```
+   See `.env.example` for the full list of supported env vars (including optional `TRUSTED_PROXY_IPS`, `GEMINI_MODEL_NAME`).
+5. **Create your first API client** via the admin endpoint:
+   ```bash
+   curl -X POST "https://YOUR-DEPLOY.vercel.app/api/v1/admin/create-client" \
+     -H "X-Admin-Key: $ADMIN_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{"client_name": "demo-frontend", "rate_limit": 100}'
+   ```
+
+### 2. Supabase Project (Auth + Edge Functions for the Demo)
+
+1. **Create a new Supabase project** at https://supabase.com/dashboard. Note the project ref, URL, and `anon` key.
+2. **Apply the schema** from this repo:
+   ```bash
+   supabase link --project-ref YOUR_NEW_REF
+   supabase db push        # applies demo-frontend/supabase/migrations/0001_initial_schema.sql
+   ```
+   This recreates the `user_recipes` and `demo_rate_limits` tables, the `increment_rate_limit` RPC, RLS policies, and triggers.
+3. **Configure OAuth providers** in dashboard → Authentication → Providers:
+   - Enable Google and GitHub
+   - Set redirect URL to `https://<your-supabase-ref>.supabase.co/auth/v1/callback`
+   - For Google: create OAuth credentials at https://console.cloud.google.com → APIs & Services → Credentials. Add the same redirect URL.
+   - For GitHub: register an OAuth App at https://github.com/settings/developers with the same redirect URL.
+4. **Create the storage bucket** `recipe-images` in dashboard → Storage. Set policies to authenticated-read/write as needed.
+5. **Deploy edge functions**:
+   ```bash
+   supabase functions deploy recipe-proxy
+   supabase functions deploy cookbook-transfer
+   ```
+   Set their secrets (`supabase secrets set REACT_APP_API_URL=https://YOUR-VERCEL-DEPLOY.vercel.app` etc.).
+
+### 3. Demo Frontend (React on Netlify)
+
+1. Copy `demo-frontend/.env.example` → `demo-frontend/.env.local` and fill in:
+   - `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` from step 2
+   - `REACT_APP_API_URL` from step 1
+   - `REACT_APP_GOOGLE_CLIENT_ID` and `REACT_APP_GITHUB_CLIENT_ID` from step 2
+2. **Verify locally**:
+   ```bash
+   cd demo-frontend && npm install && npm run build
+   ```
+3. **Deploy to Netlify**:
+   ```bash
+   npx netlify link
+   npx netlify env:import demo-frontend/.env.local   # or set vars in dashboard
+   npx netlify deploy --prod
+   ```
+
+### 4. Verify End-to-End
+
+- Backend `/health` returns 200
+- Frontend loads and sign-in flow completes
+- A text/URL/image submission reaches the backend and returns structured JSON
+
+The last known-good commit before pause is tagged `v1.0-paused`.
 
 ## 🤝 Contributing
 
