@@ -3,7 +3,7 @@
 **FastAPI service for AI-powered recipe extraction from text, URLs, and images, with secure client management and admin controls.**
 
 > [!NOTE]
-> **Project status: paused (as of 2026-05-28).** The hosted API on Vercel and the React demo on Netlify have been torn down, and the linked Supabase project has been retired. The codebase is preserved as a portfolio artifact and is fully restorable — see [How to redeploy from scratch](#-how-to-redeploy-from-scratch).
+> **Project status: paused (as of 2026-05-28).** The hosted API on Vercel and the React demo on Netlify have been torn down, and the linked Supabase project has been retired. The codebase is preserved as a portfolio artifact and is fully restorable. See [How to redeploy from scratch](#-how-to-redeploy-from-scratch).
 
 ## ✨ API Features
 
@@ -240,7 +240,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - PostgreSQL database (Neon recommended for production parity)
 - Admin key for client management features
 
-### **Previous Production Stack** (parked — see redeploy section above)
+### **Previous Production Stack** (parked; see redeploy section above)
 - **Platform**: Vercel with Python runtime
 - **Database**: Neon PostgreSQL (serverless)
 - **AI Service**: Google Gemini API
