@@ -2,11 +2,8 @@
 
 **Modern React application for AI-powered recipe extraction from text, URLs, and images with secure authentication and multi-language support.**
 
-## 🚀 Live Demo
-
-**Try it now: [https://recipe-reader-demo.netlify.app](https://recipe-reader-demo.netlify.app)**
-
-Experience recipe processing with intelligent AI extraction, real-time rate limiting, and seamless user management.
+> [!NOTE]
+> The hosted demo on Netlify has been torn down. See the root [README](../README.md#-how-to-redeploy-from-scratch) for how to spin up your own instance.
 
 ## ✨ Features
 
@@ -40,16 +37,14 @@ Experience recipe processing with intelligent AI extraction, real-time rate limi
 
 ## 🎯 How to Use
 
-1. **Visit the Demo**: [https://recipe-reader-demo.netlify.app](https://recipe-reader-demo.netlify.app)
-2. **Sign In**: Use Google or GitHub OAuth (secure authentication)
-3. **Choose Input Type**: Text, URL, or Image upload
-4. **Process Recipe**: AI extracts structured data with confidence scoring
-5. **Save & Manage**: Store recipes in your personal collection
+1. **Sign In**: Google or GitHub OAuth (secure authentication via Supabase)
+2. **Choose Input Type**: Text, URL, or Image upload
+3. **Process Recipe**: AI extracts structured data with confidence scoring
+4. **Save & Manage**: Store recipes in your personal collection
 
-### 🔑 Demo Account
-- **Rate Limit**: 5 requests per user
-- **Admin Access**: Contact us for unlimited demo access
-- **Data Persistence**: Recipes saved to your account
+### 🔑 Demo Rate Limits
+- **5 requests per user** (server-side enforced)
+- **Admin bypass** via `app_metadata.is_admin` JWT claim
 
 ## 🏗️ Architecture
 
@@ -103,19 +98,12 @@ Structured Recipe Data
 
 ## 🔧 For Developers
 
-This is a production demo application. For API integration or custom development:
-
-### **Development Setup**
-- See [Recipe API Documentation](../README.md) for backend setup
-- Contact us for development access and API keys
-- Review [Contributing Guidelines](../contributing.md) for contribution process
+### **Setup**
+- See the root [README](../README.md#-how-to-redeploy-from-scratch) for backend + Supabase setup
+- Copy `.env.example` to `.env.local` and fill in the required values
 
 ### **Technical Implementation**
 - **TypeScript**: Mixed JS/TS codebase with gradual migration
 - **Error Boundaries**: Comprehensive error handling and recovery
 - **Performance**: Lazy loading, code splitting, and optimization
 - **Accessibility**: ARIA labels, keyboard navigation, screen reader support
-
----
-
-**🔗 Related**: [Recipe API Documentation](../README.md) | [Contributing Guidelines](../contributing.md)
