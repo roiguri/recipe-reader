@@ -2,8 +2,6 @@
 
 **FastAPI service for AI-powered recipe extraction from text, URLs, and images, with secure client management and admin controls.**
 
-![Demo input panel](docs/screenshots/demo-input-panel.png)
-
 > [!NOTE]
 > **Project status: paused (as of 2026-05-28).** The hosted API on Vercel and the React demo on Netlify have been torn down, and the linked Supabase project has been retired. The codebase is preserved as a portfolio artifact and is fully restorable — see [How to redeploy from scratch](#-how-to-redeploy-from-scratch).
 
@@ -331,6 +329,3 @@ The project was paused on 2026-05-28. Everything needed to spin it back up is in
 
 The last known-good commit before pause is tagged `v1.0-paused`.
 
-## 🤝 Contributing
-
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to this project.
