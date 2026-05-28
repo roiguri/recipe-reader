@@ -1,8 +1,8 @@
 # Core FastAPI and server
 fastapi==0.115.12
 uvicorn==0.34.2
-python-dotenv==1.1.1
-python-multipart==0.0.21
+python-dotenv==1.2.2
+python-multipart==0.0.27
 
 # Database
 asyncpg==0.29.0
@@ -24,4 +24,4 @@ pillow==11.3.0
 
 # Core dependencies (minimal required)
 pydantic==2.11.4
-requests==2.32.4
+requests==2.33.0
